@@ -2,12 +2,52 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Cyrias Buddy — Pilotage & Data</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyrias Buddy — Pilotage, Temps & Facturation</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/style.css">
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+
+  <style>
+    /* Intégration du système de variables adaptées pour CRAminator */
+    #module-cra, #module-fact, #module-agr {
+      --bg-primary: var(--bg); --bg-card: var(--surface); --bg-card-hover: var(--bg); --bg-surface: var(--bg-subtle);
+      --border-subtle: var(--border); --border-accent: var(--primary); --text-primary: var(--ink);
+      --text-secondary: var(--ink-secondary); --text-muted: var(--ink-muted); --accent-blue: var(--primary);
+      --accent-cyan: var(--primary-hover); --accent-emerald: var(--brand); --accent-amber: #D97706;
+      --accent-red: #DC2626; --accent-purple: #7C3AED; --accent-pink: #DB2777;
+      --gradient-main: linear-gradient(135deg, var(--primary), var(--brand));
+    }
+    .module-nav { display: flex; gap: 12px; margin: 20px 40px 0 40px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+    .main-module { display: none; padding: 20px 40px; }
+    .main-module.active { display: block; }
+    .sortable { cursor: pointer; position: relative; user-select: none; }
+    .sortable:after { content: ' ↕'; opacity: 0.3; font-size: 10px; }
+    .sortable.asc:after { content: ' ↑'; opacity: 1; color: var(--brand); }
+    .sortable.desc:after { content: ' ↓'; opacity: 1; color: var(--brand); }
+    .source-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; border: 1px solid; margin-right: 6px; margin-bottom: 6px; }
+    .source-chip.source-0 { background: rgba(27,59,92,0.08); border-color: rgba(27,59,92,0.2); color: var(--primary); }
+    .source-chip.source-1 { background: rgba(94,176,145,0.08); border-color: rgba(94,176,145,0.3); color: var(--brand-hover); }
+    .source-chip .remove-btn { cursor: pointer; font-weight: bold; margin-left: 4px; }
+    .chart-container, .chart-container-large { position: relative; width: 100%; height: 260px; }
+    .chart-container-large { height: 320px; }
+    .drop-zone { border: 2px dashed var(--border-strong); border-radius: var(--radius-md); background: var(--surface); padding: 40px; text-align: center; transition: all var(--transition); cursor: pointer; }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--brand); background: var(--brand-soft); }
+    .staffing-grid { display: grid; grid-template-columns: 150px repeat(10, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 12px; }
+    .staffing-cell { background: var(--surface); padding: 8px; display: flex; align-items: center; justify-content: center; min-height: 40px; }
+    .staffing-header { background: var(--bg-subtle); font-weight: bold; font-size: 10px; text-transform: uppercase; color: var(--ink-muted); text-align: center; }
+    .staffing-name { justify-content: flex-start; font-weight: 600; font-size: 12px; color: var(--primary); padding-left: 12px; }
+    .staffing-input { width: 100%; border: 1px solid transparent; text-align: center; font-family: var(--font-mono); font-size: 12px; padding: 4px; border-radius: 4px; outline: none; background: transparent; }
+    .staffing-input:hover { border-color: var(--brand); background: var(--brand-soft); }
+    .staffing-input:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 2px var(--brand-soft); }
+  </style>
 </head>
 <body>
 
@@ -16,43 +56,955 @@
 
   <div class="main-content">
     <div class="page-header">
-      <h1>📊 Pilotage & Data</h1>
-      <p>CRAminator, Facturator et Stafiz Agregator regroupés.</p>
+      <h1>📊 Pilotage Financier &amp; Data</h1>
+      <p>Suivi analytique des temps passés, consolidations de la facturation et agrégations Stafiz.</p>
     </div>
-    
-    <div style="padding: 40px;">
-        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-            <button class="btn btn-primary" onclick="showTab('cra')">CRAminator</button>
-            <button class="btn btn-outline" onclick="showTab('fact')">Facturator</button>
-            <button class="btn btn-outline" onclick="showTab('agr')">Agregator</button>
+
+    <div class="module-nav">
+      <button id="btn-mod-cra" class="btn btn-primary" onclick="showModule('cra')">📊 CRAminator</button>
+      <button id="btn-mod-fact" class="btn btn-outline" onclick="showModule('fact')">💶 Facturator</button>
+      <button id="btn-mod-agr" class="btn btn-outline" onclick="showModule('agr')">🏗️ Stafiz Agregator</button>
+    </div>
+
+    <div id="module-cra" class="main-module active">
+      <div id="upload-section" class="mb-5">
+        <div id="source-manager" class="hidden mb-4">
+          <div class="tool-card" style="background: var(--bg-subtle);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <h3 style="font-size: 13px; font-weight: 700;">Sources de données CRA actives</h3>
+                <p style="font-size: 11px; color: var(--ink-muted); margin-top: 2px;"><span id="source-count">0</span> source(s) chargée(s) — <span id="total-records-count" class="font-mono">0</span> lignes au total</p>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <label class="btn btn-outline" style="font-size: 12px; cursor: pointer;">
+                  + Ajouter CRA <input type="file" id="file-upload-add" class="hidden" accept=".xlsx,.xls,.csv" multiple onchange="handleMultiFiles(event)">
+                </label>
+                <button onclick="clearAllData()" class="btn btn-outline" style="color: var(--danger); border-color: var(--danger); font-size: 12px;">Tout effacer</button>
+              </div>
+            </div>
+            <div id="source-chips" class="mt-3"></div>
+          </div>
         </div>
 
-        <div id="view-cra" class="module-view">
-            <h2>CRAminator</h2>
-            </div>
+        <div id="drop-zone" class="drop-zone">
+          <div style="font-size: 40px; margin-bottom: 12px;">📊</div>
+          <h2 style="font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 4px;">Glissez-déposez vos exports Stafiz bruts</h2>
+          <p style="color: var(--ink-secondary); font-size: 13px; margin-bottom: 16px;">Prise en charge des extensions .xlsx, .xls et .csv</p>
+          <div style="display: flex; justify-content: center; gap: 12px;">
+            <label class="btn btn-primary" style="cursor: pointer;">
+              Parcourir mes fichiers
+              <input type="file" id="file-upload" class="hidden" accept=".xlsx,.xls,.csv" multiple onchange="handleMultiFiles(event)">
+            </label>
+          </div>
+          <div style="margin: 16px auto; max-width: 300px; display: flex; align-items: center; gap: 8px; color: var(--ink-muted); font-size: 11px; text-transform: uppercase;"><hr style="flex:1; border:none; border-top:1px solid var(--border);">ou connecter via url<hr style="flex:1; border:none; border-top:1px solid var(--border);"></div>
+          <div style="max-width: 450px; margin: 0 auto; display: flex; gap: 8px;">
+            <input type="url" id="url-input" placeholder="Lien Google Sheets public..." class="form-input" style="font-size: 12px;">
+            <button onclick="triggerUrlLoad()" class="btn btn-outline" style="font-size: 12px;"><span id="url-btn-text">Connecter</span><div id="url-loader" class="hidden" style="width:12px; height:12px; border:2px solid var(--brand); border-top-color:transparent; border-radius:50%; animation:spin 0.6s linear infinite;"></div></button>
+          </div>
+          <button onclick="downloadTemplate()" class="btn btn-outline" style="margin-top: 16px; font-size: 11px; border: none; background: transparent; text-decoration: underline; color: var(--brand-hover);">Télécharger un modèle de structure standard</button>
+        </div>
 
-        <div id="view-fact" class="module-view" style="display: none;">
-            <h2>Facturator</h2>
+        <div id="upload-progress-container" class="hidden mt-4" style="max-width: 400px; margin-left: auto; margin-right: auto;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: var(--brand-hover); margin-bottom: 4px;"><span>Traitement analytique...</span><span id="upload-progress-text" class="font-mono">0%</span></div>
+          <div style="background: var(--border); height: 6px; border-radius: 3px; overflow: hidden;"><div id="upload-progress-bar" style="height: 100%; width: 0%; background: var(--brand); transition: width 0.1s;"></div></div>
+        </div>
+      </div>
+
+      <div id="dashboard-section" class="hidden">
+        <div style="background: var(--surface); border: 1px solid var(--border); padding: 8px; border-radius: var(--radius-sm); display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; align-items: center;">
+          <button onclick="switchCraTab('dashboard')" id="btn-tab-dashboard" class="btn btn-primary btn-sm">Dashboard</button>
+          <button onclick="switchCraTab('clients')" id="btn-tab-clients" class="btn btn-outline btn-sm">🏢 Fiches Clients</button>
+          <button onclick="switchCraTab('explorer')" id="btn-tab-explorer" class="btn btn-outline btn-sm">🔍 Explorateur</button>
+          <button onclick="switchCraTab('suivi')" id="btn-tab-suivi" class="btn btn-outline btn-sm">📝 Suivi Hebdo</button>
+          <button onclick="switchCraTab('demandes')" id="btn-tab-demandes" class="btn btn-outline btn-sm">🎫 Demandes</button>
+          <button onclick="switchCraTab('dispo')" id="btn-tab-dispo" class="btn btn-outline btn-sm">📅 Disponibilités</button>
+          
+          <div style="width: 1px; height: 16px; background: var(--border); margin: 0 4px;"></div>
+          <button onclick="openCraModal('filters-modal')" class="btn btn-outline btn-sm" style="position:relative; color: var(--brand-hover); border-color: var(--brand-soft);">⏳ Filtrer la sélection <span id="filter-badge" class="hidden" style="background:var(--primary); color:#fff; font-size:9px; padding:1px 5px; border-radius:10px; margin-left:4px;">0</span></button>
+          <button onclick="openDisplayModal()" class="btn btn-outline btn-sm">👁️ Widgets</button>
+          
+          <div style="margin-left: auto; display: flex; gap: 6px; align-items: center;">
+            <span id="record-count" class="font-mono text-xs text-gray-400"></span>
+            <span id="total-ca" class="hidden font-mono text-xs font-bold px-2 py-1 rounded" style="background: var(--brand-soft); color: var(--brand-hover);"></span>
+            <button onclick="exportToExcel()" class="btn btn-outline btn-sm">Excel</button>
+            <button id="btn-export-pptx" onclick="openExportModal()" class="btn btn-secondary btn-sm">PPTX</button>
+          </div>
+        </div>
+
+        <div id="dashboard-content">
+          <div id="block-charts-top" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 16px;">
+            <div class="tool-card"><h3 style="font-size:13px; font-weight:700; margin-bottom:12px;">Jours consommés par Client</h3><div class="chart-container"><canvas id="clientChart"></canvas></div></div>
+            <div class="tool-card"><h3 style="font-size:13px; font-weight:700; margin-bottom:12px;">Jours prestés par Collaborateur</h3><div class="chart-container"><canvas id="collabChart"></canvas></div></div>
+            <div class="tool-card"><h3 style="font-size:13px; font-weight:700; margin-bottom:12px;">Ventilation typologique par Tâche</h3><div class="chart-container"><canvas id="taskChart"></canvas></div></div>
+          </div>
+
+          <div id="block-charts-bottom" style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div class="tool-card">
+              <h3 style="font-size:13px; font-weight:700; margin-bottom:12px;">Évolution temporelle de la charge</h3>
+              <div class="chart-container-large"><canvas id="timeChart"></canvas></div>
+              <div style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px;"><h4 style="font-size:11px; font-weight:600; color:var(--ink-muted); margin-bottom:6px;">Heatmap d'intensité d'activité</h4><div id="heatmap-container"></div></div>
             </div>
-        
-        <div id="view-agr" class="module-view" style="display: none;">
-            <h2>Stafiz Agregator</h2>
+            <div class="tool-card"><h3 style="font-size:13px; font-weight:700; margin-bottom:12px;">Chiffre d'Affaires estimé</h3><div class="chart-container-large"><canvas id="caChart"></canvas></div></div>
+          </div>
+
+          <div id="block-alerts" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div id="budget-alerts-container" class="hidden tool-card" style="border-left: 4px solid var(--danger);"><h3 style="font-size:12px; color:var(--danger); font-weight:700; margin-bottom:10px;">🚨 Alertes Budgets (RAC ≤ 10%)</h3><div id="budget-alerts-list" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"></div></div>
+            <div id="qc-alerts-container" class="hidden tool-card" style="border-left: 4px solid var(--warn);"><h3 style="font-size:12px; color:var(--warn); font-weight:700; margin-bottom:10px;">⚠️ Anomalies de charge d'équipe</h3><div id="qc-alerts-list" style="display:grid; grid-template-columns:1fr; gap:6px;"></div></div>
+          </div>
+
+          <div id="block-tables" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div class="tool-card" style="overflow-x:auto;">
+              <h3 style="font-size:13px; font-weight:700; margin-bottom:10px;">Suivi analytique Budgets &amp; RAC</h3>
+              <table style="font-size:11px;">
+                <thead><tr><th class="sortable" onclick="sortRacData('m')">Enveloppe Mission</th><th style="text-align:right;" class="sortable" onclick="sortRacData('allocated')">Alloués</th><th style="text-align:right;" class="sortable" onclick="sortRacData('consumed')">Consommé</th><th style="text-align:right; color:var(--brand-hover);" class="sortable" onclick="sortRacData('ca')">CA Estimé</th><th style="text-align:right;" class="sortable" onclick="sortRacData('remaining')">RAC</th><th style="text-align:center; width:80px;" class="sortable" onclick="sortRacData('percent')">Progression</th></tr></thead>
+                <tbody id="rac-table-body"></tbody>
+              </table>
             </div>
-    </div>
-  </div>
-</div>
+            <div class="tool-card" style="overflow-x:auto;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><h3 style="font-size:13px; font-weight:700; margin:0;">Taux de Production Individuel (TACE)</h3><span id="working-days-info" style="font-size:11px; font-weight:700; background:var(--bg-subtle); padding:2px 8px; border-radius:4px;"></span></div>
+              <table style="font-size:11px;">
+                <thead><tr><th class="sortable" onclick="sortProdData('c')">Collaborateur</th><th style="text-align:right;" class="sortable" onclick="sortProdData('jours')">Jours Réalisés</th><th style="text-align:right;" class="sortable" onclick="sortProdData('rate')">Taux d'occupation</th><th style="text-align:center; width:100px;">Jauge graphique</th></tr></thead>
+                <tbody id="prod-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="block-comment-quality" class="tool-card mb-4">
+            <h3 style="font-size:13px; font-weight:700; margin-bottom:4px;">Contrôle Qualité de Saisie : Commentaires vides</h3>
+            <p id="comment-quality-summary" style="font-size:11px; color:var(--ink-muted); margin-bottom:12px;"></p>
+            <div class="chart-container-large"><canvas id="commentChart"></canvas></div>
+          </div>
+
+          <div id="block-ai" class="tool-card mb-4" style="border-left: 4px solid var(--accent-purple);">
+            <h3 style="font-size:13px; font-weight:700; color: var(--accent-purple); margin-bottom:10px;">✨ Assistant d'Analyse IA</h3>
+            <button id="btn-ai-analyze" onclick="generateAIAnalysis()" class="btn btn-primary" style="background:var(--accent-purple); width:100%; justify-content:center;">✨ Synthétiser et analyser la sélection courante</button>
+            <div id="ai-loading" class="hidden" style="padding:20px; text-align:center; font-size:12px; color:var(--ink-muted);">Calcul de la synthèse en cours par l'IA...</div>
+            <div id="ai-error" class="hidden" style="color:var(--danger); padding:10px; font-size:12px; font-weight:600;"></div>
+            <div id="ai-result-container" class="hidden mt-3" style="background:var(--bg-subtle); padding:16px; border-radius:8px; font-size:13px; line-height:1.6;" id="ai-response-content"></div>
+          </div>
+        </div>
+
+        <div id="clients-content" class="hidden" style="display: grid; grid-template-columns: 280px 1fr; gap: 20px;">
+          <div class="tool-card" style="max-height: 80vh; display: flex; flex-direction: column;">
+            <h3 style="font-size:13px; margin-bottom:10px;">Comptes clients détectés</h3>
+            <input type="text" id="search-client-card" onkeyup="filterClientCards()" placeholder="Filtrer la liste..." class="form-input mb-3" style="font-size:12px;">
+            <div id="client-card-list" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:4px;"></div>
+          </div>
+          <div class="tool-card" id="client-card-detail" style="max-height: 80vh; overflow-y:auto;">
+            <div style="text-align:center; padding:60px 20px; color:var(--ink-muted);">Sélectionnez un client dans la liste de gauche pour afficher sa fiche d'identité financière.</div>
+          </div>
+        </div>
+
+        <div id="explorer-content" class="hidden tool-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+            <div><h3 style="font-size:14px; font-weight:700;">Explorateur granulaire des lignes de temps</h3><p id="explorer-summary" style="font-size:11px; color:var(--brand-hover); margin-top:2px; font-family:var(--font-mono);"></p></div>
+            <input type="text" id="search-explorer" onkeyup="renderExplorerTable()" placeholder="Recherche globale (texte, commentaire...)" class="form-input" style="max-width:300px; font-size:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)) auto; gap:10px; background:var(--bg-subtle); padding:12px; border-radius:8px; margin-bottom:16px; align-items:end;">
+            <div><label class="form-group"><label>Filtrer par Client</label><select id="explorer-filter-client" onchange="renderExplorerTable()" class="form-input" style="font-size:11px;"></select></label></div>
+            <div><label class="form-group"><label>Filtrer par Mission</label><select id="explorer-filter-mission" onchange="renderExplorerTable()" class="form-input" style="font-size:11px;"></select></label></div>
+            <div><label class="form-group"><label>Filtrer par Mois</label><select id="explorer-filter-mois" onchange="renderExplorerTable()" class="form-input" style="font-size:11px;"></select></label></div>
+            <div style="display:flex; gap:6px;"><button onclick="resetExplorerFilters()" class="btn btn-outline" style="font-size:11px; padding:8px 12px;">Réinitialiser</button><button onclick="exportExplorerToExcel()" class="btn btn-secondary" style="font-size:11px; padding:8px 12px;">Export Excel</button></div>
+          </div>
+          <div style="overflow-x:auto; border:1px solid var(--border); border-radius:8px; max-height:50vh;">
+            <table style="font-size:11px; width:100%; border-collapse:collapse;">
+              <thead style="position:sticky; top:0; background:var(--surface); box-shadow:0 1px 0 var(--border); z-index:10;">
+                <tr><th style="padding:10px;">Date</th><th style="padding:10px;">Équipe</th><th style="padding:10px;">Client</th><th style="padding:10px;">Mission</th><th style="padding:10px;">Collaborateur</th><th style="padding:10px; text-align:center;">Jours</th><th style="padding:10px;">Tâche / Descriptif réalisé</th><th style="padding:10px;">Fichier Source</th></tr>
+              </thead>
+              <tbody id="explorer-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="suivi-content" class="hidden" style="display: grid; grid-template-columns: 350px 1fr; gap: 20px;">
+          <div class="tool-card" style="display: flex; flex-direction: column; gap: 14px;">
+            <h3 style="font-size:13px; font-weight:700;">📝 Note hebdomadaire</h3>
+            <div class="form-group"><label>Client cible</label><select id="suivi-client" class="form-input" style="font-size:12px;"></select></div>
+            <div class="form-group"><label>Semaine de rattachement</label><input type="week" id="suivi-semaine" class="form-input" style="font-size:12px;"></div>
+            <div class="form-group"><label>Catégorie typologique</label><select id="suivi-categorie" class="form-input" style="font-size:12px;"><option value="Point général">Point général</option><option value="Alerte / Risque">Alerte / Risque</option><option value="Décision prise">Décision prise</option><option value="Action à mener">Action à mener</option><option value="Satisfaction client">Satisfaction client</option><option value="Staffing">Staffing</option><option value="Autre">Autre</option></select></div>
+            <div class="form-group"><label>Participants</label><input type="text" id="suivi-participants" placeholder="ex: Marie, Thomas..." class="form-input" style="font-size:12px;"></div>
+            <div class="form-group"><label>Suivi des Enveloppes budgétaires</label><textarea id="suivi-enveloppes" class="form-input" style="font-size:11px; height:50px; resize:none;" placeholder="Consommations, alertes budgets..."></textarea></div>
+            <div class="form-group"><label>Avancement des sujets en cours</label><textarea id="suivi-sujets" class="form-input" style="font-size:11px; height:70px;" placeholder="Actions et jalons atteints cette semaine..."></textarea></div>
+            <div class="form-group"><label style="color:var(--danger);">Points d'attention / Risques</label><textarea id="suivi-attention" class="form-input" style="font-size:11px; height:50px; font-weight:500; border-color:rgba(239,68,68,0.2);" placeholder="Bloquants, retards à prévoir..."></textarea></div>
+            <div class="form-group"><label>Auteur</label><input type="text" id="suivi-auteur" readonly class="form-input" style="font-size:12px; color:var(--ink-muted);"></div>
+            <button onclick="addSuiviComment()" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:6px;">Ajouter à la chronologie</button>
+          </div>
+          <div class="tool-card" style="display:flex; flex-direction:column; max-height:80vh;">
+            <div style="display:flex; justify-content:between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+              <h3 style="font-size:13px; font-weight:700; margin:0; flex:1;">📜 Historique chronologique</h3>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <select id="suivi-hist-client" onchange="renderSuiviHistory()" class="form-input" style="font-size:11px; width:150px; padding:4px 8px;"></select>
+                <button onclick="exportSuiviToWord()" class="btn btn-outline" style="font-size:11px; padding:6px 10px;">Word</button>
+                <button onclick="resyncSuiviFromCRA()" class="btn btn-outline" style="font-size:11px; padding:6px 10px; border-color:var(--warn-border); color:var(--accent-amber);">Resync Clients</button>
+              </div>
+            </div>
+            <div id="suivi-history-list" style="overflow-y:auto; flex:1; padding-right:4px;"></div>
+          </div>
+        </div>
+
+        <div id="demandes-content" class="hidden">
+          <div class="tool-card mb-3" style="background:var(--bg-subtle); padding:16px 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+              <div style="display:flex; align-items:center; gap:10px;"><div style="font-size:24px;">🎫</div><div><h3 style="font-size:13px; font-weight:700;">Console d'Importation des Demandes &amp; Tickets</h3><p style="font-size:11px; color:var(--ink-muted); margin-top:1px;"><span id="demandes-count" class="font-mono">0</span> demande(s) en base locale</p></div></div>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <label class="btn btn-outline" style="font-size:12px; cursor:pointer; border-color:rgba(233,189,39,0.3); color:#D97706;">📂 Importer Excel .xlsx <input type="file" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleDemandesImport(event)"></label>
+                <button onclick="downloadDemandesTemplate()" class="btn btn-outline" style="font-size:11px; padding:6px 10px;">Modèle structure</button>
+                <button onclick="openStatutsModal()" class="btn btn-outline" style="font-size:11px; padding:6px 10px;">Ajuster Statuts</button>
+                <button onclick="clearDemandesData()" class="btn btn-outline" style="color:var(--danger); border-color:var(--danger); font-size:11px; padding:6px 10px;">Effacer</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px,1fr)); gap:10px; margin-bottom:14px;">
+            <div class="tool-card" style="padding:10px; text-align:center;"><div style="font-size:9px; color:var(--ink-muted); text-transform:uppercase;">Chargés</div><div id="kpi-total" style="font-size:18px; font-weight:800; font-family:var(--font-mono);">0</div></div>
+            <div class="tool-card" style="padding:10px; text-align:center;"><div style="font-size:9px; color:var(--ink-muted); text-transform:uppercase;">Actifs</div><div id="kpi-ouvertes" style="font-size:18px; font-weight:800; font-family:var(--font-mono); color:#D97706;">0</div></div>
+            <div class="tool-card" style="padding:10px; text-align:center;"><div style="font-size:9px; color:var(--ink-muted); text-transform:uppercase;">Résolus</div><div id="kpi-fermees" style="font-size:18px; font-weight:800; font-family:var(--font-mono); color:var(--brand-hover);">0</div></div>
+            <div class="tool-card" style="padding:10px; text-align:center;"><div style="font-size:9px; color:var(--ink-muted); text-transform:uppercase;">Vélocité</div><div id="kpi-taux-cloture" style="font-size:18px; font-weight:800; font-family:var(--font-mono); color:var(--info);">—</div></div>
+            <div class="tool-card" style="padding:10px; text-align:center;"><div style="font-size:9px; color:var(--ink-muted); text-transform:uppercase;">% Satisfaits</div><div id="kpi-satisfaction" style="font-size:18px; font-weight:800; font-family:var(--font-mono); color:var(--brand-hover);">—</div></div>
+            <div class="tool-card" style="padding:10px; text-align:center;"><div style="font-size:9px; color:var(--ink-muted); text-transform:uppercase;">% Insatisfaits</div><div id="kpi-insatisfaits" style="font-size:18px; font-weight:800; font-family:var(--font-mono); color:var(--danger);">—</div></div>
+            <div class="tool-card" style="padding:10px; text-align:center;"><div style="font-size:9px; color:var(--ink-muted); text-transform:uppercase;">Note moyenne</div><div id="kpi-note-moy" style="font-size:18px; font-weight:800; font-family:var(--font-mono); color:#D97706;">—</div></div>
+            <div class="tool-card" style="padding:10px; text-align:center;"><div style="font-size:9px; color:var(--ink-muted); text-transform:uppercase;">NPS Client</div><div id="kpi-nps-global" style="font-size:18px; font-weight:800; font-family:var(--font-mono);">—</div></div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:12px; margin-bottom:16px;">
+            <div class="tool-card"><h4 style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--ink-muted); margin-bottom:10px;">Par Statut technique</h4><div class="chart-container" style="height:180px;"><canvas id="demandes-chart-statut"></canvas></div></div>
+            <div class="tool-card"><h4 style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--ink-muted); margin-bottom:10px;">Top 10 Volumes Comptes</h4><div class="chart-container" style="height:180px;"><canvas id="demandes-chart-client"></canvas></div></div>
+            <div class="tool-card"><h4 style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--ink-muted); margin-bottom:10px;">Dispersion Satisfaction</h4><div class="chart-container" style="height:180px;"><canvas id="demandes-chart-satisfaction"></canvas></div></div>
+          </div>
+
+          <div class="tool-card">
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; background:var(--bg-subtle); padding:10px; border-radius:6px; margin-bottom:14px; align-items:end;">
+              <div><label class="form-group"><label>Filtrer Client</label><select id="demandes-filter-client" onchange="renderDemandesTable()" class="form-input" style="font-size:11px;"><option value="">Tous</option></select></label></div>
+              <div><label class="form-group"><label>Filtrer Statut</label><select id="demandes-filter-statut" onchange="renderDemandesTable()" class="form-input" style="font-size:11px;"><option value="">Tous</option></select></label></div>
+              <div><label class="form-group"><label>Filtrer Criticité</label><select id="demandes-filter-satisf" onchange="renderDemandesTable()" class="form-input" style="font-size:11px;"><option value="">Toutes</option></select></label></div>
+              <button onclick="exportDemandesToExcel()" class="btn btn-outline" style="font-size:11px; padding:8px 14px;">Exporter Excel</button>
+            </div>
+            <div style="overflow-x:auto; border:1px solid var(--border); border-radius:8px; max-height:40vh;">
+              <table style="font-size:11px; width:100%; border-collapse:collapse;">
+                <thead style="position:sticky; top:0; background:var(--surface); box-shadow:0 1px 0 var(--border); z-index:5;">
+                  <tr><th style="padding:8px 10px;">Ticket ID</th><th style="padding:8px 10px;">Date création</th><th style="padding:8px 10px;">Client</th><th style="padding:8px 10px;">Objet / Descriptif court</th><th style="padding:8px 10px;">Statut</th><th style="padding:8px 10px;">Priorité</th><th style="padding:8px 10px;">Criticité</th><th style="padding:8px 10px;">Assignation</th></tr>
+                </thead>
+                <tbody id="demandes-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="dispo-content" class="hidden">
+          <div class="tool-card mb-4">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div><h3 style="font-size:13px; font-weight:700;">📅 Charge de Staffing prévisionnelle (2 semaines glissantes)</h3><p style="font-size:11px; color:var(--ink-muted);">Saisies manuelles des allocations planifiées (1 = temps plein, 0.5 = mi-temps). Sauvegarde automatique.</p></div>
+              <button onclick="addStaffingRow()" class="btn btn-outline" style="font-size:11px; padding:6px 12px;">+ Insérer collaborateur</button>
+            </div>
+            <div style="overflow-x:auto;"><div id="staffing-calendar-container" class="staffing-grid"></div></div>
+          </div>
+          <div class="tool-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><h3 style="font-size:13px; font-weight:700;">📈 Capacité disponible calculée (Via lignes CRA en cache)</h3><span id="dispo-period-info" style="font-size:11px; font-family:var(--font-mono); background:var(--bg-subtle); padding:4px 10px; border-radius:4px;"></span></div>
+            <div style="overflow-x:auto; border:1px solid var(--border); border-radius:8px;">
+              <table style="font-size:12px; width:100%; border-collapse:collapse;">
+                <thead style="background:var(--bg-subtle);"><tr><th style="padding:10px 14px;">Nom Ressource</th><th style="padding:10px 14px; text-align:center;">Capacité théorique (j)</th><th style="padding:10px 14px; text-align:center;">Jours imputés</th><th style="padding:10px 14px; text-align:center;">Reliquat disponible</th><th style="padding:10px 14px; text-align:center;">Taux de charge global</th></tr></thead>
+                <tbody id="dispo-table-body" class="divide-y"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div></div><div id="module-fact" class="main-module">
+      <div id="fact-upload-section">
+        <div id="fact-source-manager" class="hidden mb-4">
+          <div class="tool-card" style="background: linear-gradient(135deg,rgba(94,176,145,.06),rgba(27,59,92,.04));">
+            <div style="display:flex; justify-content:between; align-items:center; flex-wrap:wrap; gap:12px;">
+              <div style="display:flex; align-items:center; gap:10px;"><div style="font-size:24px;">💶</div><div><strong style="font-size:13px;">Sources de données de facturation</strong><div style="font-size:11px; color:var(--ink-muted);"><span id="fact-source-count">0</span> fichier(s) — <span id="fact-total-records" class="font-mono">0</span> lignes en cache</div></div></div>
+              <div style="display:flex; gap:6px;"><label class="btn btn-outline" style="font-size:12px; cursor:pointer;">+ Ajouter CRA <input type="file" class="hidden" accept=".xlsx,.xls,.csv" multiple onchange="factHandleFiles(event)"></label><button onclick="factClearData()" class="btn btn-outline" style="color:var(--danger); border-color:var(--danger); font-size:12px;">Vider</button></div>
+            </div>
+            <div id="fact-source-chips" class="mt-3"></div>
+          </div>
+        </div>
+        <div id="fact-drop-zone" class="drop-zone" onclick="document.getElementById('fact-file-input').click()">
+          <div style="font-size:40px; margin-bottom:10px;">💶</div>
+          <h2 style="font-size:16px; font-weight:700; color:var(--primary); margin-bottom:4px;">Suivi analytique et génération de facturation</h2>
+          <p style="font-size:12px; color:var(--ink-secondary); margin-bottom:14px;">Déposez vos extractions d'imputations mensuelles Stafiz ici</p>
+          <div style="display:flex; justify-content:center; gap:10px;" onclick="event.stopPropagation()"><label class="btn btn-primary" style="cursor:pointer;">Parcourir les fichiers<input type="file" id="fact-file-input" class="hidden" accept=".xlsx,.xls,.csv" multiple onchange="factHandleFiles(event)"></label><button onclick="factLoadFromCRA()" class="btn btn-secondary">↩ Synchroniser les données du CRAminator</button></div>
+        </div>
+      </div>
+
+      <div id="fact-dashboard" class="hidden">
+        <div style="background:var(--surface); border:1px solid var(--border); padding:8px; border-radius:var(--radius-sm); display:flex; flex-wrap:wrap; gap:6px; margin-bottom:20px; align-items:center;">
+          <button onclick="factSwitchTab('dashboard')" id="fact-btn-dashboard" class="btn btn-primary btn-sm">📊 Synthèse</button>
+          <button onclick="factSwitchTab('clients')" id="fact-btn-clients" class="btn btn-outline btn-sm">🏢 Fiches de Clôture</button>
+          <button onclick="factSwitchTab('facturation')" id="fact-btn-facturation" class="btn btn-outline btn-sm">🧾 États de Facturation</button>
+          <div style="margin-left:auto; display:flex; gap:6px; align-items:center;"><span style="font-size:11px; color:var(--ink-muted);">Période :</span><select id="fact-filter-annee" onchange="factUpdateAll()" class="form-input" style="width:110px; font-size:11px; padding:4px 8px;"></select><select id="fact-filter-mois" onchange="factUpdateAll()" class="form-input" style="width:110px; font-size:11px; padding:4px 8px;"></select><button onclick="exportFacturateurExcel()" class="btn btn-secondary btn-sm">↓ Export Excel complet</button></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px;">
+          <div class="tool-card text-center"><div style="font-size:10px; text-transform:uppercase; color:var(--ink-muted);">CA Global Généré (HT)</div><div id="fact-kpi-ca" style="font-size:20px; font-weight:800; font-family:var(--font-mono); color:var(--primary); margin-top:4px;">—</div></div>
+          <div class="tool-card text-center"><div style="font-size:10px; text-transform:uppercase; color:var(--ink-muted);">En attente de transmission</div><div id="fact-kpi-pascal" style="font-size:20px; font-weight:800; font-family:var(--font-mono); color:#D97706; margin-top:4px;">—</div></div>
+          <div class="tool-card text-center"><div style="font-size:10px; text-transform:uppercase; color:var(--ink-muted);">Factures en attente de règlement</div><div id="fact-kpi-sent" style="font-size:20px; font-weight:800; font-family:var(--font-mono); color:#2A517A; margin-top:4px;">—</div></div>
+          <div class="tool-card text-center"><div style="font-size:10px; text-transform:uppercase; color:var(--ink-muted);">Encaissements validés (TTC)</div><div id="fact-kpi-paid" style="font-size:20px; font-weight:800; font-family:var(--font-mono); color:var(--brand-hover); margin-top:4px;">—</div></div>
+        </div>
+
+        <div id="fact-tab-dashboard">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div class="tool-card"><h3 style="font-size:12px; font-weight:700; margin-bottom:10px;">Répartition CA par Compte</h3><div class="chart-container"><canvas id="fact-chart-client"></canvas></div></div>
+            <div class="tool-card"><h3 style="font-size:12px; font-weight:700; margin-bottom:10px;">Répartition CA par Enveloppe Commande</h3><div class="chart-container"><canvas id="fact-chart-envelope"></canvas></div></div>
+          </div>
+          <div class="tool-card"><h3 style="font-size:12px; font-weight:700; margin-bottom:10px;">Série Temporelle d'Évolution mensuelle du Chiffre d'Affaires</h3><div class="chart-container" style="height:240px;"><canvas id="fact-chart-evolution"></canvas></div></div>
+        </div>
+
+        <div id="fact-tab-clients" class="hidden" style="display:grid; grid-template-columns: 280px 1fr; gap:20px;">
+          <div class="tool-card" style="max-height:75vh; display:flex; flex-direction:column;"><h3 style="font-size:12px; font-weight:700; margin-bottom:8px;">Comptes</h3><input type="text" id="fact-search-client" oninput="factRenderClientList()" placeholder="Rechercher..." class="form-input mb-3" style="font-size:11px;"><div id="fact-client-list" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:4px;"></div></div>
+          <div class="tool-card" id="fact-client-detail" style="max-height:75vh; overflow-y:auto;"><div style="text-align:center; padding:60px 20px; color:var(--ink-muted);">Sélectionnez un compte client pour éditer sa fiche d'imputation et générer ses jalons au forfait.</div></div>
+        </div>
+
+        <div id="fact-tab-facturation" class="hidden class-card" style="padding:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+            <h3 style="font-size:13px; font-weight:700; margin:0;">Grand Livre de Facturation TMA</h3>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;"><select id="fact-tbl-client" onchange="factRenderTable()" class="form-input" style="width:140px; font-size:11px; padding:4px 8px;"></select><select id="fact-tbl-mois" onchange="factRenderTable()" class="form-input" style="width:120px; font-size:11px; padding:4px 8px;"></select><select id="fact-tbl-statut" onchange="factRenderTable()" class="form-input" style="width:140px; font-size:11px; padding:4px 8px;"><option value="">Tous les statuts</option><option value="todo">À envoyer à Pascal</option><option value="sent">Facture émise</option><option value="paid">Règlement reçu</option></select></div>
+          </div>
+          <div style="overflow-x:auto; border:1px solid var(--border); border-radius:8px; max-height:55vh;">
+            <table style="font-size:11.5px; width:100%; border-collapse:collapse;">
+              <thead style="position:sticky; top:0; background:var(--bg-subtle); box-shadow:0 1px 0 var(--border); z-index:5;">
+                <tr><th style="padding:10px;">Client</th><th style="padding:10px;">Enveloppe / Jalon</th><th style="padding:10px;">Mois</th><th style="padding:10px; text-align:right;">Charge Jours</th><th style="padding:10px; text-align:right;">TJM appliqué</th><th style="padding:10px; text-align:right; color:var(--brand-hover);">Montant (HT)</th><th style="padding:10px; text-align:center;">→ Transmis</th><th style="padding:10px; text-align:center;">Émis</th><th style="padding:10px; text-align:center;">Encaissé</th></tr>
+              </thead>
+              <tbody id="fact-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div><div id="module-agr" class="main-module">
+      <div class="tool-card mb-4" style="max-width:800px; margin:0 auto;">
+        <h3 style="font-size:14px; font-weight:700; margin-bottom:6px;">01 · Source du fichier d'extraction global</h3>
+        <p style="font-size:12px; color:var(--ink-muted); margin-bottom:14px;">Déposez l'export Stafiz brut contenant tous vos comptes mélangés. L'outil va isoler et packager automatiquement un fichier Excel individuel par client.</p>
+        <div class="drop-zone" id="ag-dropzone" style="padding:30px 20px; margin-bottom:12px;">
+          <input type="file" id="ag-file-input" accept=".xlsx,.xls" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="if(this.files[0]) window.agHandleFile(this.files[0])">
+          <div style="font-size:32px; margin-bottom:6px;">🏗️</div>
+          <div style="font-weight:600; font-size:13px;">Déposer l'export global Stafiz ici</div>
+          <div style="font-size:11px; color:var(--ink-muted); margin-top:2px;">Format .xlsx uniquement</div>
+        </div>
+        <button onclick="window.agLoadFromCRA()" class="btn btn-secondary" style="width:100%; justify-content:center; font-weight:600; padding:10px;">↩ Extraire depuis les données chargées du CRAMINATOR</button>
+      </div>
+
+      <div id="ag-preview-section" class="hidden" style="max-width:800px; margin:0 auto; display:flex; flex-direction:column; gap:16px;">
+        <div class="tool-card">
+          <h3 style="font-size:13px; font-weight:700; margin-bottom:10px;">02 · Options de Filtrage &amp; Configuration d'élagage</h3>
+          <div class="form-group mb-3"><label>Filtrer spécifiquement un Mois (Optionnel)</label><select id="ag-month-select" class="form-input" onchange="window.agApplyMonthFilter()" style="max-width:240px; font-size:12px; padding:6px 10px;"></select></div>
+          <label class="form-label" style="margin-top:12px;">Sélection des colonnes à retenir dans les fichiers d'arrivée</label>
+          <div id="ag-col-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-bottom:14px;"></div>
+          <label class="form-label">Ordre des colonnes de sortie (Glisser-déposer pour réorganiser l'indexation)</label>
+          <div id="ag-col-order" style="display:flex; flex-wrap:wrap; gap:6px; padding:12px; background:var(--bg-subtle); border-radius:6px; border:1px dashed var(--border-strong);"></div>
+          <div style="display:flex; gap:6px; margin-top:12px;"><button class="btn btn-outline" style="font-size:11px; padding:5px 10px;" onclick="window.agToggleAllCols(true)">Tout cocher</button><button class="btn btn-outline" style="font-size:11px; padding:5px 10px;" onclick="window.agResetDefaultCols()">Restaurer structure Stafiz</button></div>
+        </div>
+
+        <div class="tool-card">
+          <h3 style="font-size:13px; font-weight:700; margin-bottom:10px;">03 · Comptes isolés &amp; Traitement par lots</h3>
+          <div id="ag-clients-list" style="max-height:220px; overflow-y:auto; background:var(--bg-subtle); border-radius:6px; padding:6px; margin-bottom:14px;"></div>
+          <button class="btn btn-primary" style="width:100%; padding:14px; font-size:14px; justify-content:center;" onclick="window.agExportAll()">⬇ Lancer la génération et packager les téléchargements</button>
+        </div>
+
+        <div id="ag-progress-section" class="hidden tool-card">
+          <h3 style="font-size:13px; font-weight:700;">Génération des packages de comptes en cours...</h3>
+          <div style="height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin:14px 0;"><div id="ag-prog-fill" style="height:100%; background:var(--brand); width:0%; transition:width 0.2s;"></div></div>
+          <ul id="ag-log-list" style="list-style:none; font-family:var(--font-mono); font-size:11px; max-height:150px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></ul>
+        </div>
+      </div>
+    </div></div></div><div id="demandes-statuts-modal" class="fixed inset-0 dyn-modal-overlay hidden"><div class="dyn-modal" style="width:400px;"><div class="dyn-modal-header"><div><h3>Ajustement des statuts</h3><p>Cochez 'Fermé' pour les statuts résolus</p></div><button class="dyn-modal-close" onclick="closeCraModal('demandes-statuts-modal')">×</button></div><div class="dyn-modal-body"><div id="statuts-list" style="display:flex; flex-direction:column; gap:6px;"></div><div style="display:flex; gap:6px; margin-top:12px;"><input type="text" id="new-statut-input" placeholder="Nouveau statut..." class="form-input" style="font-size:12px;"><button onclick="addCustomStatut()" class="btn btn-secondary" style="font-size:12px;">Ajouter</button></div></div><div class="dyn-modal-footer"><button onclick="closeCraModal('demandes-statuts-modal')" class="btn btn-outline btn-sm">Fermer</button><button onclick="saveCustomStatuts()" class="btn btn-primary btn-sm">Enregistrer</button></div></div></div>
+<div id="export-ppt-modal" class="fixed inset-0 dyn-modal-overlay hidden"><div class="dyn-modal" style="width:600px;"><div class="dyn-modal-header"><div><h3>Générateur PowerPoint Global</h3><p>Sélectionnez les slides et comptes à intégrer</p></div><button class="dyn-modal-close" onclick="closeCraModal('export-ppt-modal')">×</button></div><div class="dyn-modal-body" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;"><div><h4 class="form-label">1. Sliders Dashboard</h4><div style="display:flex; flex-direction:column; gap:6px;"><label><input type="checkbox" id="chk-exp-client" checked> Répartition Clients</label><label><input type="checkbox" id="chk-exp-collab" checked> Répartition Collaborateurs</label><label><input type="checkbox" id="chk-exp-task" checked> Ventilation Tâches</label><label><input type="checkbox" id="chk-exp-time" checked> Évolution Temporelle</label><label><input type="checkbox" id="chk-exp-ca" checked> Chiffre d'Affaires</label><label><input type="checkbox" id="chk-exp-qualite" checked> Qualité Saisie</label></div></div><div><h4 class="form-label">2. Comptes Fiches Client</h4><div id="export-client-list" style="max-height:180px; overflow-y:auto; background:var(--bg-subtle); padding:6px; border-radius:6px;"></div></div></div><div class="dyn-modal-footer"><span id="export-ppt-status" style="font-size:11px; color:var(--ink-muted);"></span><div style="display:flex; gap:6px;"><button onclick="closeCraModal('export-ppt-modal')" class="btn btn-outline btn-sm">Annuler</button><button id="btn-execute-export" onclick="executeCustomExport()" class="btn btn-primary btn-sm">Générer PPTX</button></div></div></div>
+<div id="filters-modal" class="fixed inset-0 dyn-modal-overlay hidden"><div class="dyn-modal" style="width:700px;"><div class="dyn-modal-header"><div><h3>Filtres d'Analyse Globaux</h3><p>Filtres hiérarchiques appliqués en cascade</p></div><button class="dyn-modal-close" onclick="closeCraModal('filters-modal')">×</button></div><div class="dyn-modal-body" style="display:flex; flex-direction:column; gap:14px; padding-bottom:80px;"><div><label class="form-label">Périodes Temporelles</label><div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;"><div><label style="font-size:10px; color:var(--ink-muted);">Années</label><select id="filter-annee" multiple></select></div><div><label style="font-size:10px; color:var(--ink-muted);">Semestres</label><select id="filter-semestre" multiple></select></div><div><label style="font-size:10px; color:var(--ink-muted);">Trimestres</label><select id="filter-trimestre" multiple></select></div><div><label style="font-size:10px; color:var(--ink-muted);">Mois</label><select id="filter-mois" multiple></select></div></div></div><div style="margin-top:10px;"><label class="form-label">Structures Opérationnelles</label><div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;"><div><label style="font-size:10px; color:var(--ink-muted);">Équipes</label><select id="filter-equipe" multiple></select></div><div><label style="font-size:10px; color:var(--ink-muted);">Clients</label><select id="filter-client" multiple></select></div><div><label style="font-size:10px; color:var(--ink-muted);">Missions</label><select id="filter-mission" multiple></select></div><div><label style="font-size:10px; color:var(--ink-muted);">Collaborateurs</label><select id="filter-collab" multiple></select></div></div></div><div style="margin-top:10px;"><label class="form-label">Fichiers Sources</label><select id="filter-source" multiple></select></div></div><div class="dyn-modal-footer"><button onclick="resetFilters()" class="btn btn-outline btn-sm" style="border:none; text-decoration:underline;">Réinitialiser</button><button onclick="closeCraModal('filters-modal')" class="btn btn-primary btn-sm">Appliquer les filtres</button></div></div></div>
+<div id="display-modal" class="fixed inset-0 dyn-modal-overlay hidden"><div class="dyn-modal" style="width:360px;"><div class="dyn-modal-header"><h3>Configuration Widgets</h3><button class="dyn-modal-close" onclick="closeCraModal('display-modal')">×</button></div><div class="dyn-modal-body" style="display:flex; flex-direction:column; gap:10px;">${[['chartsTop','Graphiques répartition'],['chartsBottom','Évolution & CA'],['alerts','Alertes & Cohérence'],['tables','Tableaux RAC & TACE'],['commentQuality','Qualité commentaires'],['ai','Assistant IA']].map(([k,l])=>`<label style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-subtle); border-radius:6px; cursor:pointer;"><span>${l}</span><input type="checkbox" id="toggle-${k}" style="width:16px; height:16px; cursor:pointer;"></label>`).join('')}</div><div class="dyn-modal-footer" style="background:transparent;"><button onclick="saveDisplayPrefs()" class="btn btn-primary btn-sm" style="width:100%; justify-content:center;">Appliquer</button></div></div></div>
+<div id="tjm-modal" class="fixed inset-0 dyn-modal-overlay hidden"><div class="dyn-modal" style="width:400px; max-height:80vh;"><div class="dyn-modal-header"><h3>Configuration des TJM par Compte</h3><button class="dyn-modal-close" onclick="closeCraModal('tjm-modal')">×</button></div><div style="padding:10px; border-bottom:1px solid var(--border);"><input type="text" id="search-tjm" onkeyup="filterModalList('search-tjm', 'tjm-list-container')" placeholder="Filtrer..." class="form-input" style="font-size:12px;"></div><div class="dyn-modal-body" id="tjm-list-container" style="overflow-y:auto;"></div><div class="dyn-modal-footer"><button onclick="closeCraModal('tjm-modal')" class="btn btn-outline btn-sm">Annuler</button><button onclick="saveTjmFromModal()" class="btn btn-primary btn-sm">Enregistrer</button></div></div></div>
+<div id="budget-modal" class="fixed inset-0 dyn-modal-overlay hidden"><div class="dyn-modal" style="width:550px; max-height:80vh;"><div class="dyn-modal-header"><h3>Gestion des Enveloppes Budgets</h3><button class="dyn-modal-close" onclick="closeCraModal('budget-modal')">×</button></div><div style="padding:10px; border-bottom:1px solid var(--border);"><input type="text" id="search-budget" onkeyup="filterModalList('search-budget', 'budget-list-container')" placeholder="Filtrer..." class="form-input" style="font-size:12px;"></div><div class="dyn-modal-body" id="budget-list-container" style="overflow-y:auto;"></div><div class="dyn-modal-footer"><button onclick="closeCraModal('budget-modal')" class="btn btn-outline btn-sm">Annuler</button><button onclick="saveBudgetFromModal()" class="btn btn-primary btn-sm">Enregistrer</button></div></div></div>
+<div id="alert-modal" class="fixed inset-0 dyn-modal-overlay hidden"><div class="dyn-modal" style="width:400px;"><div class="dyn-modal-header"><h3 id="alert-title"></h3></div><div class="dyn-modal-body" id="alert-message" style="font-size:13px; color:var(--ink-secondary); line-height:1.5;"></div><div class="dyn-modal-footer" style="background:transparent;"><button onclick="closeCraModal('alert-modal')" class="btn btn-primary btn-sm" style="width:100%; justify-content:center;">Compris</button></div></div></div>
+<div id="help-modal" class="fixed inset-0 dyn-modal-overlay hidden"><div class="dyn-modal" style="width:750px; max-height:85vh;"><div class="dyn-modal-header"><h3>Guide utilisateur &amp; Spécifications</h3><button class="dyn-modal-close" onclick="closeCraModal('help-modal')">×</button></div><div class="dyn-modal-body" style="overflow-y:auto; font-size:13px; line-height:1.6;" id="help-content"></div><div class="dyn-modal-footer" style="background:transparent;"><button onclick="closeCraModal('help-modal')" class="btn btn-primary btn-sm" style="width:100%; justify-content:center;">Fermer</button></div></div></div>
 
 <script src="assets/app.js"></script>
 <script src="assets/components.js"></script>
+
 <script>
-  // Logique de navigation interne au module
-  function showTab(tabId) {
-      document.querySelectorAll('.module-view').forEach(el => el.style.display = 'none');
-      document.getElementById('view-' + tabId).style.display = 'block';
+  // --- NAVIGATION INTER-MODULES ---
+  function showModule(modId) {
+      document.querySelectorAll('.main-module').forEach(el => el.classList.remove('active'));
+      document.getElementById('module-' + modId).classList.add('active');
+      document.querySelectorAll('.module-nav button').forEach(btn => {
+          btn.className = btn.id === 'btn-mod-' + modId ? 'btn btn-primary' : 'btn btn-outline';
+      });
+      if(modId === 'cra' && window.rawData.length > 0) updateDashboard();
+      if(modId === 'fact') factUpdateAll();
+      if(modId === 'agr' && window.agData.length > 0) window.agRenderUI();
   }
 
-  // --- COLLER ICI LA LOGIQUE JS DU CRAMINATOR, FACTURATOR ET AGREGATOR ---
-  // (Ex: function processFileQueue(), function drawCharts(), etc.)
+  // --- VARIABLES ANALYTIQUES PARTAGÉES ---
+  if(typeof window.rawData === 'undefined') window.rawData = [];
+  let rawData = window.rawData, filteredData = [];
+  let displayConfig = SafeStorage.get('cra_display') || { chartsTop: true, chartsBottom: true, alerts: true, tables: true, commentQuality: true };
+  let clientProfiles = SafeStorage.get('cra_client_profiles') || {};
+  let dataSources = SafeStorage.get('cra_data_sources') || {};
+  let clientTjm = SafeStorage.get('cra_tjm') || {};
+  let missionBudgets = SafeStorage.get('cra_budgets') || {};
+  let currentSelectedClient = null;
+  let currentWorkingDaysInPeriod = 1;
+  let tomSelectsInitialized = false;
+
+  let clientChartInstance = null, collabChartInstance = null, timeChartInstance = null, taskChartInstance = null, caChartInstance = null, commentChartInstance = null;
+  let racSort = { col: 'm', asc: true }, prodSort = { col: 'c', asc: true };
+  let currentRacData = [], currentProdData = [];
+  const sourceColors = ['source-0', 'source-1', 'source-2', 'source-3'];
+
+  // --- ENGINE ENGINE : LOGIQUE CRAMINATOR ---
+  function generateSourceId() { return 'src_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5); }
+  function openCraModal(id) { document.getElementById(id).classList.remove('hidden'); }
+  function closeCraModal(id) { document.getElementById(id).classList.add('hidden'); }
+  function showCustomAlert(t, m) { document.getElementById('alert-title').innerText = t; document.getElementById('alert-message').innerHTML = m; openCraModal('alert-modal'); }
+  function showError(msg, t="Erreur") { document.getElementById('upload-progress-container').classList.add('hidden'); showCustomAlert(t, msg); }
+
+  function rebuildRawData() {
+      rawData = [];
+      Object.values(dataSources).forEach(src => { if(src.data) rawData = rawData.concat(src.data); });
+      window.rawData = rawData;
+  }
+  function getActiveData() { return rawData.filter(d => { const mb = missionBudgets[d.mission]; return !(mb && mb.closed === true); }); }
+
+  function handleMultiFiles(e) {
+      const files = Array.from(e.target.files); if (!files.length) return;
+      document.getElementById('upload-progress-container').classList.remove('hidden');
+      processFileQueue(files, 0);
+  }
+
+  function processFileQueue(files, index) {
+      if (index >= files.length) {
+          document.getElementById('upload-progress-container').classList.add('hidden');
+          rebuildRawData(); SafeStorage.set('cra_data_sources', dataSources);
+          renderSourceChips(); showDashboard(); return;
+      }
+      const file = files[index]; setProgress(Math.round((index / files.length) * 100));
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+          try {
+              const workbook = XLSX.read(new Uint8Array(evt.target.result), {type: 'array', cellDates:true});
+              const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
+              const sourceId = generateSourceId(); const parsed = parseDataArray(json, file.name);
+              if (parsed.length > 0) { dataSources[sourceId] = { name: file.name.replace(/\.[^/.]+$/, ""), data: parsed, addedAt: Date.now() }; }
+          } catch(err) { console.error(err); }
+          processFileQueue(files, index + 1);
+      };
+      reader.readAsArrayBuffer(file);
+  }
+  function setProgress(p) { document.getElementById('upload-progress-bar').style.width = p+'%'; document.getElementById('upload-progress-text').innerText = p+'%'; }
+
+  function parseDataArray(json, sourceName) {
+      if (!json || json.length === 0) return [];
+      const getRawVal = (row, names) => { const k = Object.keys(row); for(let n of names){ const m = k.find(x => String(x).trim().toLowerCase() === n); if(m && row[m] !== undefined && row[m] !== null && row[m] !== "") return row[m]; } return null; };
+      const parseTime = (val) => { if(val === null || val === undefined || val === "") return 0; if(typeof val === 'number') return val; try { return parseFloat(String(val).replace(/\s/g, '').replace(',', '.')) || 0; } catch(e) { return 0; } };
+      
+      const parsedData = [];
+      json.forEach(row => {
+          const j1 = parseTime(getRawVal(row, ['fractions', 'fraction'])); const j2 = parseTime(getRawVal(row, ['jours', 'jour', 'temps', 'valeur', 'quantité']));
+          const j = j1 > 0 ? j1 : j2; if (j <= 0) return;
+          let jsDate = null, annee = "N/A", sem = "N/A", trim = "N/A", mois = "N/A", sort = "0000-00";
+          let rawDate = getRawVal(row, ['date', 'jour', 'date de réalisation']);
+          if (rawDate instanceof Date) { jsDate = rawDate; }
+          else if (typeof rawDate === 'number') { jsDate = new Date((new Date(1899, 11, 30)).getTime() + rawDate * 86400000); }
+          else if (typeof rawDate === 'string') {
+              if (rawDate.includes('/')) { const p = rawDate.split('/'); if(p.length>=3) jsDate = new Date(p[2].substring(0,4), parseInt(p[1])-1, p[0]); }
+              else if (rawDate.includes('-')) { jsDate = new Date(rawDate); }
+          }
+          if (jsDate && !isNaN(jsDate.getTime())) {
+              const m = jsDate.getMonth() + 1, y = jsDate.getFullYear();
+              annee = `${y}`; sem = `S${m <= 6 ? 1 : 2} ${y}`; trim = `T${Math.ceil(m / 3)} ${y}`; mois = `${String(m).padStart(2, '0')}/${y}`; sort = `${y}-${String(m).padStart(2, '0')}`;
+          }
+          parsedData.push({
+              equipe: String(getRawVal(row, ['equipe', 'team', 'équipe']) || "N/A").trim(),
+              client: String(getRawVal(row, ['client', 'project', 'projet', 'affaire', 'customer', 'compte']) || "N/A").trim(),
+              collaborateur: String(getRawVal(row, ['collaborateur', 'consultant', 'ressource', 'utilisateur', 'employee']) || "N/A").trim(),
+              mission: String(getRawVal(row, ['mission', 'enveloppe', 'lot']) || "N/A").trim(),
+              jours: j, tache: String(getRawVal(row, ['tâche', 'tache', 'task', 'activité']) || "Régie").trim(),
+              commentaire: String(getRawVal(row, ['commentaire', 'comment', 'note', 'description']) || "").trim(),
+              annee, semestre: sem, trimestre: trim, moisAnnee: mois, sortDate: sort, rawDateObj: jsDate ? jsDate.getTime() : null, _source: sourceName
+          });
+      });
+      return parsedData;
+  }
+
+  function showDashboard() {
+      document.getElementById('drop-zone').classList.add('hidden');
+      document.getElementById('dashboard-section').classList.remove('hidden');
+      initTomSelects(); syncTjmWithData(); syncBudgetsWithData(); populateFilters(); updateDashboard();
+  }
+
+  function initTomSelects() {
+      if (tomSelectsInitialized || typeof TomSelect === 'undefined') return;
+      const config = { plugins: ['remove_button'], maxItems: null, hideSelected: true, placeholder: "Tous" };
+      tsAnnee = new TomSelect('#filter-annee', config); tsSemestre = new TomSelect('#filter-semestre', config);
+      tsTrimestre = new TomSelect('#filter-trimestre', config); tsMois = new TomSelect('#filter-mois', config);
+      tsEquipe = new TomSelect('#filter-equipe', config); tsClient = new TomSelect('#filter-client', config);
+      tsMission = new TomSelect('#filter-mission', config); tsCollab = new TomSelect('#filter-collab', config);
+      tsSource = new TomSelect('#filter-source', config);
+
+      const onChange = () => { updateDashboard(); updateFilterBadge(); };
+      const onTimeChange = () => { updateTimeDropdowns(); updateOperationalDropdowns(); onChange(); };
+      tsAnnee.on('change', onTimeChange); tsSemestre.on('change', onTimeChange); tsTrimestre.on('change', onTimeChange);
+      tsMois.on('change', () => { updateOperationalDropdowns(); onChange(); });
+      tsEquipe.on('change', updateOperationalDropdowns); tsClient.on('change', updateOperationalDropdowns); tsMission.on('change', onChange); tsCollab.on('change', onChange);
+      tomSelectsInitialized = true;
+  }
+  function syncTS(tsInstance, newOptions, currentSelectedVals) { tsInstance.clearOptions(); newOptions.forEach(opt => tsInstance.addOption({value: opt, text: opt})); tsInstance.setValue(currentSelectedVals.filter(v => newOptions.includes(v)), true); }
+  
+  function updateTimeDropdowns() {
+      const vA = tsAnnee.getValue(); let dS = getActiveData(); if(vA.length > 0) dS = dS.filter(d => vA.includes(d.annee));
+      const aS = [...new Set(dS.map(d => d.semestre))].filter(v=>v!=="N/A").sort();
+      let dT = dS; const actS = tsSemestre.getValue().filter(v => aS.includes(v)); if(actS.length > 0) dT = dT.filter(d => actS.includes(d.semestre));
+      const aT = [...new Set(dT.map(d => d.trimestre))].filter(v=>v!=="N/A").sort();
+      let dM = dT; const actT = tsTrimestre.getValue().filter(v => aT.includes(v)); if(actT.length > 0) dM = dM.filter(d => actT.includes(d.trimestre));
+      const aM = [...new Set(dM.map(d => d.moisAnnee))].filter(v=>v!=="N/A").sort();
+      syncTS(tsSemestre, aS, tsSemestre.getValue()); syncTS(tsTrimestre, aT, tsTrimestre.getValue()); syncTS(tsMois, aM, tsMois.getValue());
+  }
+
+  function updateOperationalDropdowns() {
+      if(!tomSelectsInitialized) return;
+      const act = getActiveData();
+      const fA = tsAnnee.getValue(), fS = tsSemestre.getValue(), fT = tsTrimestre.getValue(), fM = tsMois.getValue(), fSrc = tsSource.getValue();
+      let base = act.filter(d => (fA.length===0||fA.includes(d.annee)) && (fS.length===0||fS.includes(d.semestre)) && (fT.length===0||fT.includes(d.trimestre)) && (fM.length===0||fM.includes(d.moisAnnee)) && (fSrc.length===0||fSrc.includes(d._source)));
+      
+      syncTS(tsEquipe, [...new Set(base.map(d => d.equipe))].sort(), tsEquipe.getValue());
+      const fE = tsEquipe.getValue(); if(fE.length > 0) base = base.filter(d => fE.includes(d.equipe));
+      
+      syncTS(tsClient, [...new Set(base.map(d => d.client))].sort(), tsClient.getValue());
+      const fC = tsClient.getValue(); if(fC.length > 0) base = base.filter(d => fC.includes(d.client));
+      
+      syncTS(tsMission, [...new Set(base.map(d => d.mission))].sort(), tsMission.getValue());
+      syncTS(tsCollab, [...new Set(base.map(d => d.collaborateur))].sort(), tsCollab.getValue());
+  }
+
+  function populateFilters() {
+      const act = getActiveData(); syncTS(tsAnnee, [...new Set(act.map(d => d.annee))].filter(v=>v!=="N/A").sort(), tsAnnee.getValue());
+      updateTimeDropdowns(); syncTS(tsSource, [...new Set(act.map(d => d._source))].sort(), tsSource.getValue()); updateOperationalDropdowns();
+  }
+  function updateFilterBadge() { const count = tsAnnee.getValue().length + tsMois.getValue().length + tsClient.getValue().length + tsCollab.getValue().length; document.getElementById('filter-badge').textContent = count; document.getElementById('filter-badge').classList.toggle('hidden', count===0); }
+  function resetFilters() { tsAnnee.clear(true); tsSemestre.clear(true); tsTrimestre.clear(true); tsMois.clear(true); tsEquipe.clear(true); tsClient.clear(true); tsMission.clear(true); tsCollab.clear(true); tsSource.clear(true); populateFilters(); updateDashboard(); updateFilterBadge(); }
+
+  function updateDashboard() {
+      const fA = tsAnnee.getValue(), fS = tsSemestre.getValue(), fT = tsTrimestre.getValue(), fM = tsMois.getValue();
+      const fE = tsEquipe.getValue(), fC = tsClient.getValue(), fMi = tsMission.getValue(), fCo = tsCollab.getValue(), fSrc = tsSource.getValue();
+      
+      const activeData = getActiveData();
+      filteredData = activeData.filter(d => 
+          (fA.length===0||fA.includes(d.annee)) && (fS.length===0||fS.includes(d.semestre)) && (fT.length===0||fT.includes(d.trimestre)) && (fM.length===0||fM.includes(d.moisAnnee)) &&
+          (fE.length===0||fE.includes(d.equipe)) && (fC.length===0||fC.includes(d.client)) && (fMi.length===0||fMi.includes(d.mission)) && (fCo.length===0||fCo.includes(d.collaborateur)) && (fSrc.length===0||fSrc.includes(d._source))
+      );
+
+      const timeDates = filteredData.map(d=>d.rawDateObj).filter(t=>t!=null);
+      currentWorkingDaysInPeriod = 20; // fallback standard
+      if(timeDates.length > 0) {
+          let minD = new Date(Math.min(...timeDates)), maxD = new Date(Math.max(...timeDates));
+          minD = new Date(minD.getFullYear(), minD.getMonth(), 1); maxD = new Date(maxD.getFullYear(), maxD.getMonth() + 1, 0);
+          let workingDays = 0; while(minD <= maxD) { if(minD.getDay()!==0 && minD.getDay()!==6) workingDays++; minD.setDate(minD.getDate()+1); }
+          currentWorkingDaysInPeriod = workingDays || 1;
+      }
+
+      document.getElementById('record-count').innerText = `${filteredData.length} lignes`;
+      const tCa = filteredData.reduce((a, r) => a + (r.jours*(clientTjm[r.client]||0)), 0);
+      const caEl = document.getElementById('total-ca'); caEl.innerText = `CA Estimé: ${tCa.toLocaleString('fr-FR')} €`; caEl.classList.toggle('hidden', tCa===0);
+
+      const agg = (k) => Object.entries(filteredData.reduce((a, r)=>{if(!a[r[k]])a[r[k]]={j:0,c:0}; a[r[k]].j+=r.jours; a[r[k]].c+=r.jours*(clientTjm[r.client]||0); return a;},{})).map(([n,v])=>({name:n,value:v.j,ca:v.c})).sort((a,b)=>b.value-a.value);
+      const bgColors = ['#19365D', '#66BB93', '#4491B6', '#2E678D', '#E9BD27', '#E75B3C'];
+
+      const drawChart = (id, data, type, horiz, isCurrency) => {
+          const ctx = document.getElementById(id).getContext('2d');
+          if(id==='clientChart' && clientChartInstance) clientChartInstance.destroy();
+          if(id==='collabChart' && collabChartInstance) collabChartInstance.destroy();
+          if(id==='caChart' && caChartInstance) caChartInstance.destroy();
+          
+          const c = new Chart(ctx, {
+              type, data: { labels: data.map(d=>d.name), datasets: [{ data: data.map(d=>isCurrency ? d.ca : d.value), backgroundColor: bgColors, borderRadius: 5 }] },
+              options: { indexAxis: horiz?'y':'x', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+          });
+          if(id==='clientChart') clientChartInstance=c; else if(id==='collabChart') collabChartInstance=c; else caChartInstance=c;
+      };
+
+      drawChart('clientChart', agg('client'), 'bar', false, false);
+      drawChart('collabChart', agg('collaborateur'), 'bar', true, false);
+      drawChart('caChart', agg('client').sort((a,b)=>b.ca-a.ca), 'bar', true, true);
+
+      if(taskChartInstance) taskChartInstance.destroy();
+      const taskData = agg('tache');
+      taskChartInstance = new Chart(document.getElementById('taskChart').getContext('2d'), {
+          type: 'doughnut', data: { labels: taskData.map(d=>d.name), datasets: [{ data: taskData.map(d=>d.value), backgroundColor: bgColors }] },
+          options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}} }
+      });
+
+      if(timeChartInstance) timeChartInstance.destroy();
+      const timeStats = {}; filteredData.forEach(r => { if(r.sortDate!=="0000-00"){ if(!timeStats[r.sortDate]) timeStats[r.sortDate]={l:r.moisAnnee, v:0}; timeStats[r.sortDate].v += r.jours; } });
+      const sortedDates = Object.keys(timeStats).sort();
+      timeChartInstance = new Chart(document.getElementById('timeChart').getContext('2d'), {
+          type: 'line', data: { labels: sortedDates.map(k=>timeStats[k].l), datasets: [{ label:'Jours consommés', data: sortedDates.map(k=>timeStats[k].v), borderColor:'#4491B6', tension:0.3, fill:true, backgroundColor:'rgba(68,145,182,0.05)' }] },
+          options: { responsive:true, maintainAspectRatio:false }
+      });
+
+      renderHeatmap(); generateTableData(); renderRacTable(); renderProdTable(); renderCommentChart();
+  }
+
+  function renderHeatmap() {
+      const container = document.getElementById('heatmap-container'); if(filteredData.length === 0) { container.innerHTML = 'Aucune donnée.'; return; }
+      const dailyData = {}; filteredData.forEach(d => { if(d.rawDateObj) { const dStr = new Date(d.rawDateObj).toISOString().split('T')[0]; dailyData[dStr] = (dailyData[dStr] || 0) + d.jours; } });
+      const maxJ = Math.max(...Object.values(dailyData), 1);
+      let html = '<div style="display:flex; flex-wrap:wrap; gap:3px;">';
+      Object.keys(dailyData).sort().forEach(dStr => {
+          const val = dailyData[dStr]; const intensity = Math.max(0.1, val / maxJ);
+          html += `<div style="width:11px; height:11px; border-radius:2px; background:rgba(94,176,145,${intensity});" title="${dStr} : ${val.toFixed(1)}j"></div>`;
+      });
+      container.innerHTML = html + '</div>';
+  }
+
+  function generateTableData() {
+      const activeData = getActiveData();
+      const gCons = activeData.reduce((a,r)=>{ if(!a[r.mission]) a[r.mission] = { j: 0, c: 0 }; a[r.mission].j += r.jours; a[r.mission].c += r.jours * (clientTjm[r.client] || 0); return a; }, {});
+      currentRacData = [...new Set(filteredData.map(d => d.mission))].map(m => {
+          const consumed = gCons[m] ? gCons[m].j : 0; const ca = gCons[m] ? gCons[m].c : 0; const allocated = missionBudgets[m] ? (missionBudgets[m].budget || 0) : 0;
+          return { m, allocated, consumed, ca, remaining: allocated - consumed, percent: allocated > 0 ? (consumed / allocated) * 100 : 0 };
+      });
+      const collabStats = filteredData.reduce((a, r) => { if(!a[r.collaborateur]) a[r.collaborateur] = 0; a[r.collaborateur] += r.jours; return a; }, {});
+      currentProdData = Object.keys(collabStats).map(c => ({ c, jours: collabStats[c], rate: (collabStats[c] / currentWorkingDaysInPeriod) * 100 }));
+  }
+
+  function renderRacTable() {
+      const tbody = document.getElementById('rac-table-body'); tbody.innerHTML = '';
+      currentRacData.forEach(d => {
+          tbody.innerHTML += `<tr><td><strong>${d.m}</strong></td><td style="text-align:right;">${d.allocated ? d.allocated.toFixed(1)+'j' : '-'}</td><td style="text-align:right;">${d.consumed.toFixed(1)}j</td><td style="text-align:right; color:var(--brand-hover); font-weight:600;">${d.ca.toLocaleString('fr-FR')} €</td><td style="text-align:right; font-weight:700; color:${d.remaining<0?'var(--danger)':'inherit'}">${d.remaining.toFixed(1)}j</td><td><div style="background:var(--border); height:6px; border-radius:3px; overflow:hidden;"><div style="width:${Math.min(d.percent,100)}%; height:100%; background:var(--brand);"></div></div></td></tr>`;
+      });
+  }
+  function renderProdTable() {
+      const tbody = document.getElementById('prod-table-body'); tbody.innerHTML = '';
+      document.getElementById('working-days-info').innerText = `${currentWorkingDaysInPeriod} jours ouvrés sur la fenêtre`;
+      currentProdData.forEach(d => {
+          tbody.innerHTML += `<tr><td><strong>${d.c}</strong></td><td style="text-align:right;">${d.jours.toFixed(1)}j</td><td style="text-align:right; font-weight:700;">${d.rate.toFixed(0)}%</td><td><div style="background:var(--border); height:6px; border-radius:3px; overflow:hidden;"><div style="width:${Math.min(d.rate,100)}%; height:100%; background:var(--primary);"></div></div></td></tr>`;
+      });
+  }
+  function renderCommentChart() {
+      if(commentChartInstance) commentChartInstance.destroy();
+      const stats = {}; filteredData.forEach(d => { if(!stats[d.collaborateur]) stats[d.collaborateur]={t:0, e:0}; stats[d.collaborateur].t++; if(!d.commentaire.trim()) stats[d.collaborateur].e++; });
+      const labels = Object.keys(stats);
+      commentChartInstance = new Chart(document.getElementById('commentChart').getContext('2d'), {
+          type:'bar', data: { labels, datasets:[{ label:'Commentaires vides', data: labels.map(k=>stats[k].e), backgroundColor:'#E75B3C' },{ label:'Renseignés', data: labels.map(k=>stats[k].t - stats[k].e), backgroundColor:'#66BB93' }] },
+          options: { responsive:true, maintainAspectRatio:false, scales:{x:{stacked:true},y:{stacked:true}} }
+      });
+  }
+
+  // --- CONFIGURATION REGROUPEMENTS FINANCIERS ---
+  function syncTjmWithData() { [...new Set(rawData.map(d=>d.client))].forEach(c=>{ if(clientTjm[c]===undefined) clientTjm[c]=0; }); SafeStorage.set('cra_tjm', clientTjm); }
+  function syncBudgetsWithData() { [...new Set(rawData.map(d=>d.mission))].forEach(m=>{ if(missionBudgets[m]===undefined) missionBudgets[m]={budget:0, closed:false}; }); SafeStorage.set('cra_budgets', missionBudgets); }
+
+  function switchCraTab(tab) {
+      ['dashboard','clients','explorer','suivi','demandes','dispo'].forEach(t => {
+          const content = document.getElementById(t + '-content'); const btn = document.getElementById('btn-tab-' + t);
+          if(content) content.classList.toggle('hidden', t !== tab);
+          if(btn) btn.className = (t === tab) ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      });
+      if(tab === 'clients') renderClientCardList();
+      if(tab === 'explorer') renderExplorerTable();
+      if(tab === 'suivi') initSuiviTab();
+      if(tab === 'demandes') initDemandesTab();
+      if(tab === 'dispo') renderDispoTable();
+  }
+
+  // --- FICHES CLIENTS ---
+  function renderClientCardList() {
+      const container = document.getElementById('client-card-list'); container.innerHTML = '';
+      const clients = [...new Set(rawData.map(d=>d.client))].sort();
+      clients.forEach(c => {
+          container.innerHTML += `<button onclick="selectClientCard('${c.replace(/'/g, "\\'")}')" class="btn ${c===currentSelectedClient?'btn-primary':'btn-outline'}" style="width:100%; text-align:left; font-size:12px;">🏢 ${c}</button>`;
+      });
+  }
+  function filterClientCards() { const term = document.getElementById('search-client-card').value.toLowerCase(); document.querySelectorAll('#client-card-list button').forEach(b => b.style.display = b.innerText.toLowerCase().includes(term)?'':'none'); }
+
+  function selectClientCard(clientName) {
+      currentSelectedClient = clientName; renderClientCardList();
+      const p = clientProfiles[clientName] || { contact:'', email:'', contrat:'', responsable:'', satisfaction:'Neutre', note:3, nps:7 };
+      const clientData = rawData.filter(d => d.client === clientName); const totalJours = clientData.reduce((s,d)=>s+d.jours,0);
+      const tjm = clientTjm[clientName] || 0;
+      
+      document.getElementById('client-card-detail').innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:start; border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:16px;">
+              <div><h2 style="font-family:'Fraunces',serif; font-size:20px; color:var(--primary);">${clientName}</h2><p style="font-size:11px; color:var(--ink-muted);">Profil d'identité commerciale en base</p></div>
+              <div style="font-size:18px; font-weight:800; color:var(--brand-hover); font-family:var(--font-mono);">${(totalJours*tjm).toLocaleString('fr-FR')} € <span style="font-size:10px; color:var(--ink-muted); font-weight:400;">CA Estimé</span></div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                  <div class="form-group"><label>Contact Client</label><input type="text" id="fiche-contact" value="${p.contact}" class="form-input" onchange="saveClientProfile('${clientName.replace(/'/g,"\\'")}')"></div>
+                  <div class="form-group"><label>Email / Tel</label><input type="text" id="fiche-email" value="${p.email}" class="form-input" onchange="saveClientProfile('${clientName.replace(/'/g,"\\'")}')"></div>
+                  <div class="form-group"><label>Référence Contrat</label><input type="text" id="fiche-contrat" value="${p.contrat}" class="form-input" onchange="saveClientProfile('${clientName.replace(/'/g,"\\'")}')"></div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                  <div class="form-group"><label>TJM Négocié (€)</label><input type="number" id="fiche-tjm" value="${tjm}" class="form-input" onchange="saveClientTjm('${clientName.replace(/'/g,"\\'")}')"></div>
+                  <div class="form-group"><label>Volume Global Affecté</label><div class="form-input" style="background:var(--bg-subtle); font-weight:700;">${totalJours.toFixed(1)} jours passés</div></div>
+                  <div class="form-group"><label>Manager de Compte</label><input type="text" id="fiche-responsable" value="${p.responsable}" class="form-input" onchange="saveClientProfile('${clientName.replace(/'/g,"\\'")}')"></div>
+              </div>
+          </div>
+      `;
+  }
+  function saveClientProfile(c) { clientProfiles[c] = { contact: document.getElementById('fiche-contact').value, email: document.getElementById('fiche-email').value, contrat: document.getElementById('fiche-contrat').value, responsable: document.getElementById('fiche-responsable').value }; SafeStorage.set('cra_client_profiles', clientProfiles); }
+  function saveClientTjm(c) { clientTjm[c] = parseFloat(document.getElementById('fiche-tjm').value) || 0; SafeStorage.set('cra_tjm', clientTjm); updateDashboard(); }
+
+  // --- EXPLORATEUR DE DONNÉES ---
+  function renderExplorerTable() {
+      const tbody = document.getElementById('explorer-table-body'); if(!tbody) return;
+      const term = document.getElementById('search-explorer').value.toLowerCase();
+      const fC = document.getElementById('explorer-filter-client').value;
+      const fM = document.getElementById('explorer-filter-mission').value;
+      const fMo = document.getElementById('explorer-filter-mois').value;
+
+      // Hydrater les filtres dynamiques au premier appel
+      if(document.getElementById('explorer-filter-client').children.length === 0) {
+          const cls = [...new Set(rawData.map(d=>d.client))].sort(); const mis = [...new Set(rawData.map(d=>d.mission))].sort(); const mos = [...new Set(rawData.map(d=>d.moisAnnee))].sort();
+          document.getElementById('explorer-filter-client').innerHTML = '<option value="">— Tous —</option>' + cls.map(c=>`<option value="${c}">${c}</option>`).join('');
+          document.getElementById('explorer-filter-mission').innerHTML = '<option value="">— Toutes —</option>' + mis.map(m=>`<option value="${m}">${m}</option>`).join('');
+          document.getElementById('explorer-filter-mois').innerHTML = '<option value="">— Tous —</option>' + mos.map(m=>`<option value="${m}">${m}</option>`).join('');
+      }
+
+      let data = filteredData;
+      if(fC) data = data.filter(d=>d.client === fC); if(fM) data = data.filter(d=>d.mission === fM); if(fMo) data = data.filter(d=>d.moisAnnee === fMo);
+      if(term) data = data.filter(d=> d.collaborateur.toLowerCase().includes(term) || d.commentaire.toLowerCase().includes(term) || d.tache.toLowerCase().includes(term));
+
+      document.getElementById('explorer-summary').innerText = `${data.length} lignes affichées — Total: ${data.reduce((a,r)=>a+r.jours,0).toFixed(1)}j`;
+      tbody.innerHTML = data.slice(0, 150).map(d => `
+          <tr style="border-bottom:1px solid var(--border-subtle);">
+              <td style="padding:8px;">${d.moisAnnee}</td><td>${d.equipe}</td><td style="font-weight:600; color:var(--primary);">${d.client}</td><td>${d.mission}</td><td>${d.collaborateur}</td><td style="text-align:center; font-weight:700;">${d.jours}</td><td><strong>${d.tache}</strong><div style="font-size:10px; color:var(--ink-muted); max-width:400px; overflow:hidden; text-overflow:ellipsis;">${d.commentaire}</div></td><td>${d._source}</td>
+          </tr>
+      `).join('');
+  }
+
+  // --- MODULE SUIVI HEBDO ---
+  let suiviComments = SafeStorage.get('cra_suivi_comments') || [];
+  function initSuiviTab() {
+      const cls = [...new Set(rawData.map(d=>d.client))].sort();
+      document.getElementById('suivi-client').innerHTML = cls.map(c=>`<option value="${c}">${c}</option>`).join('');
+      document.getElementById('suivi-hist-client').innerHTML = '<option value="">Tous les comptes</option>' + cls.map(c=>`<option value="${c}">${c}</option>`).join('');
+      document.getElementById('suivi-auteur').value = localStorage.getItem('cyrias_username') || "Compagnon";
+      renderSuiviHistory();
+  }
+  function addSuiviComment() {
+      const c = { client: document.getElementById('suivi-client').value, semaine: document.getElementById('suivi-semaine').value, categorie: document.getElementById('suivi-categorie').value, participants: document.getElementById('suivi-participants').value, enveloppes: document.getElementById('suivi-enveloppes').value, sujets: document.getElementById('suivi-sujets').value, attention: document.getElementById('suivi-attention').value, auteur: document.getElementById('suivi-auteur').value, createdAt: new Date().toISOString(), id: Date.now() };
+      if(!c.semaine || !c.sujets) return alert("Veuillez renseigner au moins la semaine et l'avancement !");
+      suiviComments.unshift(c); SafeStorage.set('cra_suivi_comments', suiviComments); initSuiviTab();
+  }
+  function renderSuiviHistory() {
+      const container = document.getElementById('suivi-history-list'); container.innerHTML = '';
+      const fC = document.getElementById('suivi-hist-client').value;
+      let data = suiviComments; if(fC) data = data.filter(x=>x.client === fC);
+      
+      if(!data.length) { container.innerHTML = '<div style="text-align:center; color:var(--ink-muted); padding:30px;">Aucune note enregistrée.</div>'; return; }
+      container.innerHTML = data.map(c => `
+          <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-weight:700; color:var(--primary);">${c.client} — Semaine : ${c.semaine}</span><span style="font-size:10px; padding:2px 6px; background:var(--surface); border-radius:4px; font-weight:700;">${c.categorie}</span></div>
+              <div style="font-size:12px; color:var(--ink-secondary); margin-bottom:6px;"><strong>Sujets :</strong> ${escapeHtml(c.sujets)}</div>
+              ${c.attention ? `<div style="font-size:12px; color:var(--danger); font-weight:500;">⚠️ <strong>Attention :</strong> ${escapeHtml(c.attention)}</div>` : ''}
+              <div style="font-size:10px; color:var(--ink-muted); text-align:right; margin-top:4px;">Par ${c.auteur} le ${new Date(c.createdAt).toLocaleDateString()}</div>
+          </div>
+      `).join('');
+  }
+  function resyncSuiviFromCRA() { initSuiviTab(); }
+
+  // --- MODULE DEMANDES ---
+  let demandesData = SafeStorage.get('cra_demandes') || [];
+  let demandesStatuts = SafeStorage.get('cra_demandes_statuts') || [{name:'Nouveau', closed:false, color:'#7ec8e3'}, {name:'En cours', closed:false, color:'#f0d46a'}, {name:'Fermé', closed:true, color:'#64748b'}];
+  function initDemandesTab() { populateDemandesFilters(); renderDemandesTable(); }
+  function populateDemandesFilters() {
+      const cls = [...new Set(demandesData.map(d=>d.client))].sort();
+      document.getElementById('demandes-filter-client').innerHTML = '<option value="">Tous</option>' + cls.map(c=>`<option value="${c}">${c}</option>`).join('');
+  }
+  function renderDemandesTable() {
+      const tbody = document.getElementById('demandes-table-body'); if(!tbody) return;
+      const fC = document.getElementById('demandes-filter-client').value;
+      let data = demandesData; if(fC) data = data.filter(d=>d.client === fC);
+      
+      document.getElementById('kpi-total').innerText = data.length;
+      tbody.innerHTML = data.slice(0, 100).map(d => `
+          <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:6px 10px; font-family:var(--font-mono);">${d.id}</td><td style="padding:6px 10px;">${d.date ? new Date(d.date).toLocaleDateString():'—'}</td><td style="font-weight:600; color:var(--primary);">${d.client}</td><td>${escapeHtml(d.objet)}</td><td><span style="font-size:10px; padding:2px 6px; background:var(--bg-subtle); border-radius:4px;">${d.statut}</span></td><td>${d.priorite}</td><td>${d.severite}</td><td>${d.assigneA}</td></tr>
+      `).join('');
+  }
+  function handleDemandesImport(e) {
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+          const workbook = XLSX.read(new Uint8Array(evt.target.result), {type:'array'});
+          const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {defval:""});
+          demandesData = json.map((row, i) => ({ id: row['ID'] || `TK-${i}`, date: row['Created']||row['Date'], client: row['Project']||row['Client']||"N/A", objet: row['Short description']||row['Objet']||"Sans titre", statut: row['Resolution']||row['Statut']||"Nouveau", priorite: row['Priority']||"P3", severite: row['Severity']||"Minor", assigneA: row['Assigned to']||"" }));
+          SafeStorage.set('cra_demandes', demandesData); initDemandesTab();
+      };
+      reader.readAsArrayBuffer(file);
+  }
+
+  // --- MODULE DISPONIBILITÉS ---
+  let manualStaffing = SafeStorage.get('cra_manual_staffing') || {};
+  function getStaffingDates() {
+      const dates = []; const now = new Date(); let day = now.getDay(); if(day===0) day=7;
+      const monday = new Date(now); monday.setDate(now.getDate() - day + 1);
+      for(let i=0; i<10; i++) {
+          const d = new Date(monday); d.setDate(monday.getDate()+i + (i>=5?2:0)); // sauter le weekend
+          dates.push({ iso: d.toISOString().split('T')[0], label: d.toLocaleDateString('fr-FR', {weekday:'short', day:'2-digit'}) });
+      }
+      return dates;
+  }
+  function renderStaffingCalendar() {
+      const container = document.getElementById('staffing-calendar-container'); if(!container) return;
+      const dates = getStaffingDates();
+      let html = `<div class="staffing-cell staffing-header">Collaborateur</div>` + dates.map(d=>`<div class="staffing-cell staffing-header">${d.label}</div>`).join('');
+      const collabs = [...new Set([...rawData.map(d=>d.collaborateur), ...Object.keys(manualStaffing)])].filter(n=>n && n!=="N/A").sort();
+      
+      collabs.forEach(name => {
+          html += `<div class="staffing-cell staffing-name">${name}</div>`;
+          dates.forEach(d => {
+              const val = (manualStaffing[name] && manualStaffing[name][d.iso]) || "";
+              html += `<div class="staffing-cell"><input type="text" class="staffing-input" value="${val}" onchange="saveStaffingValue('${name.replace(/'/g,"\\'")}', '${d.iso}', this.value)"></div>`;
+          });
+      });
+      container.innerHTML = html;
+  }
+  function saveStaffingValue(n, date, val) { if(!manualStaffing[n]) manualStaffing[n]={}; manualStaffing[n][date]=val.trim(); SafeStorage.set('cra_manual_staffing', manualStaffing); }
+  function addStaffingRow() { const n = prompt("Nom du collaborateur :"); if(n){ manualStaffing[n]={}; renderStaffingCalendar(); } }
+  function renderDispoTable() { renderStaffingCalendar(); }
+
+  // =========================================================================
+  // LOGIQUE MODULE 2 : FACTURATOR
+  // =========================================================================
+  let factDataSources = SafeStorage.get('fact_data_sources') || {}; let factData = []; let factFilteredData = [];
+  let factStatuts = SafeStorage.get('fact_statuts') || {}; let factTjm = SafeStorage.get('fact_tjm') || {}; let factEcheances = SafeStorage.get('fact_echeances') || [];
+  let factCurrentClient = null;
+
+  function factLoadFromCRA() {
+      factDataSources = { 'cra_shared': { name: 'CRAminator Sync', data: rawData, addedAt: Date.now() } };
+      SafeStorage.set('fact_data_sources', factDataSources); factRebuildData();
+  }
+  function factRebuildData() {
+      factData = []; Object.values(factDataSources).forEach(src => { if(src.data) factData = factData.concat(src.data); });
+      if(factData.length > 0) {
+          document.getElementById('fact-drop-zone').classList.add('hidden'); document.getElementById('fact-dashboard').classList.remove('hidden');
+          factPopulateFilters(); factFilteredData = factGetFiltered(); factUpdateKPIs(); factRenderTable(); factRenderClientList(); factDrawCharts();
+      }
+  }
+  function factPopulateFilters() {
+      const ans = [...new Set(factData.map(d=>d.annee))].sort(); const mos = [...new Set(factData.map(d=>d.moisAnnee))].sort();
+      document.getElementById('fact-filter-annee').innerHTML = ans.map(a=>`<option value="${a}">${a}</option>`).join('');
+      document.getElementById('fact-filter-mois').innerHTML = '<option value="">Tous</option>' + mos.map(m=>`<option value="${m}">${m}</option>`).join('');
+      document.getElementById('fact-tbl-client').innerHTML = '<option value="">Tous les comptes</option>' + [...new Set(factData.map(d=>d.client))].sort().map(c=>`<option value="${c}">${c}</option>`).join('');
+      document.getElementById('fact-tbl-mois').innerHTML = '<option value="">Tous les mois</option>' + mos.map(m=>`<option value="${m}">${m}</option>`).join('');
+  }
+  function factGetFiltered() {
+      const fA = document.getElementById('fact-filter-annee').value, fM = document.getElementById('fact-filter-mois').value;
+      return factData.filter(d => d.annee === fA && (!fM || d.moisAnnee === fM));
+  }
+  function factAggregate(data) {
+      const map = {}; data.forEach(d => { const k = d.client+'||'+d.mission+'||'+d.moisAnnee; if(!map[k]) map[k]={client:d.client, mission:d.mission, moisAnnee:d.moisAnnee, jours:0}; map[k].jours += d.jours; });
+      return Object.values(map);
+  }
+  function factUpdateAll() { factFilteredData = factGetFiltered(); factUpdateKPIs(); factRenderTable(); factRenderClientList(); factDrawCharts(); }
+  
+  function factUpdateKPIs() {
+      let ca = 0; factAggregate(factFilteredData).forEach(r => { ca += r.jours * (factTjm[r.client]||clientTjm[r.client]||0); });
+      document.getElementById('fact-kpi-ca').innerText = ca.toLocaleString('fr-FR') + ' € HT';
+  }
+  function factRenderTable() {
+      const tbody = document.getElementById('fact-table-body'); tbody.innerHTML = '';
+      const fC = document.getElementById('fact-tbl-client').value, fM = document.getElementById('fact-tbl-mois').value;
+      let data = factAggregate(factFilteredData);
+      if(fC) data = data.filter(r=>r.client === fC); if(fM) data = data.filter(r=>r.moisAnnee === fM);
+      
+      data.forEach(r => {
+          const tjm = factTjm[r.client]||clientTjm[r.client]||0;
+          tbody.innerHTML += `<tr style="border-bottom:1px solid var(--border-subtle);">
+              <td style="padding:10px;"><strong>${r.client}</strong></td><td>${r.mission}</td><td>${r.moisAnnee}</td><td style="text-align:right;">${r.jours.toFixed(1)}j</td><td style="text-align:right;">${tjm} €</td><td style="text-align:right; font-weight:700; color:var(--brand-hover);">${(r.jours*tjm).toLocaleString('fr-FR')} €</td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox"></td>
+          </tr>`;
+      });
+  }
+  function factSwitchTab(tab) {
+      ['dashboard', 'clients', 'facturation'].forEach(t => { document.getElementById('fact-tab-' + t).classList.toggle('hidden', t !== tab); });
+  }
+  function factRenderClientList() {
+      const container = document.getElementById('fact-client-list'); container.innerHTML = '';
+      [...new Set(factFilteredData.map(d=>d.client))].sort().forEach(c => {
+          container.innerHTML += `<button onclick="factSelectClient('${c.replace(/'/g,"\\'")}')" class="btn btn-outline" style="width:100%; text-align:left; font-size:11px;">🏢 ${c}</button>`;
+      });
+  }
+  function factSelectClient(name) {
+      factCurrentClient = name; const tjm = factTjm[name]||clientTjm[name]||0;
+      document.getElementById('fact-client-detail').innerHTML = `<h3 style="font-family:'Fraunces',serif; font-size:18px; margin-bottom:12px;">Fiche de clôture : ${name}</h3><div class="form-group"><label>TJM spécifique (€)</label><input type="number" id="fact-tjm-val" value="${tjm}" class="form-input" style="max-width:150px;" onchange="factTjm['${name.replace(/'/g,"\\\'")}']=parseFloat(this.value);SafeStorage.set('fact_tjm',factTjm);factUpdateAll();"></div>`;
+  }
+  function factDrawCharts() {
+      const ctxC = document.getElementById('fact-chart-client').getContext('2d'); if(factChartClient) factChartClient.destroy();
+      const clientAgg = {}; factAggregate(factFilteredData).forEach(r => { clientAgg[r.client] = (clientAgg[r.client]||0) + (r.jours*(factTjm[r.client]||clientTjm[r.client]||0)); });
+      factChartClient = new Chart(ctxC, { type:'bar', data: { labels: Object.keys(clientAgg), datasets:[{ data: Object.values(clientAgg), backgroundColor:'#4491B6' }] }, options:{responsive:true, maintainAspectRatio:false} });
+  }
+
+  // =========================================================================
+  // LOGIQUE MODULE 3 : STAFIZ AGREGATOR (SPLITTER COUPE-FLUX)
+  // =========================================================================
+  window.agData = []; window.agHeaders = []; window.agClientGroups = {}; window.agSelectedCols = new Set(); window.agColOrder = [];
+  const AG_DEFAULT_KEEP = ['Collaborateur','Nom de la mission','Tâche','Date','Commentaire','Fractions'];
+
+  window.agHandleFile = function(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+          const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
+          const ws = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false, dateNF: 'DD/MM/YYYY' });
+          if (!rows.length) return; window.agHeaders = Object.keys(rows[0]); window.agData = rows;
+          window.agSelectedCols = new Set(window.agHeaders.filter(h => AG_DEFAULT_KEEP.includes(h)));
+          window.agApplyMonthFilter();
+      };
+      reader.readAsArrayBuffer(file);
+  };
+  window.agLoadFromCRA = function() {
+      if(!rawData.length) return alert("CRAminator vide !");
+      window.agHeaders = ['Collaborateur', 'Client', 'Nom de la mission', 'Tâche', 'Date', 'Commentaire', 'Fractions'];
+      window.agData = rawData.map(d=>({ 'Collaborateur':d.collaborateur, 'Client':d.client, 'Nom de la mission':d.mission, 'Tâche':d.tache, 'Date':d.moisAnnee, 'Commentaire':d.commentaire, 'Fractions':d.jours }));
+      window.agSelectedCols = new Set(window.agHeaders); window.agApplyMonthFilter();
+  };
+  window.agApplyMonthFilter = function() {
+      window.agClientGroups = {};
+      window.agData.forEach(r => {
+          const cKey = String(r['Client'] || r['client'] || Object.values(r)[3] || 'Inconnu').trim();
+          if (!window.agClientGroups[cKey]) window.agClientGroups[cKey] = []; window.agClientGroups[cKey].push(r);
+      });
+      window.agRenderUI();
+  };
+  window.agRenderUI = function() {
+      document.getElementById('ag-preview-section').classList.remove('hidden');
+      document.getElementById('ag-clients-list').innerHTML = Object.keys(window.agClientGroups).sort().map(c => `<div style="padding:6px; font-size:12px; border-bottom:1px solid var(--border-subtle);">🏢 <strong>${c}</strong> — ${window.agClientGroups[c].length} ligne(s)</div>`).join('');
+  };
+  window.agExportAll = async function() {
+      document.getElementById('ag-progress-section').classList.remove('hidden');
+      const list = Object.keys(window.agClientGroups);
+      for(let i=0; i<list.length; i++) {
+          const name = list[i]; document.getElementById('ag-prog-fill').style.width = `${((i+1)/list.length)*100}%`;
+          const rows = window.agClientGroups[name]; const ws = XLSX.utils.json_to_sheet(rows);
+          const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'CRA');
+          XLSX.writeFile(wb, `CRA_${name.replace(/[^a-zA-Z0-9]/g,'_')}.xlsx`);
+          document.getElementById('ag-log-list').innerHTML += `<li>✓ Package exporté avec succès pour : ${name}</li>`;
+          await new Promise(r => setTimeout(r, 200));
+      }
+  };
+
+  // --- ENGINE ENGINE : ASSISTANT IA DÉPORTE ---
+  async function generateAIAnalysis() {
+      const key = localStorage.getItem('cyrias_gemini_key') || '';
+      if(!key) return alert("Clé API Gemini absente de la page Configuration.");
+      
+      document.getElementById('ai-loading').classList.remove('hidden');
+      try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: [{ text: `Génère une synthèse managériale en français pour cette volumétrie : ${filteredData.length} lignes d'imputations, représentant ${filteredData.reduce((a,r)=>a+r.jours,0).toFixed(1)} jours prestés. Liste les dérives potentielles.` }] }] })
+          });
+          const json = await res.json(); const txt = json.candidates[0].content.parts[0].text;
+          document.getElementById('ai-result-container').classList.remove('hidden');
+          document.getElementById('ai-result-container').innerHTML = txt.replace(/\n/g, '<br>');
+      } catch(e) { document.getElementById('ai-error').innerText = "Erreur communication API: " + e.message; }
+      finally { document.getElementById('ai-loading').classList.add('hidden'); }
+  }
+
+  // --- INITIALISATIONS SUR CHARGEMENT ---
+  window.addEventListener('load', () => {
+      if(Object.keys(dataSources).length > 0) showDashboard();
+      factInit();
+  });
+  function factInit() { if(Object.keys(factDataSources).length > 0) factRebuildData(); }
 </script>
 
 </body>

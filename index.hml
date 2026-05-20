@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyrias Buddy — Accueil</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="app">
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1>Bonjour, bienvenue sur Cyrias Buddy 👋</h1>
+      <p id="home-date"></p>
+    </div>
+    
+    <div style="padding: 40px;">
+      <h3 class="section-title" style="padding: 0; margin-top: 0;">Vos indicateurs rapides</h3>
+      <div style="display: flex; gap: 16px;">
+          <div class="tool-card" style="flex: 1;">
+              <h4>Tâches en attente</h4>
+              <div style="font-size: 32px; font-weight: bold; color: var(--primary); margin-top: 10px;">0</div>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script src="assets/components.js"></script>
+<script>
+  // Logique spécifique à l'accueil
+  document.getElementById('home-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+</script>
+
+</body>
+</html>

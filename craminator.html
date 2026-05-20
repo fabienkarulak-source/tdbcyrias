@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Cyrias Buddy — Pilotage & Data</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="app">
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1>📊 Pilotage & Data</h1>
+      <p>CRAminator, Facturator et Stafiz Agregator regroupés.</p>
+    </div>
+    
+    <div style="padding: 40px;">
+        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <button class="btn btn-primary" onclick="showTab('cra')">CRAminator</button>
+            <button class="btn btn-outline" onclick="showTab('fact')">Facturator</button>
+            <button class="btn btn-outline" onclick="showTab('agr')">Agregator</button>
+        </div>
+
+        <div id="view-cra" class="module-view">
+            <h2>CRAminator</h2>
+            </div>
+
+        <div id="view-fact" class="module-view" style="display: none;">
+            <h2>Facturator</h2>
+            </div>
+        
+        <div id="view-agr" class="module-view" style="display: none;">
+            <h2>Stafiz Agregator</h2>
+            </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script src="assets/components.js"></script>
+<script>
+  // Logique de navigation interne au module
+  function showTab(tabId) {
+      document.querySelectorAll('.module-view').forEach(el => el.style.display = 'none');
+      document.getElementById('view-' + tabId).style.display = 'block';
+  }
+
+  // --- COLLER ICI LA LOGIQUE JS DU CRAMINATOR, FACTURATOR ET AGREGATOR ---
+  // (Ex: function processFileQueue(), function drawCharts(), etc.)
+</script>
+
+</body>
+</html>

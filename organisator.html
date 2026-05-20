@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyrias Buddy — Organisator & Kanban</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="assets/style.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* --- CSS Spécifique au module --- */
+    .module-nav { display: flex; gap: 12px; margin-bottom: 24px; }
+    .org-container { display: grid; grid-template-columns: 350px 1fr; gap: 24px; }
+    @media (max-width: 900px) { .org-container { grid-template-columns: 1fr; } }
+    
+    /* Timer & Stats */
+    .pomodoro-card { background: linear-gradient(135deg, var(--primary) 0%, var(--brand) 100%); color: white; padding: 28px; border-radius: var(--radius-md); box-shadow: var(--elev-2); }
+    #timerDisplay { font-size: 4rem; font-weight: 800; text-align: center; margin: 20px 0; font-family: var(--font-mono); }
+    .timer-buttons { display: flex; gap: 8px; margin-bottom: 16px; }
+    .timer-buttons button { flex: 1; padding: 10px; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .timer-buttons button:hover { background: rgba(255,255,255,0.3); }
+    
+    /* Tâches */
+    .task-item { background: var(--bg); padding: 14px; border-radius: var(--radius-sm); margin-bottom: 10px; display: flex; align-items: center; gap: 12px; border-left: 4px solid var(--border); transition: 0.2s; }
+    .task-urgent { border-left-color: var(--danger); }
+    .task-moyen { border-left-color: var(--warn); }
+    .task-bas { border-left-color: var(--ok); }
+    .task-item.done { opacity: 0.5; }
+    .task-item.done .task-text { text-decoration: line-through; }
+    .task-checkbox { width: 20px; height: 20px; cursor: pointer; flex-shrink: 0; }
+    .task-content { flex: 1; }
+    .task-text { font-weight: 600; font-size: 14px; color: var(--ink); }
+    .task-meta { font-size: 12px; color: var(--ink-muted); margin-top: 4px; }
+    .task-delete { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; flex-shrink: 0; }
+    
+    /* Kanban Board */
+    .kanban-board { display: flex; gap: 14px; overflow-x: auto; min-height: 600px; padding-top: 10px; }
+    .kanban-column { flex: 1; min-width: 270px; background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; display: flex; flex-direction: column; }
+    .kanban-col-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; margin-bottom: 10px; border-bottom: 2px solid var(--col-accent, var(--brand)); font-weight: 700; color: var(--ink); }
+    .kanban-count { background: var(--col-accent, var(--brand)); color: white; padding: 2px 8px; border-radius: 99px; font-size: 11px; }
+    .kanban-dropzone { flex: 1; min-height: 400px; display: flex; flex-direction: column; gap: 8px; }
+    .kanban-dropzone-active { background: var(--brand-soft); border-radius: var(--radius-sm); }
+    
+    .kanban-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--ink-muted); border-radius: var(--radius-sm); padding: 12px; cursor: grab; box-shadow: var(--elev-1); transition: 0.2s; }
+    .kanban-card:hover { transform: translateY(-2px); box-shadow: var(--elev-2); border-color: var(--brand); }
+    .kanban-card-title { font-weight: 600; font-size: 13px; margin: 6px 0; color: var(--ink); line-height: 1.4; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div class="page-header">
+      <h1>📅 Productivité & Suivi</h1>
+      <p>Organisez vos journées, suivez vos temps et pilotez vos tickets.</p>
+    </div>
+    
+    <div style="padding: 40px;">
+      <div class="module-nav">
+        <button id="btn-tab-org" class="btn btn-primary" onclick="showTab('org')">✓ Mes Tâches & Timer</button>
+        <button id="btn-tab-kanban" class="btn btn-outline" onclick="showTab('kanban')">📋 Kanban Board</button>
+      </div>
+
+      <div id="view-org" class="org-container">
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          
+          <div class="pomodoro-card">
+            <h3>⏱️ Focus Timer</h3>
+            <div id="timerDisplay">25:00</div>
+            <div class="timer-buttons">
+              <button onclick="startTimer()">Démarrer</button>
+              <button onclick="pauseTimer()">Pause</button>
+              <button onclick="resetTimer()">Reset</button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-outline" style="flex: 1; border: none; background: rgba(255,255,255,0.2); color: white;" onclick="setTimer(10)">10m</button>
+              <button class="btn btn-outline" style="flex: 1; border: none; background: rgba(255,255,255,0.2); color: white;" onclick="setTimer(25)">25m</button>
+              <button class="btn btn-outline" style="flex: 1; border: none; background: rgba(255,255,255,0.2); color: white;" onclick="setTimer(50)">50m</button>
+            </div>
+          </div>
+
+          <div class="tool-card">
+            <h3 style="margin-bottom: 16px; color: var(--primary);">📝 Nouvelle Tâche</h3>
+            <div class="form-group">
+              <label>Titre</label>
+              <input type="text" id="taskInput" class="form-input" placeholder="Que devez-vous faire ?">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+              <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="dateInput" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>Priorité</label>
+                <select id="priorityInput" class="form-input">
+                  <option value="urgent">🔴 Urgent</option>
+                  <option value="moyen" selected>🟡 Moyen</option>
+                  <option value="bas">🟢 Bas</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="addTask()" style="width: 100%; margin-top: 16px;">Ajouter</button>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          <div class="tool-card">
+            <h3 style="margin-bottom: 16px; color: var(--primary);">📊 Performance (7 derniers jours)</h3>
+            <div style="height: 200px;"><canvas id="perfChart"></canvas></div>
+          </div>
+
+          <div class="tool-card" style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+              <h3 style="color: var(--primary); margin: 0;">📋 Ma Liste</h3>
+              <span id="task-stats" style="font-size: 12px; color: var(--ink-muted); font-weight: 600;">0 terminées / 0</span>
+            </div>
+            <div id="taskList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-kanban" style="display: none;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+            <input type="text" id="kanban-filter" class="form-input" placeholder="🔍 Rechercher un ticket..." style="max-width: 300px;" oninput="renderKanban()">
+            <button class="btn btn-primary" onclick="kanbanOpenTicketForm()">+ Nouveau ticket</button>
+        </div>
+
+        <div class="kanban-board" id="kanban-board">
+            </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script src="assets/components.js"></script>
+
+<script>
+  // ==========================================
+  // LOGIQUE DE NAVIGATION INTERNE
+  // ==========================================
+  function showTab(tabId) {
+      document.getElementById('view-org').style.display = tabId === 'org' ? 'grid' : 'none';
+      document.getElementById('view-kanban').style.display = tabId === 'kanban' ? 'block' : 'none';
+      
+      document.getElementById('btn-tab-org').className = tabId === 'org' ? 'btn btn-primary' : 'btn btn-outline';
+      document.getElementById('btn-tab-kanban').className = tabId === 'kanban' ? 'btn btn-primary' : 'btn btn-outline';
+
+      if (tabId === 'kanban') renderKanban();
+  }
+
+  // ==========================================
+  // LOGIQUE ORGANISATOR (Timer + Tâches)
+  // ==========================================
+  let orgTasks = JSON.parse(localStorage.getItem('cyrias_tasks')) || [];
+  let orgChart = null;
+  let orgTimer = null;
+  let timeLeft = 1500; // 25 min par défaut
+  let isTimerRunning = false;
+
+  // --- Timer ---
+  function setTimer(minutes) {
+    clearInterval(orgTimer);
+    timeLeft = minutes * 60;
+    isTimerRunning = false;
+    updateTimerDisplay();
+  }
+
+  function startTimer() {
+    if (isTimerRunning) return;
+    isTimerRunning = true;
+    orgTimer = setInterval(() => {
+        if (timeLeft <= 0) {
+            clearInterval(orgTimer);
+            isTimerRunning = false;
+            alert("🍅 Focus terminé ! C'est l'heure de la pause.");
+            return;
+        }
+        timeLeft--;
+        updateTimerDisplay();
+    }, 1000);
+  }
+
+  function pauseTimer() { clearInterval(orgTimer); isTimerRunning = false; }
+  function resetTimer() { setTimer(25); }
+
+  function updateTimerDisplay() {
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    document.getElementById('timerDisplay').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  // --- Tâches ---
+  function addTask() {
+    const text = document.getElementById('taskInput').value.trim();
+    const date = document.getElementById('dateInput').value;
+    const priority = document.getElementById('priorityInput').value;
+    
+    if(!text) { alert('Veuillez remplir le titre.'); return; }
+    
+    orgTasks.push({ id: Date.now(), text, date: date || new Date().toISOString().split('T')[0], priority, done: false, completedAt: null });
+    saveOrgTasks();
+    
+    document.getElementById('taskInput').value = '';
+    renderOrgTasks();
+  }
+
+  function toggleTask(id) {
+    const task = orgTasks.find(t => t.id === id);
+    if(task) {
+        task.done = !task.done;
+        task.completedAt = task.done ? new Date().toISOString().split('T')[0] : null;
+        if(task.done && typeof confetti === 'function') confetti({spread: 70});
+        saveOrgTasks();
+        renderOrgTasks();
+        updateOrgChart();
+    }
+  }
+
+  function deleteTask(id) {
+    orgTasks = orgTasks.filter(t => t.id !== id);
+    saveOrgTasks();
+    renderOrgTasks();
+  }
+
+  function saveOrgTasks() { localStorage.setItem('cyrias_tasks', JSON.stringify(orgTasks)); }
+
+  function renderOrgTasks() {
+    const container = document.getElementById('taskList');
+    container.innerHTML = '';
+    
+    let doneCount = 0;
+    orgTasks.sort((a,b) => a.done - b.done).forEach(task => {
+        if (task.done) doneCount++;
+        const el = document.createElement('div');
+        el.className = `task-item task-${task.priority} ${task.done ? 'done' : ''}`;
+        el.innerHTML = `
+            <input type="checkbox" class="task-checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${task.id})">
+            <div class="task-content">
+                <div class="task-text">${escapeHtml(task.text)}</div>
+                <div class="task-meta">📅 ${task.date}</div>
+            </div>
+            <button class="task-delete" onclick="deleteTask(${task.id})">🗑️</button>
+        `;
+        container.appendChild(el);
+    });
+
+    document.getElementById('task-stats').textContent = `${doneCount} terminées / ${orgTasks.length}`;
+  }
+
+  // --- Graphique ---
+  function initOrgChart() {
+    const ctx = document.getElementById('perfChart').getContext('2d');
+    orgChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Tâches terminées', data: [], borderColor: '#5EB091', backgroundColor: 'rgba(94, 176, 145, 0.1)', fill: true, tension: 0.4 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+    updateOrgChart();
+  }
+
+  function updateOrgChart() {
+    if(!orgChart) return;
+    const days = [];
+    for(let i = 6; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        days.push(d.toISOString().split('T')[0]);
+    }
+    const counts = days.map(day => orgTasks.filter(t => t.done && t.completedAt === day).length);
+    orgChart.data.labels = days.map(d => d.split('-')[2] + '/' + d.split('-')[1]);
+    orgChart.data.datasets[0].data = counts;
+    orgChart.update();
+  }
+
+
+  // ==========================================
+  // LOGIQUE KANBAN BOARD
+  // ==========================================
+  const KANBAN_COLS = [
+    { id: 'qualif', label: '📥 À qualifier', color: '#94a3b8' },
+    { id: 'dev', label: '⚙️ En développement', color: '#3B82F6' },
+    { id: 'uat', label: '🧪 UAT (Recette)', color: '#F59E0B' },
+    { id: 'mep', label: '🚀 Prêt pour MEP', color: '#5EB091' },
+    { id: 'closed', label: '✅ Clôturé', color: '#CBD5E1' }
+  ];
+
+  function getKanbanTickets() {
+      return JSON.parse(localStorage.getItem('cyrias_kanban_tickets') || '[]');
+  }
+
+  function saveKanbanTickets(data) {
+      localStorage.setItem('cyrias_kanban_tickets', JSON.stringify(data));
+  }
+
+  function renderKanban() {
+      const board = document.getElementById('kanban-board');
+      board.innerHTML = '';
+      
+      const tickets = getKanbanTickets();
+      const filter = document.getElementById('kanban-filter').value.toLowerCase();
+
+      KANBAN_COLS.forEach(col => {
+          // Création de la colonne
+          const colEl = document.createElement('div');
+          colEl.className = 'kanban-column';
+          
+          const colTickets = tickets.filter(t => t.statut === col.id && (t.titre.toLowerCase().includes(filter) || t.client.toLowerCase().includes(filter)));
+          
+          colEl.innerHTML = `
+              <div class="kanban-col-header" style="--col-accent: ${col.color}">
+                  <span>${col.label}</span>
+                  <span class="kanban-count">${colTickets.length}</span>
+              </div>
+              <div class="kanban-dropzone" data-status="${col.id}" ondragover="allowDrop(event)" ondrop="drop(event)">
+                  ${colTickets.map(t => `
+                      <div class="kanban-card" draggable="true" ondragstart="drag(event, '${t.id}')" onclick="kanbanOpenTicketForm('${t.id}')">
+                          <div style="font-size: 10px; color: var(--ink-muted); display: flex; justify-content: space-between;">
+                              <span>#${t.id.slice(-4)}</span><span>🏢 ${escapeHtml(t.client)}</span>
+                          </div>
+                          <div class="kanban-card-title">${escapeHtml(t.titre)}</div>
+                          <div style="font-size: 10px; color: var(--ink-muted);">Assigné : ${escapeHtml(t.assignee || 'Non assigné')}</div>
+                      </div>
+                  `).join('')}
+              </div>
+          `;
+          board.appendChild(colEl);
+      });
+  }
+
+  // --- Drag & Drop natif ---
+  function allowDrop(ev) { ev.preventDefault(); }
+  function drag(ev, id) { ev.dataTransfer.setData("ticketId", id); }
+  function drop(ev) {
+      ev.preventDefault();
+      const id = ev.dataTransfer.getData("ticketId");
+      let dropTarget = ev.target;
+      
+      // Remonter jusqu'à trouver la dropzone
+      while (dropTarget && !dropTarget.classList.contains('kanban-dropzone')) {
+          dropTarget = dropTarget.parentNode;
+      }
+      
+      if (dropTarget && dropTarget.dataset.status) {
+          const newStatus = dropTarget.dataset.status;
+          const tickets = getKanbanTickets();
+          const ticket = tickets.find(t => t.id === id);
+          if (ticket && ticket.statut !== newStatus) {
+              ticket.statut = newStatus;
+              saveKanbanTickets(tickets);
+              renderKanban();
+          }
+      }
+  }
+
+  // --- Formulaire Ticket ---
+  function kanbanOpenTicketForm(id = null) {
+      const tickets = getKanbanTickets();
+      const t = id ? tickets.find(x => x.id === id) : {};
+      
+      const modal = document.createElement('div');
+      modal.id = 'ticket-modal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;';
+      modal.innerHTML = `
+          <div style="background:var(--surface);width:500px;border-radius:var(--radius);padding:24px;box-shadow:var(--elev-2);">
+              <h2 style="margin-bottom: 16px;">${id ? 'Modifier' : 'Nouveau'} Ticket</h2>
+              <div class="form-group"><label>Titre</label><input type="text" id="tk-titre" class="form-input" value="${escapeHtml(t.titre || '')}"></div>
+              <div class="form-group"><label>Client</label><input type="text" id="tk-client" class="form-input" value="${escapeHtml(t.client || '')}"></div>
+              <div class="form-group"><label>Assigné à</label><input type="text" id="tk-assignee" class="form-input" value="${escapeHtml(t.assignee || '')}"></div>
+              <div class="form-group"><label>Statut</label>
+                  <select id="tk-statut" class="form-input">
+                      ${KANBAN_COLS.map(c => `<option value="${c.id}" ${(t.statut || 'qualif') === c.id ? 'selected' : ''}>${c.label}</option>`).join('')}
+                  </select>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px;">
+                  ${id ? `<button class="btn btn-outline" style="color:var(--danger);border-color:var(--danger);" onclick="deleteTicket('${id}')">Supprimer</button>` : ''}
+                  <button class="btn btn-outline" onclick="document.getElementById('ticket-modal').remove()">Annuler</button>
+                  <button class="btn btn-primary" onclick="saveTicket('${id || ''}')">Enregistrer</button>
+              </div>
+          </div>
+      `;
+      document.body.appendChild(modal);
+  }
+
+  function saveTicket(id) {
+      const titre = document.getElementById('tk-titre').value.trim();
+      if (!titre) return alert("Titre requis !");
+      
+      const tickets = getKanbanTickets();
+      const data = {
+          titre,
+          client: document.getElementById('tk-client').value.trim(),
+          assignee: document.getElementById('tk-assignee').value.trim(),
+          statut: document.getElementById('tk-statut').value
+      };
+
+      if (id) {
+          const index = tickets.findIndex(t => t.id === id);
+          tickets[index] = { ...tickets[index], ...data };
+      } else {
+          tickets.unshift({ id: 'tk_' + Date.now(), ...data });
+      }
+      
+      saveKanbanTickets(tickets);
+      document.getElementById('ticket-modal').remove();
+      renderKanban();
+  }
+
+  function deleteTicket(id) {
+      if(confirm("Supprimer ce ticket ?")) {
+          const tickets = getKanbanTickets().filter(t => t.id !== id);
+          saveKanbanTickets(tickets);
+          document.getElementById('ticket-modal').remove();
+          renderKanban();
+      }
+  }
+
+  // --- Initialisation ---
+  window.addEventListener('load', () => {
+      renderOrgTasks();
+      initOrgChart();
+      // On initialise le Kanban discrètement en arrière-plan
+      renderKanban();
+  });
+
+</script>
+</body>
+</html>

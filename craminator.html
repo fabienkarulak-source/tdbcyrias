@@ -419,49 +419,102 @@
 <script src="assets/components.js"></script>
 
 <script>
+
   // --- NAVIGATION INTER-MODULES ---
   function showModule(modId) {
+      // 1. Cacher tous les modules
       document.querySelectorAll('.main-module').forEach(el => el.classList.remove('active'));
-      document.getElementById('module-' + modId).classList.add('active');
+      
+      // 2. Changer l'apparence des boutons de l'en-tête
       document.querySelectorAll('.module-nav button').forEach(btn => {
           btn.className = btn.id === 'btn-mod-' + modId ? 'btn btn-primary' : 'btn btn-outline';
       });
-      if(modId === 'cra' && window.rawData.length > 0) updateDashboard();
-      if(modId === 'fact') factUpdateAll();
-      if(modId === 'agr' && window.agData.length > 0) window.agRenderUI();
+
+      // 3. Afficher le module cible
+      document.getElementById('module-' + modId).classList.add('active');
+      
+      // 4. CORRECTION : Un léger setTimeout pour laisser le DOM respirer 
+      // et éviter les graphiques écrasés à 0px de hauteur !
+      setTimeout(() => {
+          if (modId === 'cra' && typeof window.rawData !== 'undefined' && window.rawData.length > 0) {
+              updateDashboard();
+          }
+          if (modId === 'fact' && typeof factData !== 'undefined' && factData.length > 0) {
+              factUpdateAll();
+          }
+          if (modId === 'agr' && typeof window.agData !== 'undefined' && window.agData.length > 0) {
+              window.agRenderUI();
+          }
+      }, 50);
   }
-
-  // --- VARIABLES ANALYTIQUES PARTAGÉES ---
-  if(typeof window.rawData === 'undefined') window.rawData = [];
-  let rawData = window.rawData, filteredData = [];
-  let displayConfig = SafeStorage.get('cra_display') || { chartsTop: true, chartsBottom: true, alerts: true, tables: true, commentQuality: true };
-  let clientProfiles = SafeStorage.get('cra_client_profiles') || {};
-  let dataSources = SafeStorage.get('cra_data_sources') || {};
-  let clientTjm = SafeStorage.get('cra_tjm') || {};
-  let missionBudgets = SafeStorage.get('cra_budgets') || {};
-  let currentSelectedClient = null;
-  let currentWorkingDaysInPeriod = 1;
-  let tomSelectsInitialized = false;
-
-  let clientChartInstance = null, collabChartInstance = null, timeChartInstance = null, taskChartInstance = null, caChartInstance = null, commentChartInstance = null;
-  let racSort = { col: 'm', asc: true }, prodSort = { col: 'c', asc: true };
-  let currentRacData = [], currentProdData = [];
-  const sourceColors = ['source-0', 'source-1', 'source-2', 'source-3'];
-
-  // --- ENGINE ENGINE : LOGIQUE CRAMINATOR ---
-  function generateSourceId() { return 'src_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5); }
+  
+  // =========================================================================
+  // 1. SÉCURITÉ & UTILITAIRES DE BASE (Autonomie du module garantie)
+  // =========================================================================
+  const Store = {
+      get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } },
+      set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} },
+      remove(k) { try { localStorage.removeItem(k); } catch(e) {} }
+  };
   function openCraModal(id) { document.getElementById(id).classList.remove('hidden'); }
   function closeCraModal(id) { document.getElementById(id).classList.add('hidden'); }
-  function showCustomAlert(t, m) { document.getElementById('alert-title').innerText = t; document.getElementById('alert-message').innerHTML = m; openCraModal('alert-modal'); }
-  function showError(msg, t="Erreur") { document.getElementById('upload-progress-container').classList.add('hidden'); showCustomAlert(t, msg); }
+  function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
-  function rebuildRawData() {
-      rawData = [];
-      Object.values(dataSources).forEach(src => { if(src.data) rawData = rawData.concat(src.data); });
-      window.rawData = rawData;
-  }
-  function getActiveData() { return rawData.filter(d => { const mb = missionBudgets[d.mission]; return !(mb && mb.closed === true); }); }
+  // =========================================================================
+  // 2. VARIABLES GLOBALES CRAMINATOR
+  // =========================================================================
+  window.rawData = []; 
+  let rawData = window.rawData, filteredData = [];
+  let dataSources = Store.get('cra_data_sources') || {};
+  let clientTjm = Store.get('cra_tjm') || {};
+  let missionBudgets = Store.get('cra_budgets') || {};
+  let clientProfiles = Store.get('cra_client_profiles') || {};
+  
+  let currentWorkingDaysInPeriod = 1;
+  let tomSelectsInitialized = false;
+  let currentRacData = [], currentProdData = [];
+  let racSort = { col: 'm', asc: true }, prodSort = { col: 'c', asc: true };
 
+  // Instances de graphiques
+  let clientChartInstance = null, collabChartInstance = null, taskChartInstance = null;
+  let timeChartInstance = null, caChartInstance = null, commentChartInstance = null;
+
+  // =========================================================================
+  // 3. GLISSER-DÉPOSER (DRAG & DROP)
+  // =========================================================================
+  window.addEventListener('DOMContentLoaded', () => {
+      const dzCra = document.getElementById('drop-zone');
+      if (dzCra) {
+          dzCra.addEventListener('dragover', e => { e.preventDefault(); dzCra.style.borderColor = 'var(--brand)'; dzCra.style.background = 'var(--brand-soft)'; });
+          dzCra.addEventListener('dragleave', e => { e.preventDefault(); dzCra.style.borderColor = 'var(--border-strong)'; dzCra.style.background = 'var(--surface)'; });
+          dzCra.addEventListener('drop', e => {
+              e.preventDefault(); dzCra.style.borderColor = 'var(--border-strong)'; dzCra.style.background = 'var(--surface)';
+              if (e.dataTransfer.files.length) handleMultiFiles({ target: { files: e.dataTransfer.files } });
+          });
+      }
+
+      const dzFact = document.getElementById('fact-drop-zone');
+      if (dzFact) {
+          dzFact.addEventListener('dragover', e => { e.preventDefault(); dzFact.style.borderColor = 'var(--brand)'; });
+          dzFact.addEventListener('dragleave', e => { e.preventDefault(); dzFact.style.borderColor = 'var(--border-strong)'; });
+          dzFact.addEventListener('drop', e => {
+              e.preventDefault(); dzFact.style.borderColor = 'var(--border-strong)';
+              if (e.dataTransfer.files.length) factHandleFiles({ target: { files: e.dataTransfer.files } });
+          });
+      }
+
+      // Initialisation au démarrage si des données sont en cache
+      if(Object.keys(dataSources).length > 0) {
+          rebuildRawData();
+          renderSourceChips();
+          showDashboard();
+      }
+      factInit();
+  });
+
+  // =========================================================================
+  // 4. MOTEUR D'IMPORTATION (CRAMINATOR)
+  // =========================================================================
   function handleMultiFiles(e) {
       const files = Array.from(e.target.files); if (!files.length) return;
       document.getElementById('upload-progress-container').classList.remove('hidden');
@@ -471,35 +524,42 @@
   function processFileQueue(files, index) {
       if (index >= files.length) {
           document.getElementById('upload-progress-container').classList.add('hidden');
-          rebuildRawData(); SafeStorage.set('cra_data_sources', dataSources);
-          renderSourceChips(); showDashboard(); return;
+          rebuildRawData(); 
+          Store.set('cra_data_sources', dataSources);
+          renderSourceChips(); 
+          showDashboard(); 
+          return;
       }
-      const file = files[index]; setProgress(Math.round((index / files.length) * 100));
+      const file = files[index]; 
+      document.getElementById('upload-progress-bar').style.width = Math.round((index / files.length) * 100) + '%';
+      
       const reader = new FileReader();
       reader.onload = function(evt) {
           try {
               const workbook = XLSX.read(new Uint8Array(evt.target.result), {type: 'array', cellDates:true});
               const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
-              const sourceId = generateSourceId(); const parsed = parseDataArray(json, file.name);
-              if (parsed.length > 0) { dataSources[sourceId] = { name: file.name.replace(/\.[^/.]+$/, ""), data: parsed, addedAt: Date.now() }; }
-          } catch(err) { console.error(err); }
+              const sourceId = 'src_' + Date.now() + Math.random().toString(36).substr(2,5);
+              const parsed = parseDataArray(json, file.name);
+              if (parsed.length > 0) dataSources[sourceId] = { name: file.name, data: parsed, addedAt: Date.now() };
+          } catch(err) { console.error("Erreur de lecture", err); alert("Impossible de lire le fichier: " + file.name); }
           processFileQueue(files, index + 1);
       };
       reader.readAsArrayBuffer(file);
   }
-  function setProgress(p) { document.getElementById('upload-progress-bar').style.width = p+'%'; document.getElementById('upload-progress-text').innerText = p+'%'; }
 
   function parseDataArray(json, sourceName) {
       if (!json || json.length === 0) return [];
       const getRawVal = (row, names) => { const k = Object.keys(row); for(let n of names){ const m = k.find(x => String(x).trim().toLowerCase() === n); if(m && row[m] !== undefined && row[m] !== null && row[m] !== "") return row[m]; } return null; };
-      const parseTime = (val) => { if(val === null || val === undefined || val === "") return 0; if(typeof val === 'number') return val; try { return parseFloat(String(val).replace(/\s/g, '').replace(',', '.')) || 0; } catch(e) { return 0; } };
+      const parseTime = (val) => { if(!val) return 0; if(typeof val === 'number') return val; try { return parseFloat(String(val).replace(/\s/g, '').replace(',', '.')) || 0; } catch(e) { return 0; } };
       
       const parsedData = [];
       json.forEach(row => {
-          const j1 = parseTime(getRawVal(row, ['fractions', 'fraction'])); const j2 = parseTime(getRawVal(row, ['jours', 'jour', 'temps', 'valeur', 'quantité']));
-          const j = j1 > 0 ? j1 : j2; if (j <= 0) return;
+          const j = Math.max(parseTime(getRawVal(row, ['fractions', 'fraction'])), parseTime(getRawVal(row, ['jours', 'jour', 'temps', 'valeur'])));
+          if (j <= 0) return;
+          
           let jsDate = null, annee = "N/A", sem = "N/A", trim = "N/A", mois = "N/A", sort = "0000-00";
           let rawDate = getRawVal(row, ['date', 'jour', 'date de réalisation']);
+          
           if (rawDate instanceof Date) { jsDate = rawDate; }
           else if (typeof rawDate === 'number') { jsDate = new Date((new Date(1899, 11, 30)).getTime() + rawDate * 86400000); }
           else if (typeof rawDate === 'string') {
@@ -511,185 +571,68 @@
               annee = `${y}`; sem = `S${m <= 6 ? 1 : 2} ${y}`; trim = `T${Math.ceil(m / 3)} ${y}`; mois = `${String(m).padStart(2, '0')}/${y}`; sort = `${y}-${String(m).padStart(2, '0')}`;
           }
           parsedData.push({
-              equipe: String(getRawVal(row, ['equipe', 'team', 'équipe']) || "N/A").trim(),
-              client: String(getRawVal(row, ['client', 'project', 'projet', 'affaire', 'customer', 'compte']) || "N/A").trim(),
-              collaborateur: String(getRawVal(row, ['collaborateur', 'consultant', 'ressource', 'utilisateur', 'employee']) || "N/A").trim(),
-              mission: String(getRawVal(row, ['mission', 'enveloppe', 'lot']) || "N/A").trim(),
-              jours: j, tache: String(getRawVal(row, ['tâche', 'tache', 'task', 'activité']) || "Régie").trim(),
-              commentaire: String(getRawVal(row, ['commentaire', 'comment', 'note', 'description']) || "").trim(),
+              equipe: String(getRawVal(row, ['equipe', 'team']) || "N/A").trim(),
+              client: String(getRawVal(row, ['client', 'project', 'projet', 'affaire']) || "N/A").trim(),
+              collaborateur: String(getRawVal(row, ['collaborateur', 'consultant', 'ressource']) || "N/A").trim(),
+              mission: String(getRawVal(row, ['mission', 'enveloppe']) || "N/A").trim(),
+              jours: j, tache: String(getRawVal(row, ['tâche', 'tache', 'task']) || "Régie").trim(),
+              commentaire: String(getRawVal(row, ['commentaire', 'comment', 'description']) || "").trim(),
               annee, semestre: sem, trimestre: trim, moisAnnee: mois, sortDate: sort, rawDateObj: jsDate ? jsDate.getTime() : null, _source: sourceName
           });
       });
       return parsedData;
   }
 
-  function showDashboard() {
-      document.getElementById('drop-zone').classList.add('hidden');
-      document.getElementById('dashboard-section').classList.remove('hidden');
-      initTomSelects(); syncTjmWithData(); syncBudgetsWithData(); populateFilters(); updateDashboard();
+  function rebuildRawData() {
+      rawData = [];
+      Object.values(dataSources).forEach(src => { if(src.data) rawData = rawData.concat(src.data); });
+      window.rawData = rawData;
   }
 
-  function initTomSelects() {
-      if (tomSelectsInitialized || typeof TomSelect === 'undefined') return;
-      const config = { plugins: ['remove_button'], maxItems: null, hideSelected: true, placeholder: "Tous" };
-      tsAnnee = new TomSelect('#filter-annee', config); tsSemestre = new TomSelect('#filter-semestre', config);
-      tsTrimestre = new TomSelect('#filter-trimestre', config); tsMois = new TomSelect('#filter-mois', config);
-      tsEquipe = new TomSelect('#filter-equipe', config); tsClient = new TomSelect('#filter-client', config);
-      tsMission = new TomSelect('#filter-mission', config); tsCollab = new TomSelect('#filter-collab', config);
-      tsSource = new TomSelect('#filter-source', config);
+  function renderSourceChips() {
+      const container = document.getElementById('source-chips');
+      const managerEl = document.getElementById('source-manager');
+      const keys = Object.keys(dataSources);
 
-      const onChange = () => { updateDashboard(); updateFilterBadge(); };
-      const onTimeChange = () => { updateTimeDropdowns(); updateOperationalDropdowns(); onChange(); };
-      tsAnnee.on('change', onTimeChange); tsSemestre.on('change', onTimeChange); tsTrimestre.on('change', onTimeChange);
-      tsMois.on('change', () => { updateOperationalDropdowns(); onChange(); });
-      tsEquipe.on('change', updateOperationalDropdowns); tsClient.on('change', updateOperationalDropdowns); tsMission.on('change', onChange); tsCollab.on('change', onChange);
-      tomSelectsInitialized = true;
-  }
-  function syncTS(tsInstance, newOptions, currentSelectedVals) { tsInstance.clearOptions(); newOptions.forEach(opt => tsInstance.addOption({value: opt, text: opt})); tsInstance.setValue(currentSelectedVals.filter(v => newOptions.includes(v)), true); }
-  
-  function updateTimeDropdowns() {
-      const vA = tsAnnee.getValue(); let dS = getActiveData(); if(vA.length > 0) dS = dS.filter(d => vA.includes(d.annee));
-      const aS = [...new Set(dS.map(d => d.semestre))].filter(v=>v!=="N/A").sort();
-      let dT = dS; const actS = tsSemestre.getValue().filter(v => aS.includes(v)); if(actS.length > 0) dT = dT.filter(d => actS.includes(d.semestre));
-      const aT = [...new Set(dT.map(d => d.trimestre))].filter(v=>v!=="N/A").sort();
-      let dM = dT; const actT = tsTrimestre.getValue().filter(v => aT.includes(v)); if(actT.length > 0) dM = dM.filter(d => actT.includes(d.trimestre));
-      const aM = [...new Set(dM.map(d => d.moisAnnee))].filter(v=>v!=="N/A").sort();
-      syncTS(tsSemestre, aS, tsSemestre.getValue()); syncTS(tsTrimestre, aT, tsTrimestre.getValue()); syncTS(tsMois, aM, tsMois.getValue());
+      if (keys.length === 0) { managerEl.classList.add('hidden'); return; }
+
+      managerEl.classList.remove('hidden');
+      document.getElementById('source-count').textContent = keys.length;
+      document.getElementById('total-records-count').textContent = rawData.length;
+
+      const colors = ['source-0', 'source-1'];
+      container.innerHTML = keys.map((id, i) => `<span class="source-chip ${colors[i % 2]}">${dataSources[id].name} <span class="remove-btn" onclick="removeSource('${id}')">×</span></span>`).join('');
   }
 
-  function updateOperationalDropdowns() {
-      if(!tomSelectsInitialized) return;
-      const act = getActiveData();
-      const fA = tsAnnee.getValue(), fS = tsSemestre.getValue(), fT = tsTrimestre.getValue(), fM = tsMois.getValue(), fSrc = tsSource.getValue();
-      let base = act.filter(d => (fA.length===0||fA.includes(d.annee)) && (fS.length===0||fS.includes(d.semestre)) && (fT.length===0||fT.includes(d.trimestre)) && (fM.length===0||fM.includes(d.moisAnnee)) && (fSrc.length===0||fSrc.includes(d._source)));
+  function removeSource(id) {
+      delete dataSources[id]; Store.set('cra_data_sources', dataSources);
+      rebuildRawData(); renderSourceChips();
+      if (Object.keys(dataSources).length === 0) {
+          document.getElementById('dashboard-section').classList.add('hidden');
+          document.getElementById('drop-zone').classList.remove('hidden');
+      } else { populateFilters(); updateDashboard(); }
+  }
+
+  function clearAllData() {
+      if (!confirm("Effacer toutes les sources CRA ?")) return;
+      dataSources = {}; rawData = []; Store.remove('cra_data_sources');
+      renderSourceChips();
+      document.getElementById('drop-zone').classList.remove('hidden');
+      document.getElementById('dashboard-section').classList.add('hidden');
+  }
+
+  // =========================================================================
+  // 5. MOTEUR D'AFFICHAGE & DASHBOARD
+  // =========================================================================
+  function showModule(modId) {
+      document.querySelectorAll('.main-module').forEach(el => el.classList.remove('active'));
+      document.getElementById('module-' + modId).classList.add('active');
+      document.querySelectorAll('.module-nav button').forEach(btn => { btn.className = btn.id === 'btn-mod-' + modId ? 'btn btn-primary' : 'btn btn-outline'; });
       
-      syncTS(tsEquipe, [...new Set(base.map(d => d.equipe))].sort(), tsEquipe.getValue());
-      const fE = tsEquipe.getValue(); if(fE.length > 0) base = base.filter(d => fE.includes(d.equipe));
-      
-      syncTS(tsClient, [...new Set(base.map(d => d.client))].sort(), tsClient.getValue());
-      const fC = tsClient.getValue(); if(fC.length > 0) base = base.filter(d => fC.includes(d.client));
-      
-      syncTS(tsMission, [...new Set(base.map(d => d.mission))].sort(), tsMission.getValue());
-      syncTS(tsCollab, [...new Set(base.map(d => d.collaborateur))].sort(), tsCollab.getValue());
+      if(modId === 'cra' && rawData.length > 0) updateDashboard();
+      if(modId === 'fact' && factData.length > 0) factUpdateAll();
+      if(modId === 'agr' && window.agData.length > 0) window.agRenderUI();
   }
-
-  function populateFilters() {
-      const act = getActiveData(); syncTS(tsAnnee, [...new Set(act.map(d => d.annee))].filter(v=>v!=="N/A").sort(), tsAnnee.getValue());
-      updateTimeDropdowns(); syncTS(tsSource, [...new Set(act.map(d => d._source))].sort(), tsSource.getValue()); updateOperationalDropdowns();
-  }
-  function updateFilterBadge() { const count = tsAnnee.getValue().length + tsMois.getValue().length + tsClient.getValue().length + tsCollab.getValue().length; document.getElementById('filter-badge').textContent = count; document.getElementById('filter-badge').classList.toggle('hidden', count===0); }
-  function resetFilters() { tsAnnee.clear(true); tsSemestre.clear(true); tsTrimestre.clear(true); tsMois.clear(true); tsEquipe.clear(true); tsClient.clear(true); tsMission.clear(true); tsCollab.clear(true); tsSource.clear(true); populateFilters(); updateDashboard(); updateFilterBadge(); }
-
-  function updateDashboard() {
-      const fA = tsAnnee.getValue(), fS = tsSemestre.getValue(), fT = tsTrimestre.getValue(), fM = tsMois.getValue();
-      const fE = tsEquipe.getValue(), fC = tsClient.getValue(), fMi = tsMission.getValue(), fCo = tsCollab.getValue(), fSrc = tsSource.getValue();
-      
-      const activeData = getActiveData();
-      filteredData = activeData.filter(d => 
-          (fA.length===0||fA.includes(d.annee)) && (fS.length===0||fS.includes(d.semestre)) && (fT.length===0||fT.includes(d.trimestre)) && (fM.length===0||fM.includes(d.moisAnnee)) &&
-          (fE.length===0||fE.includes(d.equipe)) && (fC.length===0||fC.includes(d.client)) && (fMi.length===0||fMi.includes(d.mission)) && (fCo.length===0||fCo.includes(d.collaborateur)) && (fSrc.length===0||fSrc.includes(d._source))
-      );
-
-      const timeDates = filteredData.map(d=>d.rawDateObj).filter(t=>t!=null);
-      currentWorkingDaysInPeriod = 20; // fallback standard
-      if(timeDates.length > 0) {
-          let minD = new Date(Math.min(...timeDates)), maxD = new Date(Math.max(...timeDates));
-          minD = new Date(minD.getFullYear(), minD.getMonth(), 1); maxD = new Date(maxD.getFullYear(), maxD.getMonth() + 1, 0);
-          let workingDays = 0; while(minD <= maxD) { if(minD.getDay()!==0 && minD.getDay()!==6) workingDays++; minD.setDate(minD.getDate()+1); }
-          currentWorkingDaysInPeriod = workingDays || 1;
-      }
-
-      document.getElementById('record-count').innerText = `${filteredData.length} lignes`;
-      const tCa = filteredData.reduce((a, r) => a + (r.jours*(clientTjm[r.client]||0)), 0);
-      const caEl = document.getElementById('total-ca'); caEl.innerText = `CA Estimé: ${tCa.toLocaleString('fr-FR')} €`; caEl.classList.toggle('hidden', tCa===0);
-
-      const agg = (k) => Object.entries(filteredData.reduce((a, r)=>{if(!a[r[k]])a[r[k]]={j:0,c:0}; a[r[k]].j+=r.jours; a[r[k]].c+=r.jours*(clientTjm[r.client]||0); return a;},{})).map(([n,v])=>({name:n,value:v.j,ca:v.c})).sort((a,b)=>b.value-a.value);
-      const bgColors = ['#19365D', '#66BB93', '#4491B6', '#2E678D', '#E9BD27', '#E75B3C'];
-
-      const drawChart = (id, data, type, horiz, isCurrency) => {
-          const ctx = document.getElementById(id).getContext('2d');
-          if(id==='clientChart' && clientChartInstance) clientChartInstance.destroy();
-          if(id==='collabChart' && collabChartInstance) collabChartInstance.destroy();
-          if(id==='caChart' && caChartInstance) caChartInstance.destroy();
-          
-          const c = new Chart(ctx, {
-              type, data: { labels: data.map(d=>d.name), datasets: [{ data: data.map(d=>isCurrency ? d.ca : d.value), backgroundColor: bgColors, borderRadius: 5 }] },
-              options: { indexAxis: horiz?'y':'x', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
-          });
-          if(id==='clientChart') clientChartInstance=c; else if(id==='collabChart') collabChartInstance=c; else caChartInstance=c;
-      };
-
-      drawChart('clientChart', agg('client'), 'bar', false, false);
-      drawChart('collabChart', agg('collaborateur'), 'bar', true, false);
-      drawChart('caChart', agg('client').sort((a,b)=>b.ca-a.ca), 'bar', true, true);
-
-      if(taskChartInstance) taskChartInstance.destroy();
-      const taskData = agg('tache');
-      taskChartInstance = new Chart(document.getElementById('taskChart').getContext('2d'), {
-          type: 'doughnut', data: { labels: taskData.map(d=>d.name), datasets: [{ data: taskData.map(d=>d.value), backgroundColor: bgColors }] },
-          options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}} }
-      });
-
-      if(timeChartInstance) timeChartInstance.destroy();
-      const timeStats = {}; filteredData.forEach(r => { if(r.sortDate!=="0000-00"){ if(!timeStats[r.sortDate]) timeStats[r.sortDate]={l:r.moisAnnee, v:0}; timeStats[r.sortDate].v += r.jours; } });
-      const sortedDates = Object.keys(timeStats).sort();
-      timeChartInstance = new Chart(document.getElementById('timeChart').getContext('2d'), {
-          type: 'line', data: { labels: sortedDates.map(k=>timeStats[k].l), datasets: [{ label:'Jours consommés', data: sortedDates.map(k=>timeStats[k].v), borderColor:'#4491B6', tension:0.3, fill:true, backgroundColor:'rgba(68,145,182,0.05)' }] },
-          options: { responsive:true, maintainAspectRatio:false }
-      });
-
-      renderHeatmap(); generateTableData(); renderRacTable(); renderProdTable(); renderCommentChart();
-  }
-
-  function renderHeatmap() {
-      const container = document.getElementById('heatmap-container'); if(filteredData.length === 0) { container.innerHTML = 'Aucune donnée.'; return; }
-      const dailyData = {}; filteredData.forEach(d => { if(d.rawDateObj) { const dStr = new Date(d.rawDateObj).toISOString().split('T')[0]; dailyData[dStr] = (dailyData[dStr] || 0) + d.jours; } });
-      const maxJ = Math.max(...Object.values(dailyData), 1);
-      let html = '<div style="display:flex; flex-wrap:wrap; gap:3px;">';
-      Object.keys(dailyData).sort().forEach(dStr => {
-          const val = dailyData[dStr]; const intensity = Math.max(0.1, val / maxJ);
-          html += `<div style="width:11px; height:11px; border-radius:2px; background:rgba(94,176,145,${intensity});" title="${dStr} : ${val.toFixed(1)}j"></div>`;
-      });
-      container.innerHTML = html + '</div>';
-  }
-
-  function generateTableData() {
-      const activeData = getActiveData();
-      const gCons = activeData.reduce((a,r)=>{ if(!a[r.mission]) a[r.mission] = { j: 0, c: 0 }; a[r.mission].j += r.jours; a[r.mission].c += r.jours * (clientTjm[r.client] || 0); return a; }, {});
-      currentRacData = [...new Set(filteredData.map(d => d.mission))].map(m => {
-          const consumed = gCons[m] ? gCons[m].j : 0; const ca = gCons[m] ? gCons[m].c : 0; const allocated = missionBudgets[m] ? (missionBudgets[m].budget || 0) : 0;
-          return { m, allocated, consumed, ca, remaining: allocated - consumed, percent: allocated > 0 ? (consumed / allocated) * 100 : 0 };
-      });
-      const collabStats = filteredData.reduce((a, r) => { if(!a[r.collaborateur]) a[r.collaborateur] = 0; a[r.collaborateur] += r.jours; return a; }, {});
-      currentProdData = Object.keys(collabStats).map(c => ({ c, jours: collabStats[c], rate: (collabStats[c] / currentWorkingDaysInPeriod) * 100 }));
-  }
-
-  function renderRacTable() {
-      const tbody = document.getElementById('rac-table-body'); tbody.innerHTML = '';
-      currentRacData.forEach(d => {
-          tbody.innerHTML += `<tr><td><strong>${d.m}</strong></td><td style="text-align:right;">${d.allocated ? d.allocated.toFixed(1)+'j' : '-'}</td><td style="text-align:right;">${d.consumed.toFixed(1)}j</td><td style="text-align:right; color:var(--brand-hover); font-weight:600;">${d.ca.toLocaleString('fr-FR')} €</td><td style="text-align:right; font-weight:700; color:${d.remaining<0?'var(--danger)':'inherit'}">${d.remaining.toFixed(1)}j</td><td><div style="background:var(--border); height:6px; border-radius:3px; overflow:hidden;"><div style="width:${Math.min(d.percent,100)}%; height:100%; background:var(--brand);"></div></div></td></tr>`;
-      });
-  }
-  function renderProdTable() {
-      const tbody = document.getElementById('prod-table-body'); tbody.innerHTML = '';
-      document.getElementById('working-days-info').innerText = `${currentWorkingDaysInPeriod} jours ouvrés sur la fenêtre`;
-      currentProdData.forEach(d => {
-          tbody.innerHTML += `<tr><td><strong>${d.c}</strong></td><td style="text-align:right;">${d.jours.toFixed(1)}j</td><td style="text-align:right; font-weight:700;">${d.rate.toFixed(0)}%</td><td><div style="background:var(--border); height:6px; border-radius:3px; overflow:hidden;"><div style="width:${Math.min(d.rate,100)}%; height:100%; background:var(--primary);"></div></div></td></tr>`;
-      });
-  }
-  function renderCommentChart() {
-      if(commentChartInstance) commentChartInstance.destroy();
-      const stats = {}; filteredData.forEach(d => { if(!stats[d.collaborateur]) stats[d.collaborateur]={t:0, e:0}; stats[d.collaborateur].t++; if(!d.commentaire.trim()) stats[d.collaborateur].e++; });
-      const labels = Object.keys(stats);
-      commentChartInstance = new Chart(document.getElementById('commentChart').getContext('2d'), {
-          type:'bar', data: { labels, datasets:[{ label:'Commentaires vides', data: labels.map(k=>stats[k].e), backgroundColor:'#E75B3C' },{ label:'Renseignés', data: labels.map(k=>stats[k].t - stats[k].e), backgroundColor:'#66BB93' }] },
-          options: { responsive:true, maintainAspectRatio:false, scales:{x:{stacked:true},y:{stacked:true}} }
-      });
-  }
-
-  // --- CONFIGURATION REGROUPEMENTS FINANCIERS ---
-  function syncTjmWithData() { [...new Set(rawData.map(d=>d.client))].forEach(c=>{ if(clientTjm[c]===undefined) clientTjm[c]=0; }); SafeStorage.set('cra_tjm', clientTjm); }
-  function syncBudgetsWithData() { [...new Set(rawData.map(d=>d.mission))].forEach(m=>{ if(missionBudgets[m]===undefined) missionBudgets[m]={budget:0, closed:false}; }); SafeStorage.set('cra_budgets', missionBudgets); }
 
   function switchCraTab(tab) {
       ['dashboard','clients','explorer','suivi','demandes','dispo'].forEach(t => {
@@ -704,267 +647,131 @@
       if(tab === 'dispo') renderDispoTable();
   }
 
-  // --- FICHES CLIENTS ---
-  function renderClientCardList() {
-      const container = document.getElementById('client-card-list'); container.innerHTML = '';
-      const clients = [...new Set(rawData.map(d=>d.client))].sort();
-      clients.forEach(c => {
-          container.innerHTML += `<button onclick="selectClientCard('${c.replace(/'/g, "\\'")}')" class="btn ${c===currentSelectedClient?'btn-primary':'btn-outline'}" style="width:100%; text-align:left; font-size:12px;">🏢 ${c}</button>`;
-      });
+  function showDashboard() {
+      document.getElementById('drop-zone').classList.add('hidden');
+      document.getElementById('dashboard-section').classList.remove('hidden');
+      syncTjmWithData(); syncBudgetsWithData(); initTomSelects(); populateFilters(); updateDashboard();
   }
-  function filterClientCards() { const term = document.getElementById('search-client-card').value.toLowerCase(); document.querySelectorAll('#client-card-list button').forEach(b => b.style.display = b.innerText.toLowerCase().includes(term)?'':'none'); }
 
-  function selectClientCard(clientName) {
-      currentSelectedClient = clientName; renderClientCardList();
-      const p = clientProfiles[clientName] || { contact:'', email:'', contrat:'', responsable:'', satisfaction:'Neutre', note:3, nps:7 };
-      const clientData = rawData.filter(d => d.client === clientName); const totalJours = clientData.reduce((s,d)=>s+d.jours,0);
-      const tjm = clientTjm[clientName] || 0;
+  function syncTjmWithData() { [...new Set(rawData.map(d=>d.client))].forEach(c=>{ if(clientTjm[c]===undefined) clientTjm[c]=0; }); Store.set('cra_tjm', clientTjm); }
+  function syncBudgetsWithData() { [...new Set(rawData.map(d=>d.mission))].forEach(m=>{ if(missionBudgets[m]===undefined) missionBudgets[m]={budget:0, closed:false}; }); Store.set('cra_budgets', missionBudgets); }
+
+  let tsAnnee, tsMois, tsEquipe, tsClient, tsMission, tsCollab;
+  function initTomSelects() {
+      if (tomSelectsInitialized || typeof TomSelect === 'undefined') return;
+      const conf = { plugins: ['remove_button'], maxItems: null, hideSelected: true };
+      tsAnnee = new TomSelect('#filter-annee', conf); tsMois = new TomSelect('#filter-mois', conf);
+      tsEquipe = new TomSelect('#filter-equipe', conf); tsClient = new TomSelect('#filter-client', conf);
+      tsMission = new TomSelect('#filter-mission', conf); tsCollab = new TomSelect('#filter-collab', conf);
       
-      document.getElementById('client-card-detail').innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:start; border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:16px;">
-              <div><h2 style="font-family:'Fraunces',serif; font-size:20px; color:var(--primary);">${clientName}</h2><p style="font-size:11px; color:var(--ink-muted);">Profil d'identité commerciale en base</p></div>
-              <div style="font-size:18px; font-weight:800; color:var(--brand-hover); font-family:var(--font-mono);">${(totalJours*tjm).toLocaleString('fr-FR')} € <span style="font-size:10px; color:var(--ink-muted); font-weight:400;">CA Estimé</span></div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-              <div style="display:flex; flex-direction:column; gap:8px;">
-                  <div class="form-group"><label>Contact Client</label><input type="text" id="fiche-contact" value="${p.contact}" class="form-input" onchange="saveClientProfile('${clientName.replace(/'/g,"\\'")}')"></div>
-                  <div class="form-group"><label>Email / Tel</label><input type="text" id="fiche-email" value="${p.email}" class="form-input" onchange="saveClientProfile('${clientName.replace(/'/g,"\\'")}')"></div>
-                  <div class="form-group"><label>Référence Contrat</label><input type="text" id="fiche-contrat" value="${p.contrat}" class="form-input" onchange="saveClientProfile('${clientName.replace(/'/g,"\\'")}')"></div>
-              </div>
-              <div style="display:flex; flex-direction:column; gap:8px;">
-                  <div class="form-group"><label>TJM Négocié (€)</label><input type="number" id="fiche-tjm" value="${tjm}" class="form-input" onchange="saveClientTjm('${clientName.replace(/'/g,"\\'")}')"></div>
-                  <div class="form-group"><label>Volume Global Affecté</label><div class="form-input" style="background:var(--bg-subtle); font-weight:700;">${totalJours.toFixed(1)} jours passés</div></div>
-                  <div class="form-group"><label>Manager de Compte</label><input type="text" id="fiche-responsable" value="${p.responsable}" class="form-input" onchange="saveClientProfile('${clientName.replace(/'/g,"\\'")}')"></div>
-              </div>
-          </div>
-      `;
-  }
-  function saveClientProfile(c) { clientProfiles[c] = { contact: document.getElementById('fiche-contact').value, email: document.getElementById('fiche-email').value, contrat: document.getElementById('fiche-contrat').value, responsable: document.getElementById('fiche-responsable').value }; SafeStorage.set('cra_client_profiles', clientProfiles); }
-  function saveClientTjm(c) { clientTjm[c] = parseFloat(document.getElementById('fiche-tjm').value) || 0; SafeStorage.set('cra_tjm', clientTjm); updateDashboard(); }
-
-  // --- EXPLORATEUR DE DONNÉES ---
-  function renderExplorerTable() {
-      const tbody = document.getElementById('explorer-table-body'); if(!tbody) return;
-      const term = document.getElementById('search-explorer').value.toLowerCase();
-      const fC = document.getElementById('explorer-filter-client').value;
-      const fM = document.getElementById('explorer-filter-mission').value;
-      const fMo = document.getElementById('explorer-filter-mois').value;
-
-      // Hydrater les filtres dynamiques au premier appel
-      if(document.getElementById('explorer-filter-client').children.length === 0) {
-          const cls = [...new Set(rawData.map(d=>d.client))].sort(); const mis = [...new Set(rawData.map(d=>d.mission))].sort(); const mos = [...new Set(rawData.map(d=>d.moisAnnee))].sort();
-          document.getElementById('explorer-filter-client').innerHTML = '<option value="">— Tous —</option>' + cls.map(c=>`<option value="${c}">${c}</option>`).join('');
-          document.getElementById('explorer-filter-mission').innerHTML = '<option value="">— Toutes —</option>' + mis.map(m=>`<option value="${m}">${m}</option>`).join('');
-          document.getElementById('explorer-filter-mois').innerHTML = '<option value="">— Tous —</option>' + mos.map(m=>`<option value="${m}">${m}</option>`).join('');
-      }
-
-      let data = filteredData;
-      if(fC) data = data.filter(d=>d.client === fC); if(fM) data = data.filter(d=>d.mission === fM); if(fMo) data = data.filter(d=>d.moisAnnee === fMo);
-      if(term) data = data.filter(d=> d.collaborateur.toLowerCase().includes(term) || d.commentaire.toLowerCase().includes(term) || d.tache.toLowerCase().includes(term));
-
-      document.getElementById('explorer-summary').innerText = `${data.length} lignes affichées — Total: ${data.reduce((a,r)=>a+r.jours,0).toFixed(1)}j`;
-      tbody.innerHTML = data.slice(0, 150).map(d => `
-          <tr style="border-bottom:1px solid var(--border-subtle);">
-              <td style="padding:8px;">${d.moisAnnee}</td><td>${d.equipe}</td><td style="font-weight:600; color:var(--primary);">${d.client}</td><td>${d.mission}</td><td>${d.collaborateur}</td><td style="text-align:center; font-weight:700;">${d.jours}</td><td><strong>${d.tache}</strong><div style="font-size:10px; color:var(--ink-muted); max-width:400px; overflow:hidden; text-overflow:ellipsis;">${d.commentaire}</div></td><td>${d._source}</td>
-          </tr>
-      `).join('');
+      const onChange = () => { updateDashboard(); document.getElementById('filter-badge').textContent = tsAnnee.getValue().length + tsMois.getValue().length + tsClient.getValue().length; document.getElementById('filter-badge').classList.toggle('hidden', document.getElementById('filter-badge').textContent === '0'); };
+      tsAnnee.on('change', onChange); tsMois.on('change', onChange); tsEquipe.on('change', onChange); tsClient.on('change', onChange); tsMission.on('change', onChange); tsCollab.on('change', onChange);
+      tomSelectsInitialized = true;
   }
 
-  // --- MODULE SUIVI HEBDO ---
-  let suiviComments = SafeStorage.get('cra_suivi_comments') || [];
-  function initSuiviTab() {
-      const cls = [...new Set(rawData.map(d=>d.client))].sort();
-      document.getElementById('suivi-client').innerHTML = cls.map(c=>`<option value="${c}">${c}</option>`).join('');
-      document.getElementById('suivi-hist-client').innerHTML = '<option value="">Tous les comptes</option>' + cls.map(c=>`<option value="${c}">${c}</option>`).join('');
-      document.getElementById('suivi-auteur').value = localStorage.getItem('cyrias_username') || "Compagnon";
-      renderSuiviHistory();
+  function populateFilters() {
+      if(!tomSelectsInitialized) return;
+      const sync = (ts, arr) => { ts.clearOptions(); arr.forEach(a => ts.addOption({value:a, text:a})); ts.setValue(ts.getValue().filter(v=>arr.includes(v)), true); };
+      sync(tsAnnee, [...new Set(rawData.map(d=>d.annee))].sort());
+      sync(tsMois, [...new Set(rawData.map(d=>d.moisAnnee))].sort());
+      sync(tsClient, [...new Set(rawData.map(d=>d.client))].sort());
+      sync(tsMission, [...new Set(rawData.map(d=>d.mission))].sort());
+      sync(tsCollab, [...new Set(rawData.map(d=>d.collaborateur))].sort());
   }
-  function addSuiviComment() {
-      const c = { client: document.getElementById('suivi-client').value, semaine: document.getElementById('suivi-semaine').value, categorie: document.getElementById('suivi-categorie').value, participants: document.getElementById('suivi-participants').value, enveloppes: document.getElementById('suivi-enveloppes').value, sujets: document.getElementById('suivi-sujets').value, attention: document.getElementById('suivi-attention').value, auteur: document.getElementById('suivi-auteur').value, createdAt: new Date().toISOString(), id: Date.now() };
-      if(!c.semaine || !c.sujets) return alert("Veuillez renseigner au moins la semaine et l'avancement !");
-      suiviComments.unshift(c); SafeStorage.set('cra_suivi_comments', suiviComments); initSuiviTab();
-  }
-  function renderSuiviHistory() {
-      const container = document.getElementById('suivi-history-list'); container.innerHTML = '';
-      const fC = document.getElementById('suivi-hist-client').value;
-      let data = suiviComments; if(fC) data = data.filter(x=>x.client === fC);
-      
-      if(!data.length) { container.innerHTML = '<div style="text-align:center; color:var(--ink-muted); padding:30px;">Aucune note enregistrée.</div>'; return; }
-      container.innerHTML = data.map(c => `
-          <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:10px;">
-              <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-weight:700; color:var(--primary);">${c.client} — Semaine : ${c.semaine}</span><span style="font-size:10px; padding:2px 6px; background:var(--surface); border-radius:4px; font-weight:700;">${c.categorie}</span></div>
-              <div style="font-size:12px; color:var(--ink-secondary); margin-bottom:6px;"><strong>Sujets :</strong> ${escapeHtml(c.sujets)}</div>
-              ${c.attention ? `<div style="font-size:12px; color:var(--danger); font-weight:500;">⚠️ <strong>Attention :</strong> ${escapeHtml(c.attention)}</div>` : ''}
-              <div style="font-size:10px; color:var(--ink-muted); text-align:right; margin-top:4px;">Par ${c.auteur} le ${new Date(c.createdAt).toLocaleDateString()}</div>
-          </div>
-      `).join('');
-  }
-  function resyncSuiviFromCRA() { initSuiviTab(); }
 
-  // --- MODULE DEMANDES ---
-  let demandesData = SafeStorage.get('cra_demandes') || [];
-  let demandesStatuts = SafeStorage.get('cra_demandes_statuts') || [{name:'Nouveau', closed:false, color:'#7ec8e3'}, {name:'En cours', closed:false, color:'#f0d46a'}, {name:'Fermé', closed:true, color:'#64748b'}];
-  function initDemandesTab() { populateDemandesFilters(); renderDemandesTable(); }
-  function populateDemandesFilters() {
-      const cls = [...new Set(demandesData.map(d=>d.client))].sort();
-      document.getElementById('demandes-filter-client').innerHTML = '<option value="">Tous</option>' + cls.map(c=>`<option value="${c}">${c}</option>`).join('');
-  }
-  function renderDemandesTable() {
-      const tbody = document.getElementById('demandes-table-body'); if(!tbody) return;
-      const fC = document.getElementById('demandes-filter-client').value;
-      let data = demandesData; if(fC) data = data.filter(d=>d.client === fC);
-      
-      document.getElementById('kpi-total').innerText = data.length;
-      tbody.innerHTML = data.slice(0, 100).map(d => `
-          <tr style="border-bottom:1px solid var(--border-subtle);"><td style="padding:6px 10px; font-family:var(--font-mono);">${d.id}</td><td style="padding:6px 10px;">${d.date ? new Date(d.date).toLocaleDateString():'—'}</td><td style="font-weight:600; color:var(--primary);">${d.client}</td><td>${escapeHtml(d.objet)}</td><td><span style="font-size:10px; padding:2px 6px; background:var(--bg-subtle); border-radius:4px;">${d.statut}</span></td><td>${d.priorite}</td><td>${d.severite}</td><td>${d.assigneA}</td></tr>
-      `).join('');
-  }
-  function handleDemandesImport(e) {
-      const file = e.target.files[0]; if(!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-          const workbook = XLSX.read(new Uint8Array(evt.target.result), {type:'array'});
-          const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {defval:""});
-          demandesData = json.map((row, i) => ({ id: row['ID'] || `TK-${i}`, date: row['Created']||row['Date'], client: row['Project']||row['Client']||"N/A", objet: row['Short description']||row['Objet']||"Sans titre", statut: row['Resolution']||row['Statut']||"Nouveau", priorite: row['Priority']||"P3", severite: row['Severity']||"Minor", assigneA: row['Assigned to']||"" }));
-          SafeStorage.set('cra_demandes', demandesData); initDemandesTab();
+  function updateDashboard() {
+      if(!tomSelectsInitialized) return;
+      const fA = tsAnnee.getValue(), fM = tsMois.getValue(), fC = tsClient.getValue(), fCo = tsCollab.getValue(), fMi = tsMission.getValue();
+      filteredData = rawData.filter(d => (!fA.length||fA.includes(d.annee)) && (!fM.length||fM.includes(d.moisAnnee)) && (!fC.length||fC.includes(d.client)) && (!fCo.length||fCo.includes(d.collaborateur)) && (!fMi.length||fMi.includes(d.mission)));
+
+      document.getElementById('record-count').innerText = `${filteredData.length} lignes`;
+      const tCa = filteredData.reduce((a, r) => a + (r.jours*(clientTjm[r.client]||0)), 0);
+      document.getElementById('total-ca').innerText = `CA: ${tCa.toLocaleString('fr-FR')} €`; document.getElementById('total-ca').classList.toggle('hidden', tCa===0);
+
+      const agg = (k) => Object.entries(filteredData.reduce((a, r)=>{if(!a[r[k]])a[r[k]]={j:0,c:0}; a[r[k]].j+=r.jours; a[r[k]].c+=r.jours*(clientTjm[r.client]||0); return a;},{})).map(([n,v])=>({name:n,value:v.j,ca:v.c})).sort((a,b)=>b.value-a.value);
+      const bgColors = ['#19365D', '#66BB93', '#4491B6', '#E9BD27'];
+
+      const drawChart = (id, data, type, horiz, isCurrency) => {
+          const ctx = document.getElementById(id).getContext('2d');
+          if(id==='clientChart' && clientChartInstance) clientChartInstance.destroy();
+          if(id==='collabChart' && collabChartInstance) collabChartInstance.destroy();
+          if(id==='caChart' && caChartInstance) caChartInstance.destroy();
+          const c = new Chart(ctx, { type, data: { labels: data.map(d=>d.name), datasets: [{ data: data.map(d=>isCurrency ? d.ca : d.value), backgroundColor: bgColors, borderRadius: 4 }] }, options: { indexAxis: horiz?'y':'x', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } });
+          if(id==='clientChart') clientChartInstance=c; else if(id==='collabChart') collabChartInstance=c; else caChartInstance=c;
       };
-      reader.readAsArrayBuffer(file);
+
+      drawChart('clientChart', agg('client'), 'bar', false, false);
+      drawChart('collabChart', agg('collaborateur'), 'bar', true, false);
+      drawChart('caChart', agg('client').sort((a,b)=>b.ca-a.ca), 'bar', true, true);
+
+      if(taskChartInstance) taskChartInstance.destroy();
+      taskChartInstance = new Chart(document.getElementById('taskChart').getContext('2d'), { type: 'doughnut', data: { labels: agg('tache').map(d=>d.name), datasets: [{ data: agg('tache').map(d=>d.value), backgroundColor: bgColors }] }, options: { responsive:true, maintainAspectRatio:false } });
+
+      generateTableData(); renderRacTable(); renderProdTable();
   }
 
-  // --- MODULE DISPONIBILITÉS ---
-  let manualStaffing = SafeStorage.get('cra_manual_staffing') || {};
-  function getStaffingDates() {
-      const dates = []; const now = new Date(); let day = now.getDay(); if(day===0) day=7;
-      const monday = new Date(now); monday.setDate(now.getDate() - day + 1);
-      for(let i=0; i<10; i++) {
-          const d = new Date(monday); d.setDate(monday.getDate()+i + (i>=5?2:0)); // sauter le weekend
-          dates.push({ iso: d.toISOString().split('T')[0], label: d.toLocaleDateString('fr-FR', {weekday:'short', day:'2-digit'}) });
-      }
-      return dates;
-  }
-  function renderStaffingCalendar() {
-      const container = document.getElementById('staffing-calendar-container'); if(!container) return;
-      const dates = getStaffingDates();
-      let html = `<div class="staffing-cell staffing-header">Collaborateur</div>` + dates.map(d=>`<div class="staffing-cell staffing-header">${d.label}</div>`).join('');
-      const collabs = [...new Set([...rawData.map(d=>d.collaborateur), ...Object.keys(manualStaffing)])].filter(n=>n && n!=="N/A").sort();
-      
-      collabs.forEach(name => {
-          html += `<div class="staffing-cell staffing-name">${name}</div>`;
-          dates.forEach(d => {
-              const val = (manualStaffing[name] && manualStaffing[name][d.iso]) || "";
-              html += `<div class="staffing-cell"><input type="text" class="staffing-input" value="${val}" onchange="saveStaffingValue('${name.replace(/'/g,"\\'")}', '${d.iso}', this.value)"></div>`;
-          });
+  function generateTableData() {
+      const gCons = rawData.reduce((a,r)=>{ if(!a[r.mission]) a[r.mission] = { j: 0, c: 0 }; a[r.mission].j += r.jours; a[r.mission].c += r.jours * (clientTjm[r.client] || 0); return a; }, {});
+      currentRacData = [...new Set(filteredData.map(d => d.mission))].map(m => {
+          const consumed = gCons[m] ? gCons[m].j : 0; const ca = gCons[m] ? gCons[m].c : 0; const allocated = missionBudgets[m] ? (missionBudgets[m].budget || 0) : 0;
+          return { m, allocated, consumed, ca, remaining: allocated - consumed, percent: allocated > 0 ? (consumed / allocated) * 100 : 0 };
       });
-      container.innerHTML = html;
+      const collabStats = filteredData.reduce((a, r) => { if(!a[r.collaborateur]) a[r.collaborateur] = 0; a[r.collaborateur] += r.jours; return a; }, {});
+      currentProdData = Object.keys(collabStats).map(c => ({ c, jours: collabStats[c], rate: (collabStats[c] / 20) * 100 })); // Approx 20j/mois
   }
-  function saveStaffingValue(n, date, val) { if(!manualStaffing[n]) manualStaffing[n]={}; manualStaffing[n][date]=val.trim(); SafeStorage.set('cra_manual_staffing', manualStaffing); }
-  function addStaffingRow() { const n = prompt("Nom du collaborateur :"); if(n){ manualStaffing[n]={}; renderStaffingCalendar(); } }
-  function renderDispoTable() { renderStaffingCalendar(); }
+
+  function renderRacTable() {
+      const tbody = document.getElementById('rac-table-body'); tbody.innerHTML = '';
+      currentRacData.sort((a,b) => racSort.asc ? (a[racSort.col] > b[racSort.col] ? 1 : -1) : (a[racSort.col] < b[racSort.col] ? 1 : -1)).forEach(d => {
+          tbody.innerHTML += `<tr><td><strong>${d.m}</strong></td><td style="text-align:right;">${d.allocated ? d.allocated.toFixed(1)+'j' : '-'}</td><td style="text-align:right;">${d.consumed.toFixed(1)}j</td><td style="text-align:right; color:var(--brand-hover); font-weight:600;">${d.ca.toLocaleString('fr-FR')} €</td><td style="text-align:right; font-weight:700; color:${d.remaining<0?'var(--danger)':'inherit'}">${d.remaining.toFixed(1)}j</td><td><div style="background:var(--border); height:6px; border-radius:3px; overflow:hidden;"><div style="width:${Math.min(d.percent,100)}%; height:100%; background:var(--brand);"></div></div></td></tr>`;
+      });
+  }
+  function sortRacData(col) { racSort.asc = (racSort.col === col) ? !racSort.asc : true; racSort.col = col; renderRacTable(); }
+
+  function renderProdTable() {
+      const tbody = document.getElementById('prod-table-body'); tbody.innerHTML = '';
+      currentProdData.sort((a,b) => prodSort.asc ? (a[prodSort.col] > b[prodSort.col] ? 1 : -1) : (a[prodSort.col] < b[prodSort.col] ? 1 : -1)).forEach(d => {
+          tbody.innerHTML += `<tr><td><strong>${d.c}</strong></td><td style="text-align:right;">${d.jours.toFixed(1)}j</td><td style="text-align:right; font-weight:700;">${d.rate.toFixed(0)}%</td><td><div style="background:var(--border); height:6px; border-radius:3px; overflow:hidden;"><div style="width:${Math.min(d.rate,100)}%; height:100%; background:var(--primary);"></div></div></td></tr>`;
+      });
+  }
+  function sortProdData(col) { prodSort.asc = (prodSort.col === col) ? !prodSort.asc : true; prodSort.col = col; renderProdTable(); }
 
   // =========================================================================
-  // LOGIQUE MODULE 2 : FACTURATOR
+  // 6. FACTURATOR
   // =========================================================================
-  let factDataSources = SafeStorage.get('fact_data_sources') || {}; let factData = []; let factFilteredData = [];
-  let factStatuts = SafeStorage.get('fact_statuts') || {}; let factTjm = SafeStorage.get('fact_tjm') || {}; let factEcheances = SafeStorage.get('fact_echeances') || [];
-  let factCurrentClient = null;
-
-  function factLoadFromCRA() {
-      factDataSources = { 'cra_shared': { name: 'CRAminator Sync', data: rawData, addedAt: Date.now() } };
-      SafeStorage.set('fact_data_sources', factDataSources); factRebuildData();
-  }
+  let factDataSources = Store.get('fact_data_sources') || {}; let factData = [];
+  function factInit() { if(Object.keys(factDataSources).length > 0) factRebuildData(); }
+  function factLoadFromCRA() { factDataSources = { 'cra_shared': { name: 'CRAminator', data: rawData } }; Store.set('fact_data_sources', factDataSources); factRebuildData(); }
+  function factClearData() { if(!confirm('Vider la facturation ?')) return; factDataSources = {}; Store.remove('fact_data_sources'); factRebuildData(); }
   function factRebuildData() {
       factData = []; Object.values(factDataSources).forEach(src => { if(src.data) factData = factData.concat(src.data); });
-      if(factData.length > 0) {
-          document.getElementById('fact-drop-zone').classList.add('hidden'); document.getElementById('fact-dashboard').classList.remove('hidden');
-          factPopulateFilters(); factFilteredData = factGetFiltered(); factUpdateKPIs(); factRenderTable(); factRenderClientList(); factDrawCharts();
-      }
-  }
-  function factPopulateFilters() {
-      const ans = [...new Set(factData.map(d=>d.annee))].sort(); const mos = [...new Set(factData.map(d=>d.moisAnnee))].sort();
-      document.getElementById('fact-filter-annee').innerHTML = ans.map(a=>`<option value="${a}">${a}</option>`).join('');
-      document.getElementById('fact-filter-mois').innerHTML = '<option value="">Tous</option>' + mos.map(m=>`<option value="${m}">${m}</option>`).join('');
-      document.getElementById('fact-tbl-client').innerHTML = '<option value="">Tous les comptes</option>' + [...new Set(factData.map(d=>d.client))].sort().map(c=>`<option value="${c}">${c}</option>`).join('');
-      document.getElementById('fact-tbl-mois').innerHTML = '<option value="">Tous les mois</option>' + mos.map(m=>`<option value="${m}">${m}</option>`).join('');
-  }
-  function factGetFiltered() {
-      const fA = document.getElementById('fact-filter-annee').value, fM = document.getElementById('fact-filter-mois').value;
-      return factData.filter(d => d.annee === fA && (!fM || d.moisAnnee === fM));
-  }
-  function factAggregate(data) {
-      const map = {}; data.forEach(d => { const k = d.client+'||'+d.mission+'||'+d.moisAnnee; if(!map[k]) map[k]={client:d.client, mission:d.mission, moisAnnee:d.moisAnnee, jours:0}; map[k].jours += d.jours; });
-      return Object.values(map);
-  }
-  function factUpdateAll() { factFilteredData = factGetFiltered(); factUpdateKPIs(); factRenderTable(); factRenderClientList(); factDrawCharts(); }
-  
-  function factUpdateKPIs() {
-      let ca = 0; factAggregate(factFilteredData).forEach(r => { ca += r.jours * (factTjm[r.client]||clientTjm[r.client]||0); });
-      document.getElementById('fact-kpi-ca').innerText = ca.toLocaleString('fr-FR') + ' € HT';
-  }
-  function factRenderTable() {
-      const tbody = document.getElementById('fact-table-body'); tbody.innerHTML = '';
-      const fC = document.getElementById('fact-tbl-client').value, fM = document.getElementById('fact-tbl-mois').value;
-      let data = factAggregate(factFilteredData);
-      if(fC) data = data.filter(r=>r.client === fC); if(fM) data = data.filter(r=>r.moisAnnee === fM);
-      
-      data.forEach(r => {
-          const tjm = factTjm[r.client]||clientTjm[r.client]||0;
-          tbody.innerHTML += `<tr style="border-bottom:1px solid var(--border-subtle);">
-              <td style="padding:10px;"><strong>${r.client}</strong></td><td>${r.mission}</td><td>${r.moisAnnee}</td><td style="text-align:right;">${r.jours.toFixed(1)}j</td><td style="text-align:right;">${tjm} €</td><td style="text-align:right; font-weight:700; color:var(--brand-hover);">${(r.jours*tjm).toLocaleString('fr-FR')} €</td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox"></td><td style="text-align:center;"><input type="checkbox"></td>
-          </tr>`;
-      });
-  }
-  function factSwitchTab(tab) {
-      ['dashboard', 'clients', 'facturation'].forEach(t => { document.getElementById('fact-tab-' + t).classList.toggle('hidden', t !== tab); });
-  }
-  function factRenderClientList() {
-      const container = document.getElementById('fact-client-list'); container.innerHTML = '';
-      [...new Set(factFilteredData.map(d=>d.client))].sort().forEach(c => {
-          container.innerHTML += `<button onclick="factSelectClient('${c.replace(/'/g,"\\'")}')" class="btn btn-outline" style="width:100%; text-align:left; font-size:11px;">🏢 ${c}</button>`;
-      });
-  }
-  function factSelectClient(name) {
-      factCurrentClient = name; const tjm = factTjm[name]||clientTjm[name]||0;
-      document.getElementById('fact-client-detail').innerHTML = `<h3 style="font-family:'Fraunces',serif; font-size:18px; margin-bottom:12px;">Fiche de clôture : ${name}</h3><div class="form-group"><label>TJM spécifique (€)</label><input type="number" id="fact-tjm-val" value="${tjm}" class="form-input" style="max-width:150px;" onchange="factTjm['${name.replace(/'/g,"\\\'")}']=parseFloat(this.value);SafeStorage.set('fact_tjm',factTjm);factUpdateAll();"></div>`;
-  }
-  function factDrawCharts() {
-      const ctxC = document.getElementById('fact-chart-client').getContext('2d'); if(factChartClient) factChartClient.destroy();
-      const clientAgg = {}; factAggregate(factFilteredData).forEach(r => { clientAgg[r.client] = (clientAgg[r.client]||0) + (r.jours*(factTjm[r.client]||clientTjm[r.client]||0)); });
-      factChartClient = new Chart(ctxC, { type:'bar', data: { labels: Object.keys(clientAgg), datasets:[{ data: Object.values(clientAgg), backgroundColor:'#4491B6' }] }, options:{responsive:true, maintainAspectRatio:false} });
+      if(factData.length > 0) { document.getElementById('fact-drop-zone').classList.add('hidden'); document.getElementById('fact-dashboard').classList.remove('hidden'); }
+      else { document.getElementById('fact-drop-zone').classList.remove('hidden'); document.getElementById('fact-dashboard').classList.add('hidden'); }
   }
 
   // =========================================================================
-  // LOGIQUE MODULE 3 : STAFIZ AGREGATOR (SPLITTER COUPE-FLUX)
+  // 7. STAFIZ AGREGATOR
   // =========================================================================
-  window.agData = []; window.agHeaders = []; window.agClientGroups = {}; window.agSelectedCols = new Set(); window.agColOrder = [];
-  const AG_DEFAULT_KEEP = ['Collaborateur','Nom de la mission','Tâche','Date','Commentaire','Fractions'];
-
+  window.agData = []; window.agHeaders = []; window.agClientGroups = {};
   window.agHandleFile = function(file) {
       const reader = new FileReader();
       reader.onload = e => {
-          const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
-          const ws = workbook.Sheets[workbook.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false, dateNF: 'DD/MM/YYYY' });
+          const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
           if (!rows.length) return; window.agHeaders = Object.keys(rows[0]); window.agData = rows;
-          window.agSelectedCols = new Set(window.agHeaders.filter(h => AG_DEFAULT_KEEP.includes(h)));
           window.agApplyMonthFilter();
       };
       reader.readAsArrayBuffer(file);
   };
   window.agLoadFromCRA = function() {
       if(!rawData.length) return alert("CRAminator vide !");
-      window.agHeaders = ['Collaborateur', 'Client', 'Nom de la mission', 'Tâche', 'Date', 'Commentaire', 'Fractions'];
-      window.agData = rawData.map(d=>({ 'Collaborateur':d.collaborateur, 'Client':d.client, 'Nom de la mission':d.mission, 'Tâche':d.tache, 'Date':d.moisAnnee, 'Commentaire':d.commentaire, 'Fractions':d.jours }));
-      window.agSelectedCols = new Set(window.agHeaders); window.agApplyMonthFilter();
+      window.agHeaders = ['Collaborateur', 'Client', 'Mission', 'Tâche', 'Date', 'Commentaire', 'Jours'];
+      window.agData = rawData.map(d=>({ 'Collaborateur':d.collaborateur, 'Client':d.client, 'Mission':d.mission, 'Tâche':d.tache, 'Date':d.moisAnnee, 'Commentaire':d.commentaire, 'Jours':d.jours }));
+      window.agApplyMonthFilter();
   };
   window.agApplyMonthFilter = function() {
       window.agClientGroups = {};
-      window.agData.forEach(r => {
-          const cKey = String(r['Client'] || r['client'] || Object.values(r)[3] || 'Inconnu').trim();
-          if (!window.agClientGroups[cKey]) window.agClientGroups[cKey] = []; window.agClientGroups[cKey].push(r);
-      });
-      window.agRenderUI();
-  };
-  window.agRenderUI = function() {
+      window.agData.forEach(r => { const cKey = String(r['Client'] || r['client'] || Object.values(r)[3] || 'Inconnu').trim(); if (!window.agClientGroups[cKey]) window.agClientGroups[cKey] = []; window.agClientGroups[cKey].push(r); });
       document.getElementById('ag-preview-section').classList.remove('hidden');
       document.getElementById('ag-clients-list').innerHTML = Object.keys(window.agClientGroups).sort().map(c => `<div style="padding:6px; font-size:12px; border-bottom:1px solid var(--border-subtle);">🏢 <strong>${c}</strong> — ${window.agClientGroups[c].length} ligne(s)</div>`).join('');
   };
@@ -973,38 +780,12 @@
       const list = Object.keys(window.agClientGroups);
       for(let i=0; i<list.length; i++) {
           const name = list[i]; document.getElementById('ag-prog-fill').style.width = `${((i+1)/list.length)*100}%`;
-          const rows = window.agClientGroups[name]; const ws = XLSX.utils.json_to_sheet(rows);
-          const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'CRA');
+          const ws = XLSX.utils.json_to_sheet(window.agClientGroups[name]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'CRA');
           XLSX.writeFile(wb, `CRA_${name.replace(/[^a-zA-Z0-9]/g,'_')}.xlsx`);
-          document.getElementById('ag-log-list').innerHTML += `<li>✓ Package exporté avec succès pour : ${name}</li>`;
+          document.getElementById('ag-log-list').innerHTML += `<li>✓ Package exporté pour : ${name}</li>`;
           await new Promise(r => setTimeout(r, 200));
       }
   };
-
-  // --- ENGINE ENGINE : ASSISTANT IA DÉPORTE ---
-  async function generateAIAnalysis() {
-      const key = localStorage.getItem('cyrias_gemini_key') || '';
-      if(!key) return alert("Clé API Gemini absente de la page Configuration.");
-      
-      document.getElementById('ai-loading').classList.remove('hidden');
-      try {
-          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ contents: [{ parts: [{ text: `Génère une synthèse managériale en français pour cette volumétrie : ${filteredData.length} lignes d'imputations, représentant ${filteredData.reduce((a,r)=>a+r.jours,0).toFixed(1)} jours prestés. Liste les dérives potentielles.` }] }] })
-          });
-          const json = await res.json(); const txt = json.candidates[0].content.parts[0].text;
-          document.getElementById('ai-result-container').classList.remove('hidden');
-          document.getElementById('ai-result-container').innerHTML = txt.replace(/\n/g, '<br>');
-      } catch(e) { document.getElementById('ai-error').innerText = "Erreur communication API: " + e.message; }
-      finally { document.getElementById('ai-loading').classList.add('hidden'); }
-  }
-
-  // --- INITIALISATIONS SUR CHARGEMENT ---
-  window.addEventListener('load', () => {
-      if(Object.keys(dataSources).length > 0) showDashboard();
-      factInit();
-  });
-  function factInit() { if(Object.keys(factDataSources).length > 0) factRebuildData(); }
 </script>
 
 </body>

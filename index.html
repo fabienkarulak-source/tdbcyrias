@@ -1,42 +1,1236 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyrias Buddy — Accueil</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CYRIAS — Planning de présence</title>
+<link rel="icon" href="https://www.cyrias.com/wp-content/uploads/2023/01/favicon-cyrias.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Cyrias charte */
+  --cyrias-blue: #1B3F73;
+  --cyrias-blue-dark: #0F2C54;
+  --cyrias-blue-light: #E8EEF7;
+  --cyrias-green: #95C11F;
+  --cyrias-green-dark: #6E9613;
+  --cyrias-green-light: #EEF6D9;
+
+  --bg: #f6f7fa;
+  --surface: #ffffff;
+  --surface2: #eef1f6;
+  --border: #e2e6ee;
+  --border2: #c7cdd9;
+  --text: #0F2C54;
+  --text2: #5a6478;
+  --text3: #9098a8;
+  --accent: var(--cyrias-blue);
+  --accent-bg: var(--cyrias-blue-light);
+  --radius: 8px;
+  --radius-sm: 5px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ── */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+.topbar {
+  background: var(--cyrias-blue);
+  color: #fff;
+  border-bottom: 3px solid var(--cyrias-green);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 18px;
+  border-right: 1px solid rgba(255,255,255,.18);
+  height: 100%;
+}
+.logo img {
+  height: 32px;
+  width: auto;
+  display: block;
+}
+.logo-app-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,.85);
+  letter-spacing: .2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo-app-name::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--cyrias-green);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.topbar-center { flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; }
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: var(--radius);
+  padding: 3px 5px;
+}
+.week-btn {
+  background: none; border: none; cursor: pointer;
+  color: rgba(255,255,255,.85); padding: 5px 8px; border-radius: 5px;
+  display: flex; align-items: center; transition: background .15s;
+  font-size: 16px; line-height: 1;
+}
+.week-btn:hover { background: rgba(255,255,255,.18); color: #fff; }
+.week-label {
+  font-size: 13px; font-weight: 500; min-width: 200px;
+  text-align: center; color: #fff;
+}
+
+.topbar-right { display: flex; gap: 8px; align-items: center; }
+
+.btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface2); border-color: var(--border2); }
+.btn-primary { background: var(--cyrias-green); color: var(--cyrias-blue-dark); border-color: var(--cyrias-green); font-weight: 600; }
+.btn-primary:hover { background: var(--cyrias-green-dark); border-color: var(--cyrias-green-dark); color: #fff; }
+.btn-danger { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.btn-danger:hover { background: #fecaca; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-icon { padding: 5px; }
+
+/* Bouton sur fond bleu topbar */
+.topbar .btn {
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  border-color: rgba(255,255,255,.2);
+}
+.topbar .btn:hover { background: rgba(255,255,255,.18); }
+.topbar .btn-primary {
+  background: var(--cyrias-green);
+  color: var(--cyrias-blue-dark);
+  border-color: var(--cyrias-green);
+}
+.topbar .btn-primary:hover {
+  background: #aad434;
+  border-color: #aad434;
+  color: var(--cyrias-blue-dark);
+}
+
+.main { display: flex; flex: 1; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 60px;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+
+.sidebar-section { padding: 16px; border-bottom: 1px solid var(--border); }
+.sidebar-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--text3); margin-bottom: 10px; }
+
+/* Stats */
+.stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-card {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  border-left: 3px solid var(--cyrias-blue);
+}
+.stat-card:nth-child(2) { border-left-color: var(--cyrias-green); }
+.stat-card:nth-child(3) { border-left-color: #c44; }
+.stat-card:nth-child(4) { border-left-color: var(--text3); }
+.stat-val { font-size: 22px; font-weight: 600; color: var(--text); line-height: 1; }
+.stat-lbl { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+/* Légende */
+.legend-list { display: flex; flex-direction: column; gap: 4px; }
+.legend-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 8px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: background .1s;
+  position: relative;
+}
+.legend-item:hover { background: var(--surface2); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-name { font-size: 12px; flex: 1; }
+.legend-count { font-size: 11px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--text3); }
+.legend-actions { display: none; gap: 4px; }
+.legend-item:hover .legend-actions { display: flex; }
+.legend-edit-btn { background: none; border: none; cursor: pointer; padding: 2px; color: var(--text3); border-radius: 4px; }
+.legend-edit-btn:hover { background: var(--border); color: var(--text); }
+
+/* Persons list in sidebar */
+.person-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: background .1s;
+}
+.person-item:hover { background: var(--surface2); }
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; flex-shrink: 0;
+}
+.person-info { flex: 1; min-width: 0; }
+.person-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.person-site { font-size: 11px; color: var(--text3); }
+.person-actions { display: none; gap: 4px; }
+.person-item:hover .person-actions { display: flex; }
+
+/* ── Content ── */
+.content { flex: 1; padding: 20px; overflow-x: auto; min-width: 0; }
+
+/* Summary bar */
+.summary-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.sum-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.sum-val { font-size: 24px; font-weight: 600; line-height: 1; }
+.sum-lbl { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.sum-bar { height: 3px; border-radius: 2px; margin-top: 8px; background: var(--border); overflow: hidden; }
+.sum-bar-fill { height: 100%; border-radius: 2px; transition: width .4s; }
+
+/* Table */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+table { width: 100%; border-collapse: collapse; min-width: 600px; }
+
+thead th {
+  padding: 10px 8px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  text-align: center;
+  white-space: nowrap;
+}
+thead th.th-person {
+  text-align: left; padding-left: 16px; min-width: 140px;
+  position: sticky; left: 0; z-index: 2; background: var(--surface2);
+}
+thead th.th-ref { text-align: left; min-width: 110px; }
+thead .th-day-name { font-size: 12px; font-weight: 600; }
+thead .th-day-date { font-size: 11px; font-weight: 400; color: var(--text3); }
+thead th.th-today { background: var(--cyrias-blue-light); color: var(--cyrias-blue); }
+thead th.th-today .th-day-date { color: var(--cyrias-blue); opacity: .8; }
+
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: #fafaf8; }
+
+tbody td {
+  padding: 8px 6px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 13px;
+}
+tbody td.td-person {
+  text-align: left; padding-left: 16px;
+  position: sticky; left: 0;
+  background: var(--surface);
+  z-index: 1;
+  font-weight: 500;
+}
+tbody tr:hover td.td-person { background: #fafaf8; }
+tbody td.td-ref { text-align: left; }
+
+.presence-cell {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  min-width: 80px;
+}
+.presence-cell:hover { filter: brightness(.94); transform: scale(1.02); }
+.presence-empty {
+  width: 32px; height: 26px; border-radius: 20px;
+  border: 1.5px dashed var(--border2);
+  cursor: pointer; display: inline-flex;
+  align-items: center; justify-content: center;
+  color: var(--text3); font-size: 16px; transition: all .15s;
+}
+.presence-empty:hover { border-color: var(--cyrias-green); color: var(--cyrias-green-dark); background: var(--cyrias-green-light); }
+
+/* Footer counts */
+tfoot tr td {
+  padding: 7px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+  color: var(--text2);
+}
+tfoot tr:first-child td { border-top: 2px solid var(--border2); }
+tfoot td.td-person { text-align: left; padding-left: 16px; position: sticky; left: 0; background: var(--surface2); z-index: 1; }
+.count-pill {
+  display: inline-block;
+  background: var(--border);
+  border-radius: 20px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── Modal ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,25,22,.45);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 20px;
+  width: 90%;
+  max-width: 420px;
+  transform: translateY(8px);
+  transition: transform .2s;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.overlay.open .modal { transform: translateY(0); }
+
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-close { background: none; border: none; cursor: pointer; color: var(--text3); padding: 4px; border-radius: 6px; font-size: 18px; line-height: 1; }
+.modal-close:hover { background: var(--surface2); color: var(--text); }
+
+.modal-section { margin-bottom: 16px; }
+.modal-label { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+
+.presence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.presence-opt {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  border: 2px solid transparent;
+  transition: all .15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.presence-opt.selected { border-color: var(--cyrias-blue); box-shadow: 0 0 0 2px var(--cyrias-blue-light); }
+.presence-opt-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.form-input {
+  width: 100%; padding: 7px 10px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.form-input:focus { border-color: var(--cyrias-blue); box-shadow: 0 0 0 3px var(--cyrias-blue-light); }
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6960' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+}
+
+.color-picker-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.color-swatch {
+  width: 24px; height: 24px; border-radius: 50%;
+  cursor: pointer; border: 2px solid transparent;
+  transition: transform .1s;
+}
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch.selected { border-color: var(--text); }
+
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* Tags import/export */
+.tabs { display: flex; gap: 2px; background: var(--surface2); border-radius: var(--radius-sm); padding: 3px; margin-bottom: 16px; }
+.tab { flex: 1; text-align: center; padding: 5px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 5px; color: var(--text2); transition: all .15s; }
+.tab.active { background: var(--surface); color: var(--cyrias-blue); box-shadow: 0 1px 3px rgba(0,0,0,.08); font-weight: 600; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(60px);
+  background: var(--text); color: #fff;
+  padding: 8px 16px; border-radius: 20px;
+  font-size: 13px; font-weight: 500;
+  z-index: 999; transition: transform .3s;
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Sync badge */
+.sync-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; color: rgba(255,255,255,.8);
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
+  border-radius: 20px; padding: 4px 10px;
+}
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyrias-green); box-shadow: 0 0 0 3px rgba(149,193,31,.25); }
+.sync-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .topbar { padding: 0 12px; }
+  .content { padding: 12px; }
+}
+</style>
 </head>
 <body>
 
 <div class="app">
-  <div id="sidebar-container"></div>
 
-  <div class="main-content">
-    <div class="page-header">
-      <h1>Bonjour, bienvenue sur Cyrias Buddy 👋</h1>
-      <p id="home-date"></p>
-    </div>
-    
-    <div style="padding: 40px;">
-      <h3 class="section-title" style="padding: 0; margin-top: 0;">Vos indicateurs rapides</h3>
-      <div style="display: flex; gap: 16px;">
-          <div class="tool-card" style="flex: 1;">
-              <h4>Tâches en attente</h4>
-              <div style="font-size: 32px; font-weight: bold; color: var(--primary); margin-top: 10px;">0</div>
-          </div>
+  <!-- Topbar -->
+  <header class="topbar">
+    <a class="logo" href="https://www.cyrias.com" target="_blank" rel="noopener" title="Cyrias — Value Across Technology">
+      <img src="https://www.cyrias.com/wp-content/uploads/2023/01/logo-cyrias-blanc.svg" alt="Cyrias">
+    </a>
+    <div class="logo-app-name">Planning de présence</div>
+    <div class="topbar-center">
+      <div class="week-nav">
+        <button class="week-btn" id="prevWeek" title="Semaine précédente">&#8249;</button>
+        <span class="week-label" id="weekLabel"></span>
+        <button class="week-btn" id="nextWeek" title="Semaine suivante">&#8250;</button>
       </div>
+      <button class="btn btn-sm" id="todayBtn">Aujourd'hui</button>
+    </div>
+    <div class="topbar-right">
+      <div class="sync-badge">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncLabel">Synchronisé</span>
+      </div>
+      <button class="btn btn-sm" id="exportBtn">⬇ Export CSV</button>
+      <button class="btn btn-sm btn-primary" id="settingsBtn">⚙ Paramètres</button>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Cette semaine</div>
+        <div class="stat-row" id="sideStats"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Légende</div>
+        <div class="legend-list" id="legendList"></div>
+      </div>
+
+      <div class="sidebar-section" style="flex:1;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div class="sidebar-title" style="margin:0">Équipe</div>
+          <button class="btn btn-sm" id="addPersonSideBtn">+ Personne</button>
+        </div>
+        <div id="personList"></div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content">
+      <div class="summary-bar" id="summaryBar"></div>
+      <div class="table-wrap">
+        <table>
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+          <tfoot id="tableFoot"></tfoot>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal présence -->
+<div class="overlay" id="presenceOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="presenceModalTitle">Modifier la présence</div>
+      <button class="modal-close" id="presenceModalClose">&times;</button>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">Type de présence</div>
+      <div class="presence-grid" id="presenceGrid"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="clearPresenceBtn">Effacer</button>
+      <button class="btn btn-sm" id="presenceModalCancel">Annuler</button>
     </div>
   </div>
 </div>
 
-<script src="assets/app.js"></script>
-<script src="assets/components.js"></script>
-<script>
-  // Logique spécifique à l'accueil
-  document.getElementById('home-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-</script>
+<!-- Modal paramètres -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">Paramètres</div>
+      <button class="modal-close" id="settingsClose">&times;</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="persons">Personnes</div>
+      <div class="tab" data-tab="lieux">Lieux & Types</div>
+      <div class="tab" data-tab="sites">Sites de réf.</div>
+      <div class="tab" data-tab="data">Données</div>
+    </div>
+    <div id="tabPersons" class="tab-panel">
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input class="form-input" id="newPersonName" placeholder="Prénom Nom" style="flex:1;">
+        <select class="form-input form-select" id="newPersonSite" style="width:130px;"></select>
+        <button class="btn btn-primary btn-sm" id="addPersonBtn">Ajouter</button>
+      </div>
+      <div id="personsEditList"></div>
+    </div>
+    <div id="tabLieux" class="tab-panel" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        <input class="form-input" id="newLieuName" placeholder="Nom du lieu / type" style="flex:1;min-width:120px;">
+        <input class="form-input" id="newLieuColor" placeholder="#hex bg" style="width:90px;">
+        <input class="form-input" id="newLieuTextColor" placeholder="#hex texte" style="width:90px;">
+        <button class="btn btn-primary btn-sm" id="addLieuBtn">Ajouter</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Couleurs suggérées :</div>
+      <div class="color-picker-row" id="colorSwatches"></div>
+      <div id="lieuxEditList" style="margin-top:12px;"></div>
+    </div>
+    <div id="tabSites" class="tab-panel" style="display:none;">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Les sites de référence sont les lieux assignés par défaut à chaque personne. Modifiez-les dans l'onglet Personnes ou en cliquant sur le badge dans le tableau.</p>
+      <div id="sitesEditList"></div>
+    </div>
+    <div id="tabData" class="tab-panel" style="display:none;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn" id="exportJsonBtn">⬇ Exporter JSON (sauvegarde)</button>
+        <div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Importer JSON :</div>
+          <input type="file" id="importFile" accept=".json" style="font-size:13px;">
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);">
+        <button class="btn btn-danger" id="resetDataBtn">🗑 Réinitialiser toutes les données</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="settingsCancel">Fermer</button>
+    </div>
+  </div>
+</div>
 
+<!-- Modal personne -->
+<div class="overlay" id="personOverlay">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-header">
+      <div class="modal-title" id="personModalTitle">Modifier la personne</div>
+      <button class="modal-close" id="personModalClose">&times;</button>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">Nom</div>
+      <input class="form-input" id="editPersonName" placeholder="Prénom Nom" style="margin-bottom:10px;">
+      <div class="modal-label">Site de référence</div>
+      <select class="form-input form-select" id="editPersonSite"></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="deletePersonBtn">Supprimer</button>
+      <button class="btn btn-sm" id="personModalCancel">Annuler</button>
+      <button class="btn btn-primary btn-sm" id="savePersonBtn">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STORAGE (shared via window.storage) ──────────────────────────────
+const STORAGE_KEY = 'planning-presence-v2';
+let saveTimeout = null;
+
+async function loadFromStorage() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY, true);
+    if (result && result.value) return JSON.parse(result.value);
+  } catch(e) {}
+  return null;
+}
+
+async function saveToStorage(data) {
+  setSyncing(true);
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(data), true);
+    setSyncing(false);
+  } catch(e) {
+    setSyncing(false, true);
+  }
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => saveToStorage(state), 800);
+}
+
+function setSyncing(syncing, err) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  if (syncing) {
+    dot.className = 'sync-dot syncing';
+    lbl.textContent = 'Synchronisation…';
+  } else if (err) {
+    dot.className = 'sync-dot';
+    dot.style.background = '#ef4444';
+    lbl.textContent = 'Erreur sync';
+  } else {
+    dot.className = 'sync-dot';
+    dot.style.background = '#22c55e';
+    lbl.textContent = 'Synchronisé';
+  }
+}
+
+// ── DEFAULT STATE ─────────────────────────────────────────────────────
+const DEFAULT_LIEUX = [
+  // Sites Cyrias — déclinaison bleu (couleur principale de la charte)
+  { id: 'massy', label: 'Massy (siège)', bg: '#E8EEF7', fg: '#1B3F73' },
+  { id: 'voiture', label: 'Massy - Voiture', bg: '#D4DEEE', fg: '#0F2C54' },
+  { id: 'vannes', label: 'Vannes', bg: '#DCE6F2', fg: '#1B3F73' },
+  { id: 'nantes', label: 'Nantes', bg: '#C9D6E9', fg: '#0F2C54' },
+  { id: 'bordeaux', label: 'Bordeaux', bg: '#E0E8F3', fg: '#1B3F73' },
+  { id: 'montpellier', label: 'Montpellier', bg: '#CFDAEB', fg: '#0F2C54' },
+  // Modes hors site — vert Cyrias + neutres
+  { id: 'teletravail', label: 'Télétravail', bg: '#EEF6D9', fg: '#5C7F0E' },
+  { id: 'client', label: 'Client', bg: '#FFF4D6', fg: '#876200' },
+  { id: 'formation', label: 'Formation', bg: '#E6DEF2', fg: '#46307A' },
+  { id: 'absence', label: 'Absence', bg: '#FCE0E0', fg: '#9A1F1F' },
+];
+
+const DEFAULT_PERSONS = [
+  { id: 'p1', nom: 'Xavier', site: 'bordeaux' },
+  { id: 'p2', nom: 'Amélie', site: 'massy' },
+  { id: 'p3', nom: 'Thomas', site: 'vannes' },
+  { id: 'p4', nom: 'Sophie', site: 'nantes' },
+  { id: 'p5', nom: 'Marc', site: 'massy' },
+  { id: 'p6', nom: 'Julie', site: 'teletravail' },
+];
+
+const DEFAULT_PLANNING = {
+  'p1': { '2026-05-25': 'teletravail', '2026-05-26': 'massy', '2026-05-27': 'client', '2026-05-28': 'massy', '2026-05-29': 'teletravail' },
+  'p2': { '2026-05-25': 'absence', '2026-05-26': 'teletravail', '2026-05-27': 'absence', '2026-05-28': 'massy', '2026-05-29': 'massy' },
+  'p3': { '2026-05-25': 'vannes', '2026-05-26': 'vannes', '2026-05-27': 'teletravail', '2026-05-28': 'vannes', '2026-05-29': 'vannes' },
+  'p4': { '2026-05-25': 'nantes', '2026-05-26': 'nantes', '2026-05-27': 'nantes', '2026-05-28': 'teletravail', '2026-05-29': 'nantes' },
+  'p5': { '2026-05-25': 'massy', '2026-05-26': 'teletravail', '2026-05-27': 'massy', '2026-05-28': 'massy', '2026-05-29': 'client' },
+  'p6': { '2026-05-25': 'teletravail', '2026-05-26': 'teletravail', '2026-05-27': 'teletravail', '2026-05-28': 'teletravail', '2026-05-29': 'teletravail' },
+};
+
+let state = {
+  lieux: JSON.parse(JSON.stringify(DEFAULT_LIEUX)),
+  persons: JSON.parse(JSON.stringify(DEFAULT_PERSONS)),
+  planning: JSON.parse(JSON.stringify(DEFAULT_PLANNING)),
+};
+
+// ── DATE UTILS ────────────────────────────────────────────────────────
+const MONTHS_FR = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+const DAYS_FR = ['Lun','Mar','Mer','Jeu','Ven'];
+
+function getMonday(d) {
+  const dd = new Date(d);
+  const day = dd.getDay();
+  const diff = dd.getDate() - day + (day === 0 ? -6 : 1);
+  dd.setDate(diff); dd.setHours(0,0,0,0);
+  return dd;
+}
+function addDays(d, n) { const dd = new Date(d); dd.setDate(dd.getDate()+n); return dd; }
+function dateKey(d) { return d.toISOString().slice(0,10); }
+function fmtDate(d) { return d.getDate() + ' ' + MONTHS_FR[d.getMonth()]; }
+
+let currentMonday = getMonday(new Date());
+let editCell = null; // {personId, dayKey}
+let editPersonId = null;
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+function getLieu(id) { return state.lieux.find(l => l.id === id); }
+function getPerson(id) { return state.persons.find(p => p.id === id); }
+function getPresence(personId, dayKey) {
+  return (state.planning[personId] && state.planning[personId][dayKey]) || null;
+}
+function setPresence(personId, dayKey, val) {
+  if (!state.planning[personId]) state.planning[personId] = {};
+  if (val === null) delete state.planning[personId][dayKey];
+  else state.planning[personId][dayKey] = val;
+  scheduleSave();
+}
+
+function uid() { return 'p' + Date.now() + Math.random().toString(36).slice(2,6); }
+
+function initials(nom) {
+  return nom.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+
+function avatarColor(nom) {
+  // Avatars en déclinaison de la charte Cyrias (bleu + vert)
+  const colors = ['#E8EEF7','#EEF6D9','#D4DEEE','#E6DEF2','#FFF4D6','#DCE6F2','#E0E8F3','#FCE0E0'];
+  let h = 0; for(let c of nom) h = (h*31 + c.charCodeAt(0)) & 0xfffff;
+  return colors[h % colors.length];
+}
+
+function badgeHtml(lieuId, clickAttr='') {
+  const l = getLieu(lieuId);
+  if (!l) return `<span class="presence-empty" ${clickAttr}>+</span>`;
+  return `<span class="presence-cell" style="background:${l.bg};color:${l.fg};" ${clickAttr}>${l.label}</span>`;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────
+function render() {
+  renderWeekLabel();
+  renderSidebar();
+  renderSummaryBar();
+  renderTable();
+  renderLegend();
+}
+
+function renderWeekLabel() {
+  const end = addDays(currentMonday, 4);
+  document.getElementById('weekLabel').textContent =
+    fmtDate(currentMonday) + ' – ' + fmtDate(end) + ' ' + end.getFullYear();
+}
+
+function renderSidebar() {
+  // Stats
+  let onsite=0, remote=0, absent=0;
+  const officeIds = state.lieux.filter(l => !['teletravail','absence','formation','client'].includes(l.id)).map(l=>l.id);
+  state.persons.forEach(p => {
+    for(let d=0;d<5;d++) {
+      const k = dateKey(addDays(currentMonday,d));
+      const v = getPresence(p.id, k);
+      if (!v) continue;
+      if (officeIds.includes(v)) onsite++;
+      else if (v === 'teletravail') remote++;
+      else absent++;
+    }
+  });
+  document.getElementById('sideStats').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${onsite}</div><div class="stat-lbl">Sur site</div></div>
+    <div class="stat-card"><div class="stat-val">${remote}</div><div class="stat-lbl">Télétravail</div></div>
+    <div class="stat-card"><div class="stat-val">${absent}</div><div class="stat-lbl">Absent</div></div>
+    <div class="stat-card"><div class="stat-val">${state.persons.length}</div><div class="stat-lbl">Personnes</div></div>
+  `;
+
+  // Person list
+  const pl = document.getElementById('personList');
+  pl.innerHTML = state.persons.map(p => {
+    const site = getLieu(p.site);
+    const av = avatarColor(p.nom);
+    return `<div class="person-item">
+      <div class="avatar" style="background:${av};color:#333;">${initials(p.nom)}</div>
+      <div class="person-info">
+        <div class="person-name">${p.nom}</div>
+        <div class="person-site">${site ? site.label : '—'}</div>
+      </div>
+      <div class="person-actions">
+        <button class="legend-edit-btn" onclick="openPersonModal('${p.id}')" title="Modifier">✏</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderLegend() {
+  const counts = {};
+  state.persons.forEach(p => {
+    for(let d=0;d<5;d++) {
+      const k = dateKey(addDays(currentMonday,d));
+      const v = getPresence(p.id, k);
+      if (v) counts[v] = (counts[v]||0) + 1;
+    }
+  });
+  document.getElementById('legendList').innerHTML = state.lieux.map(l => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${l.fg};"></div>
+      <div class="legend-name">${l.label}</div>
+      <div class="legend-count">${counts[l.id]||0}</div>
+    </div>
+  `).join('');
+}
+
+function renderSummaryBar() {
+  const total = state.persons.length * 5;
+  const officeIds = state.lieux.filter(l => !['teletravail','absence','formation','client'].includes(l.id)).map(l=>l.id);
+  let onsite=0, remote=0, absent=0, client=0;
+  state.persons.forEach(p => {
+    for(let d=0;d<5;d++) {
+      const k = dateKey(addDays(currentMonday,d));
+      const v = getPresence(p.id, k);
+      if (!v) continue;
+      if (officeIds.includes(v)) onsite++;
+      else if (v === 'teletravail') remote++;
+      else if (v === 'client') client++;
+      else absent++;
+    }
+  });
+  const pct = total > 0 ? Math.round(onsite/total*100) : 0;
+  document.getElementById('summaryBar').innerHTML = `
+    <div class="sum-card" style="border-top:3px solid #1B3F73;">
+      <div class="sum-val" style="color:#1B3F73;">${onsite}</div>
+      <div class="sum-lbl">Présences site</div>
+      <div class="sum-bar"><div class="sum-bar-fill" style="width:${pct}%;background:#1B3F73;"></div></div>
+    </div>
+    <div class="sum-card" style="border-top:3px solid #95C11F;">
+      <div class="sum-val" style="color:#5C7F0E;">${remote}</div>
+      <div class="sum-lbl">Télétravail</div>
+    </div>
+    <div class="sum-card" style="border-top:3px solid #E0B019;">
+      <div class="sum-val" style="color:#876200;">${client}</div>
+      <div class="sum-lbl">Client / déplacement</div>
+    </div>
+    <div class="sum-card" style="border-top:3px solid #C44;">
+      <div class="sum-val" style="color:#9A1F1F;">${absent}</div>
+      <div class="sum-lbl">Absences</div>
+    </div>
+    <div class="sum-card" style="border-top:3px solid #0F2C54;">
+      <div class="sum-val" style="color:#0F2C54;">${pct}%</div>
+      <div class="sum-lbl">Taux présence</div>
+    </div>
+  `;
+}
+
+function renderTable() {
+  const todayKey = dateKey(new Date());
+  // Head
+  let headHtml = '<tr><th class="th-person">Personne</th><th class="th-ref">Site réf.</th>';
+  for(let d=0;d<5;d++) {
+    const dd = addDays(currentMonday, d);
+    const k = dateKey(dd);
+    const isToday = k === todayKey;
+    headHtml += `<th${isToday?' class="th-today"':''}>
+      <div class="th-day-name">${DAYS_FR[d]}</div>
+      <div class="th-day-date">${fmtDate(dd)}</div>
+    </th>`;
+  }
+  headHtml += '</tr>';
+  document.getElementById('tableHead').innerHTML = headHtml;
+
+  // Body
+  let bodyHtml = '';
+  state.persons.forEach(p => {
+    const site = getLieu(p.site);
+    const av = avatarColor(p.nom);
+    bodyHtml += `<tr>
+      <td class="td-person">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="avatar" style="background:${av};color:#333;width:26px;height:26px;font-size:10px;">${initials(p.nom)}</div>
+          <span>${p.nom}</span>
+        </div>
+      </td>
+      <td class="td-ref">${site ? `<span class="presence-cell" style="background:${site.bg};color:${site.fg};font-size:11px;cursor:default;">${site.label}</span>` : '—'}</td>`;
+    for(let d=0;d<5;d++) {
+      const dd = addDays(currentMonday,d);
+      const k = dateKey(dd);
+      const v = getPresence(p.id, k);
+      const attr = `onclick="openPresenceModal('${p.id}','${k}')"`;
+      if (v) {
+        const l = getLieu(v);
+        bodyHtml += `<td>${l ? `<span class="presence-cell" style="background:${l.bg};color:${l.fg};" ${attr}>${l.label}</span>` : `<span class="presence-empty" ${attr}>+</span>`}</td>`;
+      } else {
+        bodyHtml += `<td><span class="presence-empty" ${attr}>+</span></td>`;
+      }
+    }
+    bodyHtml += '</tr>';
+  });
+  document.getElementById('tableBody').innerHTML = bodyHtml;
+
+  // Foot — group counts by lieu
+  const groupRows = [
+    { label: 'Total site', filter: l => !['teletravail','client','formation','absence'].includes(l.id) },
+    { label: 'Télétravail', filter: l => l.id === 'teletravail' },
+    { label: 'Client / dépl.', filter: l => ['client','formation'].includes(l.id) },
+    { label: 'Absences', filter: l => l.id === 'absence' },
+  ];
+  let footHtml = '';
+  groupRows.forEach(gr => {
+    const ids = state.lieux.filter(gr.filter).map(l=>l.id);
+    footHtml += `<tr><td class="td-person" colspan="2">${gr.label}</td>`;
+    for(let d=0;d<5;d++) {
+      const k = dateKey(addDays(currentMonday,d));
+      let cnt = 0;
+      state.persons.forEach(p => { if (ids.includes(getPresence(p.id,k))) cnt++; });
+      footHtml += `<td>${cnt > 0 ? `<span class="count-pill">${cnt}</span>` : '—'}</td>`;
+    }
+    footHtml += '</tr>';
+  });
+  document.getElementById('tableFoot').innerHTML = footHtml;
+}
+
+// ── MODAL PRÉSENCE ────────────────────────────────────────────────────
+function openPresenceModal(personId, dayKey) {
+  editCell = { personId, dayKey };
+  const p = getPerson(personId);
+  const d = new Date(dayKey);
+  const dn = DAYS_FR[d.getDay()-1] || DAYS_FR[0];
+  document.getElementById('presenceModalTitle').textContent = `${p.nom} — ${dn} ${fmtDate(d)}`;
+
+  const current = getPresence(personId, dayKey);
+  document.getElementById('presenceGrid').innerHTML = state.lieux.map(l => `
+    <div class="presence-opt ${current===l.id?'selected':''}" 
+      style="background:${l.bg};color:${l.fg};"
+      onclick="selectPresence('${l.id}')">
+      <div class="presence-opt-dot" style="background:${l.fg};"></div>
+      ${l.label}
+    </div>
+  `).join('');
+  openOverlay('presenceOverlay');
+}
+
+function selectPresence(id) {
+  if (!editCell) return;
+  setPresence(editCell.personId, editCell.dayKey, id);
+  closeOverlay('presenceOverlay');
+  render();
+}
+
+document.getElementById('clearPresenceBtn').onclick = () => {
+  if (!editCell) return;
+  setPresence(editCell.personId, editCell.dayKey, null);
+  closeOverlay('presenceOverlay');
+  render();
+};
+
+// ── MODAL PERSONNE ────────────────────────────────────────────────────
+function openPersonModal(personId) {
+  editPersonId = personId;
+  const p = getPerson(personId);
+  document.getElementById('personModalTitle').textContent = 'Modifier ' + p.nom;
+  document.getElementById('editPersonName').value = p.nom;
+  populateSiteSelect('editPersonSite', p.site);
+  openOverlay('personOverlay');
+}
+
+document.getElementById('savePersonBtn').onclick = () => {
+  if (!editPersonId) return;
+  const p = getPerson(editPersonId);
+  const nom = document.getElementById('editPersonName').value.trim();
+  const site = document.getElementById('editPersonSite').value;
+  if (!nom) return toast('Le nom ne peut pas être vide');
+  p.nom = nom; p.site = site;
+  scheduleSave();
+  closeOverlay('personOverlay');
+  render();
+};
+
+document.getElementById('deletePersonBtn').onclick = () => {
+  if (!editPersonId) return;
+  if (!confirm('Supprimer cette personne et toutes ses données ?')) return;
+  state.persons = state.persons.filter(p => p.id !== editPersonId);
+  delete state.planning[editPersonId];
+  scheduleSave();
+  closeOverlay('personOverlay');
+  render();
+};
+
+// ── SETTINGS ─────────────────────────────────────────────────────────
+const COLOR_SWATCHES = [
+  // Charte Cyrias — bleu primaire + vert accent + neutres harmonisés
+  '#E8EEF7','#D4DEEE','#C9D6E9','#1B3F73',
+  '#EEF6D9','#D7E89B','#95C11F','#5C7F0E',
+  '#FFF4D6','#E6DEF2','#FCE0E0','#F2F4F8',
+];
+
+function openSettings() {
+  renderSettingsPersons();
+  renderSettingsLieux();
+  renderSettingsSites();
+  populateSiteSelect('newPersonSite');
+  document.getElementById('colorSwatches').innerHTML = COLOR_SWATCHES.map(c =>
+    `<div class="color-swatch" style="background:${c};" onclick="pickColor('${c}')" title="${c}"></div>`
+  ).join('');
+  openOverlay('settingsOverlay');
+}
+
+function pickColor(c) {
+  document.getElementById('newLieuColor').value = c;
+}
+
+function renderSettingsPersons() {
+  document.getElementById('personsEditList').innerHTML = state.persons.map(p => {
+    const site = getLieu(p.site);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <div class="avatar" style="background:${avatarColor(p.nom)};color:#333;width:26px;height:26px;font-size:10px;">${initials(p.nom)}</div>
+      <div style="flex:1;font-size:13px;font-weight:500;">${p.nom}</div>
+      <div style="font-size:12px;color:var(--text3);">${site?site.label:'—'}</div>
+      <button class="btn btn-sm" onclick="openPersonModal('${p.id}')">✏ Modifier</button>
+    </div>`;
+  }).join('') || '<p style="font-size:13px;color:var(--text3);">Aucune personne</p>';
+}
+
+function renderSettingsLieux() {
+  document.getElementById('lieuxEditList').innerHTML = state.lieux.map((l,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <div style="width:14px;height:14px;border-radius:50%;background:${l.fg};"></div>
+      <span class="presence-cell" style="background:${l.bg};color:${l.fg};cursor:default;font-size:12px;padding:2px 8px;">${l.label}</span>
+      <div style="flex:1;font-size:11px;color:var(--text3);">${l.bg} / ${l.fg}</div>
+      <button class="btn btn-sm btn-danger" onclick="deleteLieu('${l.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderSettingsSites() {
+  document.getElementById('sitesEditList').innerHTML = state.persons.map(p => {
+    const av = avatarColor(p.nom);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div class="avatar" style="background:${av};color:#333;width:26px;height:26px;font-size:10px;">${initials(p.nom)}</div>
+      <div style="flex:1;font-size:13px;font-weight:500;">${p.nom}</div>
+      <select class="form-input form-select" style="width:140px;" onchange="changeSite('${p.id}',this.value)">
+        ${state.lieux.map(l => `<option value="${l.id}" ${p.site===l.id?'selected':''}>${l.label}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join('');
+}
+
+function changeSite(personId, siteId) {
+  const p = getPerson(personId);
+  if (p) { p.site = siteId; scheduleSave(); render(); }
+}
+
+function populateSiteSelect(id, selected) {
+  document.getElementById(id).innerHTML = state.lieux.map(l =>
+    `<option value="${l.id}" ${selected===l.id?'selected':''}>${l.label}</option>`
+  ).join('');
+}
+
+document.getElementById('addPersonBtn').onclick = () => {
+  const nom = document.getElementById('newPersonName').value.trim();
+  const site = document.getElementById('newPersonSite').value;
+  if (!nom) return toast('Entrez un nom');
+  state.persons.push({ id: uid(), nom, site });
+  document.getElementById('newPersonName').value = '';
+  scheduleSave();
+  renderSettingsPersons();
+  renderSettingsSites();
+  render();
+  toast(`${nom} ajouté(e)`);
+};
+
+document.getElementById('addLieuBtn').onclick = () => {
+  const name = document.getElementById('newLieuName').value.trim();
+  const bg = document.getElementById('newLieuColor').value.trim() || '#f1f0e8';
+  const fg = document.getElementById('newLieuTextColor').value.trim() || '#44403c';
+  if (!name) return toast('Entrez un nom');
+  const id = name.toLowerCase().replace(/[^a-z0-9]/g,'-');
+  if (state.lieux.find(l => l.id === id)) return toast('Ce lieu existe déjà');
+  state.lieux.push({ id, label: name, bg, fg });
+  document.getElementById('newLieuName').value = '';
+  document.getElementById('newLieuColor').value = '';
+  document.getElementById('newLieuTextColor').value = '';
+  scheduleSave();
+  renderSettingsLieux();
+  render();
+  toast(`Lieu "${name}" ajouté`);
+};
+
+function deleteLieu(id) {
+  if (!confirm('Supprimer ce lieu ? Les présences associées seront effacées.')) return;
+  state.lieux = state.lieux.filter(l => l.id !== id);
+  Object.values(state.planning).forEach(pp => {
+    Object.keys(pp).forEach(k => { if (pp[k] === id) delete pp[k]; });
+  });
+  scheduleSave();
+  renderSettingsLieux();
+  render();
+}
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(tt => tt.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    const panel = document.getElementById('tab' + t.dataset.tab.charAt(0).toUpperCase() + t.dataset.tab.slice(1));
+    if (panel) panel.style.display = '';
+    if (t.dataset.tab === 'persons') { renderSettingsPersons(); populateSiteSelect('newPersonSite'); }
+    if (t.dataset.tab === 'lieux') renderSettingsLieux();
+    if (t.dataset.tab === 'sites') renderSettingsSites();
+  });
+});
+
+// Export JSON
+document.getElementById('exportJsonBtn').onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = 'planning-presence.json'; a.click();
+  URL.revokeObjectURL(url);
+};
+
+// Import JSON
+document.getElementById('importFile').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!imported.persons || !imported.lieux) return toast('Format invalide');
+      if (!confirm('Remplacer toutes les données par le fichier importé ?')) return;
+      state = imported;
+      scheduleSave();
+      render();
+      toast('Données importées');
+    } catch(err) { toast('Erreur lors de l\'import'); }
+  };
+  r.readAsText(f);
+});
+
+// Reset
+document.getElementById('resetDataBtn').onclick = () => {
+  if (!confirm('Réinitialiser toutes les données ? Cette action est irréversible.')) return;
+  state = {
+    lieux: JSON.parse(JSON.stringify(DEFAULT_LIEUX)),
+    persons: JSON.parse(JSON.stringify(DEFAULT_PERSONS)),
+    planning: JSON.parse(JSON.stringify(DEFAULT_PLANNING)),
+  };
+  scheduleSave();
+  closeOverlay('settingsOverlay');
+  render();
+  toast('Données réinitialisées');
+};
+
+// Export CSV
+document.getElementById('exportBtn').onclick = () => {
+  let csv = 'Personne,Site de référence';
+  for(let d=0;d<5;d++) {
+    const dd = addDays(currentMonday,d);
+    csv += ',' + DAYS_FR[d] + ' ' + fmtDate(dd);
+  }
+  csv += '\n';
+  state.persons.forEach(p => {
+    const site = getLieu(p.site);
+    csv += `"${p.nom}","${site?site.label:''}"`;
+    for(let d=0;d<5;d++) {
+      const k = dateKey(addDays(currentMonday,d));
+      const v = getPresence(p.id,k);
+      const l = v ? getLieu(v) : null;
+      csv += `,"${l?l.label:''}"`;
+    }
+    csv += '\n';
+  });
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = 'planning-' + dateKey(currentMonday) + '.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Export CSV téléchargé');
+};
+
+// ── OVERLAYS ──────────────────────────────────────────────────────────
+function openOverlay(id) { document.getElementById(id).classList.add('open'); }
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) closeOverlay(o.id); });
+});
+
+document.getElementById('presenceModalClose').onclick = () => closeOverlay('presenceOverlay');
+document.getElementById('presenceModalCancel').onclick = () => closeOverlay('presenceOverlay');
+document.getElementById('settingsClose').onclick = () => closeOverlay('settingsOverlay');
+document.getElementById('settingsCancel').onclick = () => closeOverlay('settingsOverlay');
+document.getElementById('personModalClose').onclick = () => closeOverlay('personOverlay');
+document.getElementById('personModalCancel').onclick = () => closeOverlay('personOverlay');
+
+document.getElementById('settingsBtn').onclick = openSettings;
+document.getElementById('addPersonSideBtn').onclick = () => { openSettings(); };
+document.getElementById('prevWeek').onclick = () => { currentMonday = addDays(currentMonday,-7); render(); };
+document.getElementById('nextWeek').onclick = () => { currentMonday = addDays(currentMonday,7); render(); };
+document.getElementById('todayBtn').onclick = () => { currentMonday = getMonday(new Date()); render(); };
+
+// ── TOAST ─────────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+async function init() {
+  setSyncing(true);
+  const saved = await loadFromStorage();
+  if (saved && saved.persons && saved.lieux) {
+    state = saved;
+  }
+  render();
+  setSyncing(false);
+}
+
+init();
+</script>
 </body>
 </html>

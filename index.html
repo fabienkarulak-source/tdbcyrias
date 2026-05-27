@@ -26,8 +26,8 @@
   --text3: #9098a8;
   --accent: var(--cyrias-blue);
   --accent-bg: var(--cyrias-blue-light);
-  --radius: 8px;
-  --radius-sm: 5px;
+  --radius: 10px;
+  --radius-sm: 6px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -437,6 +437,197 @@ tfoot td.td-person { text-align: left; padding-left: 16px; position: sticky; lef
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
+/* Site capacity indicators */
+.site-indicators {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.site-cap-card {
+  flex: 1;
+  min-width: 110px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  transition: border-color .2s;
+}
+.site-cap-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.site-cap-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.site-cap-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.site-cap-days {
+  display: flex;
+  gap: 3px;
+}
+.site-cap-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.site-cap-day-label { font-size: 9px; color: var(--text3); font-weight: 500; }
+.site-cap-pill {
+  width: 100%;
+  min-width: 22px;
+  padding: 3px 4px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  line-height: 1;
+  transition: background .2s, color .2s;
+}
+.cap-empty { background: var(--surface2); color: var(--text3); }
+.cap-red    { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.cap-orange { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.cap-yellow { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
+.cap-green  { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.cap-over   { background: #fde8ff; color: #6b21a8; border: 1px solid #d8b4fe; }
+
+/* Day header site breakdown */
+.day-site-breakdown {
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 14px;
+}
+.day-site-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.day-site-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Foot capacity row */
+tfoot tr.foot-cap td {
+  padding: 0;
+  border-top: none;
+  background: var(--surface2);
+}
+.foot-cap-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  padding: 6px 4px;
+}
+.foot-cap-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+.foot-cap-site-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.foot-cap-num {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  min-width: 14px;
+  text-align: right;
+}
+.foot-cap-max { font-size: 10px; color: var(--text3); }
+
+/* Capacity color on th */
+thead th.th-cap-red { background: #fff5f5; }
+thead th.th-cap-orange { background: #fffbf0; }
+thead th.th-cap-green { background: #f0fdf4; }
+
+/* Dropdown menu */
+.dropdown { position: relative; }
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  min-width: 230px;
+  z-index: 100;
+  overflow: hidden;
+  display: none;
+}
+.dropdown-menu.open { display: block; }
+.dropdown-section {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.dropdown-section:last-child { border-bottom: none; }
+.dropdown-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--text3);
+  padding: 6px 12px 2px;
+}
+.dropdown-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text);
+  transition: background .1s;
+  border: none; background: none;
+  width: 100%; text-align: left;
+  font-family: 'DM Sans', sans-serif;
+}
+.topbar .dropdown-menu .dropdown-item { color: var(--text); border-color: transparent; }
+.dropdown-item:hover { background: var(--surface2); }
+.dropdown-item.danger { color: #991b1b; }
+.dropdown-item.danger:hover { background: #fee2e2; }
+.dropdown-icon { font-size: 16px; width: 20px; text-align: center; }
+
+/* Memory meter */
+.mem-bar-wrap {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.mem-bar-track {
+  height: 8px; border-radius: 4px;
+  background: var(--border);
+  margin: 8px 0 4px;
+  overflow: hidden;
+}
+.mem-bar-fill {
+  height: 100%; border-radius: 4px;
+  transition: width .5s;
+}
+.mem-info-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-top: 10px;
+}
+.mem-info-card {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+.mem-info-val { font-size: 15px; font-weight: 600; font-family: 'DM Mono',monospace; }
+.mem-info-lbl { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
 /* Sync badge */
 .sync-badge {
   display: inline-flex; align-items: center; gap: 6px;
@@ -448,19 +639,276 @@ tfoot td.td-person { text-align: left; padding-left: 16px; position: sticky; lef
 .sync-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
 
+/* Day presence gauge */
+.day-gauge-wrap {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.day-gauge-count {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text);
+}
+.day-gauge-sub {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 1px;
+}
+.day-gauge-bar {
+  height: 4px;
+  border-radius: 4px;
+  background: var(--border);
+  margin: 5px auto 0;
+  width: 80%;
+  overflow: hidden;
+}
+.day-gauge-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+.day-gauge-dots {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 5px;
+  min-height: 10px;
+}
+.day-gauge-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+thead th.th-day { padding-bottom: 10px; }
+thead th.th-today .day-gauge-fill { background: var(--cyrias-blue) !important; }
+
+/* Enhanced footer */
+tfoot tr.foot-main td {
+  padding: 10px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--surface2);
+  border-top: 2px solid var(--border2);
+  color: var(--text);
+}
+tfoot tr.foot-main td.td-person {
+  text-align: left; padding-left: 16px;
+  position: sticky; left: 0; background: var(--surface2); z-index: 1;
+}
+.foot-site-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.foot-site-num {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--cyrias-blue);
+}
+.foot-site-label {
+  font-size: 10px;
+  color: var(--text3);
+  font-weight: 400;
+}
+.foot-mini-bar {
+  width: 40px; height: 3px;
+  border-radius: 3px;
+  background: var(--border);
+  margin-top: 3px;
+  overflow: hidden;
+}
+.foot-mini-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--cyrias-blue);
+  transition: width .4s;
+}
+tfoot tr.foot-sub td {
+  padding: 5px 6px;
+  font-size: 11px;
+  background: var(--surface2);
+  border-top: none;
+  color: var(--text2);
+}
+tfoot tr.foot-sub td.td-person {
+  text-align: left; padding-left: 16px;
+  position: sticky; left: 0; background: var(--surface2); z-index: 1;
+  font-weight: 500;
+}
+.foot-sub-val { font-size: 11px; color: var(--text3); }
+
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar { display: none; }
   .topbar { padding: 0 12px; }
   .content { padding: 12px; }
 }
+
+/* Per-row duplicate + presence count */
+.person-cell-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+.person-cell-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  font-weight: 500;
+}
+.presence-count-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  background: var(--cyrias-blue-light);
+  color: var(--cyrias-blue);
+  line-height: 1;
+}
+.presence-count-badge.zero {
+  background: var(--surface2);
+  color: var(--text3);
+}
+.row-dup-btn {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  color: var(--text3);
+  opacity: 0;
+  transition: opacity .15s, background .1s;
+}
+tbody tr:hover .row-dup-btn { opacity: 1; }
+.row-dup-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+/* Holiday column */
+td.td-holiday, th.th-holiday {
+  background: #fefce8 !important;
+  position: relative;
+}
+.holiday-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 2px;
+  opacity: .7;
+}
+.holiday-label {
+  font-size: 10px;
+  color: #854d0e;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+thead th.th-holiday-day {
+  background: #fefce8 !important;
+}
+thead th.th-holiday-day .th-day-name { color: #854d0e; }
+thead th.th-holiday-day .th-day-date { color: #b45309; }
+.holiday-th-label {
+  font-size: 10px;
+  color: #b45309;
+  font-weight: 600;
+  background: #fef08a;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-top: 4px;
+  display: inline-block;
+  white-space: nowrap;
+  max-width: 84px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dup row modal */
+.dup-row-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Site groups in summary bar */
+.site-group-card {
+  flex: 1; min-width: 130px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  transition: border-color .2s;
+}
+.site-group-header {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+}
+.site-group-icon { font-size: 14px; }
+.site-group-label {
+  font-size: 12px; font-weight: 700; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.site-group-members {
+  display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 6px;
+}
+.site-group-member-pill {
+  font-size: 10px; padding: 1px 5px; border-radius: 8px; font-weight: 500;
+}
+.site-group-max {
+  font-size: 10px; color: var(--text3); font-weight: 400; margin-left: 4px;
+}
+
+/* Solidarité column */
+td.td-solidarite, th.th-solidarite-day {
+  background: #f5f3ff !important;
+}
+thead th.th-solidarite-day .th-day-name { color: #5b21b6; }
+thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
+.solidarite-th-label {
+  font-size: 10px; color: #6d28d9; font-weight: 600;
+  background: #ede9fe; border-radius: 4px; padding: 1px 5px;
+  margin-top: 4px; display: inline-block;
+  white-space: nowrap; max-width: 90px; overflow: hidden; text-overflow: ellipsis;
+}
+.solidarite-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+  background: #ede9fe; color: #5b21b6;
+  border: 1px solid #c4b5fd; cursor: pointer;
+  transition: all .15s; white-space: nowrap;
+}
+.solidarite-badge:hover { background: #ddd6fe; }
+.solidarite-done { background: #dcfce7 !important; color: #166534 !important; border-color: #86efac !important; }
+.solidarite-done:hover { background: #bbf7d0 !important; }
 </style>
 </head>
 <body>
 
 <div class="app">
 
-  <!-- Topbar -->
   <header class="topbar">
     <a class="logo" href="https://www.cyrias.com" target="_blank" rel="noopener" title="Cyrias — Value Across Technology">
       <img src="https://www.cyrias.com/wp-content/uploads/2023/01/logo-cyrias-blanc.svg" alt="Cyrias">
@@ -479,14 +927,31 @@ tfoot td.td-person { text-align: left; padding-left: 16px; position: sticky; lef
         <div class="sync-dot" id="syncDot"></div>
         <span id="syncLabel">Synchronisé</span>
       </div>
-      <button class="btn btn-sm" id="exportBtn">⬇ Export CSV</button>
+      <button class="btn btn-sm" id="exportBtn">⬇ CSV</button>
+      <div class="dropdown" id="actionsDropdown">
+        <button class="btn btn-sm" id="actionsBtn">Actions ▾</button>
+        <div class="dropdown-menu" id="actionsMenu">
+          <div class="dropdown-section">
+            <div class="dropdown-label">Dupliquer la semaine</div>
+            <button class="dropdown-item" id="dupNextWeekBtn"><span class="dropdown-icon">📋</span>Vers la semaine suivante</button>
+            <button class="dropdown-item" id="dupPeriodBtn"><span class="dropdown-icon">📅</span>Vers une période…</button>
+          </div>
+          <div class="dropdown-section">
+            <div class="dropdown-label">Réinitialiser</div>
+            <button class="dropdown-item danger" id="clearWeekBtn"><span class="dropdown-icon">🗑</span>Vider la semaine courante</button>
+            <button class="dropdown-item danger" id="clearPeriodBtn"><span class="dropdown-icon">🗑</span>Vider une période…</button>
+          </div>
+          <div class="dropdown-section">
+            <button class="dropdown-item" id="memoryBtn"><span class="dropdown-icon">💾</span>Utilisation mémoire</button>
+          </div>
+        </div>
+      </div>
       <button class="btn btn-sm btn-primary" id="settingsBtn">⚙ Paramètres</button>
     </div>
   </header>
 
   <div class="main">
 
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-section">
         <div class="sidebar-title">Cette semaine</div>
@@ -507,7 +972,6 @@ tfoot td.td-person { text-align: left; padding-left: 16px; position: sticky; lef
       </div>
     </aside>
 
-    <!-- Main content -->
     <main class="content">
       <div class="summary-bar" id="summaryBar"></div>
       <div class="table-wrap">
@@ -521,7 +985,6 @@ tfoot td.td-person { text-align: left; padding-left: 16px; position: sticky; lef
   </div>
 </div>
 
-<!-- Modal présence -->
 <div class="overlay" id="presenceOverlay">
   <div class="modal">
     <div class="modal-header">
@@ -539,7 +1002,6 @@ tfoot td.td-person { text-align: left; padding-left: 16px; position: sticky; lef
   </div>
 </div>
 
-<!-- Modal paramètres -->
 <div class="overlay" id="settingsOverlay">
   <div class="modal" style="max-width:520px;">
     <div class="modal-header">
@@ -549,7 +1011,8 @@ tfoot td.td-person { text-align: left; padding-left: 16px; position: sticky; lef
     <div class="tabs">
       <div class="tab active" data-tab="persons">Personnes</div>
       <div class="tab" data-tab="lieux">Lieux & Types</div>
-      <div class="tab" data-tab="sites">Sites de réf.</div>
+      <div class="tab" data-tab="groupes">Groupes</div>
+      <div class="tab" data-tab="feries">Fériés</div>
       <div class="tab" data-tab="data">Données</div>
     </div>
     <div id="tabPersons" class="tab-panel">
@@ -563,17 +1026,62 @@ tfoot td.td-person { text-align: left; padding-left: 16px; position: sticky; lef
     <div id="tabLieux" class="tab-panel" style="display:none;">
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
         <input class="form-input" id="newLieuName" placeholder="Nom du lieu / type" style="flex:1;min-width:120px;">
-        <input class="form-input" id="newLieuColor" placeholder="#hex bg" style="width:90px;">
-        <input class="form-input" id="newLieuTextColor" placeholder="#hex texte" style="width:90px;">
+        <input class="form-input" id="newLieuColor" placeholder="#hex fond" style="width:80px;">
+        <input class="form-input" id="newLieuTextColor" placeholder="#hex texte" style="width:80px;">
+        <input class="form-input" type="number" id="newLieuMax" placeholder="Max" style="width:60px;" min="0" title="Capacité max (0 = illimitée)">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap;">
+          <input type="checkbox" id="newLieuIsOffice" checked> Site physique
+        </label>
         <button class="btn btn-primary btn-sm" id="addLieuBtn">Ajouter</button>
       </div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Couleurs suggérées :</div>
       <div class="color-picker-row" id="colorSwatches"></div>
       <div id="lieuxEditList" style="margin-top:12px;"></div>
     </div>
-    <div id="tabSites" class="tab-panel" style="display:none;">
-      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Les sites de référence sont les lieux assignés par défaut à chaque personne. Modifiez-les dans l'onglet Personnes ou en cliquant sur le badge dans le tableau.</p>
-      <div id="sitesEditList"></div>
+    <div id="tabGroupes" class="tab-panel" style="display:none;">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Regroupement de sites</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">Fusionner plusieurs sites dans un seul indicateur (ex: Massy + Massy-Voiture). Le max du groupe est vérifié globalement.</p>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <input class="form-input" id="newGroupName" placeholder="Nom du groupe" style="flex:1;min-width:120px;">
+        <input type="number" class="form-input" id="newGroupMax" placeholder="Max" style="width:60px;" min="0">
+        <button class="btn btn-primary btn-sm" id="addGroupBtn">+ Groupe</button>
+      </div>
+      <div id="groupsEditList" style="margin-bottom:16px;"></div>
+      <hr style="border:none;border-top:1px solid var(--border);margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Journée de solidarité</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">Le lundi de Pentecôte ou une journée travaillée sans rémunération supplémentaire. Affichée dans le planning, chaque personne peut la marquer comme effectuée.</p>
+      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;">
+          <div class="modal-label" style="margin-bottom:4px;">Date</div>
+          <input type="date" class="form-input" id="solidariteDate">
+        </div>
+        <div style="flex:2;min-width:160px;">
+          <div class="modal-label" style="margin-bottom:4px;">Libellé</div>
+          <input class="form-input" id="solidariteLabel" placeholder="ex: Journée de solidarité 2026" value="Journée de solidarité">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-primary btn-sm" id="saveSolidariteBtn">Enregistrer</button>
+        <button class="btn btn-sm" id="clearSolidariteBtn">Supprimer</button>
+      </div>
+      <div id="solidariteStatus" style="margin-top:10px;font-size:12px;color:var(--text3);"></div>
+    </div>
+    <div id="tabFeries" class="tab-panel" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:flex-end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;">
+          <div class="modal-label" style="margin-bottom:4px;">Date</div>
+          <input type="date" class="form-input" id="newFerieDate">
+        </div>
+        <div style="flex:2;min-width:160px;">
+          <div class="modal-label" style="margin-bottom:4px;">Libellé</div>
+          <input class="form-input" id="newFerieLabel" placeholder="ex: Lundi de Pentecôte">
+        </div>
+        <button class="btn btn-primary btn-sm" id="addFerieBtn" style="align-self:flex-end;">Ajouter</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <button class="btn btn-sm" id="importFeriesFrBtn">🇫🇷 Importer fériés FR 2025-2026</button>
+      </div>
+      <div id="feriesEditList"></div>
     </div>
     <div id="tabData" class="tab-panel" style="display:none;">
       <div style="display:flex;flex-direction:column;gap:10px;">
@@ -592,7 +1100,6 @@ tfoot td.td-person { text-align: left; padding-left: 16px; position: sticky; lef
   </div>
 </div>
 
-<!-- Modal personne -->
 <div class="overlay" id="personOverlay">
   <div class="modal" style="max-width:360px;">
     <div class="modal-header">
@@ -613,8 +1120,98 @@ tfoot td.td-person { text-align: left; padding-left: 16px; position: sticky; lef
   </div>
 </div>
 
-<!-- Toast -->
+<div class="overlay" id="dupRowOverlay">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <div class="modal-title" id="dupRowTitle">Dupliquer la semaine de …</div>
+      <button class="modal-close" onclick="closeOverlay('dupRowOverlay')">&times;</button>
+    </div>
+    <div class="modal-section">
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:12px;font-size:13px;color:var(--text2);">
+        Semaine source : <strong id="dupRowSourceLabel"></strong>
+      </div>
+      <div class="dup-row-grid">
+        <button class="btn" id="dupRowNextBtn">📋 Vers la semaine suivante</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="date" class="form-input" id="dupRowDateTarget" style="flex:1;">
+          <button class="btn btn-primary btn-sm" id="dupRowDateBtn">Dupliquer</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);">Ou choisir une semaine cible (n'importe quel jour de cette semaine)</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:2px;">
+          <input type="date" class="form-input" id="dupRowPeriodStart" style="flex:1;" placeholder="Début">
+          <span style="font-size:12px;color:var(--text3);">→</span>
+          <input type="date" class="form-input" id="dupRowPeriodEnd" style="flex:1;" placeholder="Fin">
+          <button class="btn btn-primary btn-sm" id="dupRowPeriodBtn">OK</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);">Ou dupliquer sur une période (toutes les semaines)</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeOverlay('dupRowOverlay')">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
+
+<div class="overlay" id="dupOverlay">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <div class="modal-title" id="dupModalTitle">Dupliquer vers une période</div>
+      <button class="modal-close" onclick="closeOverlay('dupOverlay')">&times;</button>
+    </div>
+    <div class="modal-section">
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:13px;color:var(--text2);">
+        Semaine source : <strong id="dupSourceLabel"></strong>
+      </div>
+      <div class="modal-label">Semaine de début (destination)</div>
+      <input type="date" class="form-input" id="dupDateStart" style="margin-bottom:10px;">
+      <div class="modal-label">Semaine de fin (incluse)</div>
+      <input type="date" class="form-input" id="dupDateEnd" style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--accent-bg);border-radius:var(--radius-sm);font-size:12px;color:var(--cyrias-blue-dark);" id="dupPreview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeOverlay('dupOverlay')">Annuler</button>
+      <button class="btn btn-primary btn-sm" id="dupConfirmBtn">Dupliquer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="clearPeriodOverlay">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <div class="modal-title">Vider une période</div>
+      <button class="modal-close" onclick="closeOverlay('clearPeriodOverlay')">&times;</button>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">Du lundi</div>
+      <input type="date" class="form-input" id="clearDateStart" style="margin-bottom:10px;">
+      <div class="modal-label">Au vendredi</div>
+      <input type="date" class="form-input" id="clearDateEnd" style="margin-bottom:10px;">
+      <div style="padding:8px 10px;background:#fee2e2;border-radius:var(--radius-sm);font-size:12px;color:#991b1b;">
+        ⚠ Toutes les présences de cette période seront supprimées.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeOverlay('clearPeriodOverlay')">Annuler</button>
+      <button class="btn btn-danger btn-sm" id="clearPeriodConfirmBtn">Vider la période</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="memoryOverlay">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">Utilisation mémoire</div>
+      <button class="modal-close" onclick="closeOverlay('memoryOverlay')">&times;</button>
+    </div>
+    <div id="memoryContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="purgePlanningBtn">🗑 Purger l'ancien planning</button>
+      <button class="btn btn-sm" onclick="closeOverlay('memoryOverlay')">Fermer</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ── STORAGE (shared via window.storage) ──────────────────────────────
@@ -656,25 +1253,24 @@ function setSyncing(syncing, err) {
     lbl.textContent = 'Erreur sync';
   } else {
     dot.className = 'sync-dot';
-    dot.style.background = '#22c55e';
+    dot.style.background = 'var(--cyrias-green)';
     lbl.textContent = 'Synchronisé';
   }
 }
 
 // ── DEFAULT STATE ─────────────────────────────────────────────────────
 const DEFAULT_LIEUX = [
-  // Sites Cyrias — déclinaison bleu (couleur principale de la charte)
-  { id: 'massy', label: 'Massy (siège)', bg: '#E8EEF7', fg: '#1B3F73' },
-  { id: 'voiture', label: 'Massy - Voiture', bg: '#D4DEEE', fg: '#0F2C54' },
-  { id: 'vannes', label: 'Vannes', bg: '#DCE6F2', fg: '#1B3F73' },
-  { id: 'nantes', label: 'Nantes', bg: '#C9D6E9', fg: '#0F2C54' },
-  { id: 'bordeaux', label: 'Bordeaux', bg: '#E0E8F3', fg: '#1B3F73' },
-  { id: 'montpellier', label: 'Montpellier', bg: '#CFDAEB', fg: '#0F2C54' },
-  // Modes hors site — vert Cyrias + neutres
-  { id: 'teletravail', label: 'Télétravail', bg: '#EEF6D9', fg: '#5C7F0E' },
-  { id: 'client', label: 'Client', bg: '#FFF4D6', fg: '#876200' },
-  { id: 'formation', label: 'Formation', bg: '#E6DEF2', fg: '#46307A' },
-  { id: 'absence', label: 'Absence', bg: '#FCE0E0', fg: '#9A1F1F' },
+  // Sites Cyrias avec les propriétés de capacités ajoutées
+  { id: 'massy', label: 'Massy (siège)', bg: '#E8EEF7', fg: '#1B3F73', isOffice: true, maxPersons: 20 },
+  { id: 'voiture', label: 'Massy - Voiture', bg: '#D4DEEE', fg: '#0F2C54', isOffice: true, maxPersons: 4 },
+  { id: 'vannes', label: 'Vannes', bg: '#DCE6F2', fg: '#1B3F73', isOffice: true, maxPersons: 10 },
+  { id: 'nantes', label: 'Nantes', bg: '#C9D6E9', fg: '#0F2C54', isOffice: true, maxPersons: 4 },
+  { id: 'bordeaux', label: 'Bordeaux', bg: '#E0E8F3', fg: '#1B3F73', isOffice: true, maxPersons: 3 },
+  { id: 'montpellier', label: 'Montpellier', bg: '#CFDAEB', fg: '#0F2C54', isOffice: true, maxPersons: 3 },
+  { id: 'teletravail', label: 'Télétravail', bg: '#EEF6D9', fg: '#5C7F0E', isOffice: false, maxPersons: 0 },
+  { id: 'client', label: 'Client', bg: '#FFF4D6', fg: '#876200', isOffice: false, maxPersons: 0 },
+  { id: 'formation', label: 'Formation', bg: '#E6DEF2', fg: '#46307A', isOffice: false, maxPersons: 0 },
+  { id: 'absence', label: 'Absence', bg: '#FCE0E0', fg: '#9A1F1F', isOffice: false, maxPersons: 0 },
 ];
 
 const DEFAULT_PERSONS = [
@@ -695,10 +1291,33 @@ const DEFAULT_PLANNING = {
   'p6': { '2026-05-25': 'teletravail', '2026-05-26': 'teletravail', '2026-05-27': 'teletravail', '2026-05-28': 'teletravail', '2026-05-29': 'teletravail' },
 };
 
+// Pre-populate French public holidays 2025-2026 (weekdays only)
+const FR_FERIES_DEFAULT = [
+  { date: '2025-11-01', label: 'Toussaint' },
+  { date: '2025-11-11', label: 'Armistice' },
+  { date: '2025-12-25', label: 'Noël' },
+  { date: '2026-01-01', label: 'Jour de l\'An' },
+  { date: '2026-04-06', label: 'Lundi de Pâques' },
+  { date: '2026-05-01', label: 'Fête du Travail' },
+  { date: '2026-05-08', label: 'Victoire 1945' },
+  { date: '2026-05-14', label: 'Ascension' },
+  { date: '2026-05-25', label: 'Lundi de Pentecôte' },
+  { date: '2026-07-14', label: 'Fête Nationale' },
+  { date: '2026-08-15', label: 'Assomption' },
+  { date: '2026-11-01', label: 'Toussaint' },
+  { date: '2026-11-11', label: 'Armistice' },
+  { date: '2026-12-25', label: 'Noël' },
+];
+
 let state = {
   lieux: JSON.parse(JSON.stringify(DEFAULT_LIEUX)),
   persons: JSON.parse(JSON.stringify(DEFAULT_PERSONS)),
   planning: JSON.parse(JSON.stringify(DEFAULT_PLANNING)),
+  feries: JSON.parse(JSON.stringify(FR_FERIES_DEFAULT)),
+  siteGroups: [
+    { id: 'g-massy', label: 'Massy (total)', siteIds: ['massy', 'voiture'], maxPersons: 24 }
+  ],
+  solidarite: null, // { date, label, done: [personId, ...] }
 };
 
 // ── DATE UTILS ────────────────────────────────────────────────────────
@@ -735,12 +1354,66 @@ function setPresence(personId, dayKey, val) {
 
 function uid() { return 'p' + Date.now() + Math.random().toString(36).slice(2,6); }
 
+// ── HOLIDAY HELPERS ───────────────────────────────────────────────────
+function getFerie(dateKey) {
+  if (!state.feries) return null;
+  return state.feries.find(f => f.date === dateKey) || null;
+}
+
+// Count on-site days for a person this week (not absence, not télétravail, not holiday)
+function countOnsiteDays(personId, weekMonday) {
+  const officeIds = state.lieux.filter(l => l.isOffice).map(l => l.id);
+  let count = 0;
+  for (let d = 0; d < 5; d++) {
+    const k = dateKey(addDays(weekMonday, d));
+    if (getFerie(k)) continue; // holiday — don't count
+    const v = getPresence(personId, k);
+    if (v && officeIds.includes(v)) count++;
+  }
+  return count;
+}
+
+// ── CAPACITY HELPERS ──────────────────────────────────────────────────
+// Returns the CSS class for fill color based on count vs max
+// 0 = empty, 1 = red, 1<n<max = gradient green→yellow→orange, n>=max = red, n>max = purple
+function capClass(count, max) {
+  if (count === 0) return 'cap-empty';
+  if (max <= 0) return 'cap-green'; // no limit set
+  if (count === 1) return 'cap-red';
+  if (count > max) return 'cap-over';
+  if (count === max) return 'cap-orange';
+  const ratio = count / max; // between 0 and 1
+  if (ratio <= 0.4) return 'cap-green';
+  if (ratio <= 0.7) return 'cap-yellow';
+  return 'cap-orange';
+}
+
+// Returns background color string for inline use
+function capBgColor(count, max) {
+  const cls = capClass(count, max);
+  const map = { 'cap-empty': 'transparent', 'cap-red': '#fee2e2', 'cap-orange': '#fff7ed', 'cap-yellow': '#fefce8', 'cap-green': '#dcfce7', 'cap-over': '#fde8ff' };
+  return map[cls] || 'transparent';
+}
+function capFgColor(count, max) {
+  const cls = capClass(count, max);
+  const map = { 'cap-empty': 'var(--text3)', 'cap-red': '#991b1b', 'cap-orange': '#c2410c', 'cap-yellow': '#854d0e', 'cap-green': '#166534', 'cap-over': '#6b21a8' };
+  return map[cls] || 'var(--text)';
+}
+
+// Overall day capacity class: use worst site (red > over > orange > yellow > green)
+function dayCapClass(dayStats) {
+  const classes = dayStats.siteBreakdown.map(s => capClass(s.count, s.max));
+  if (classes.includes('cap-red')) return 'th-cap-red';
+  if (classes.includes('cap-over')) return 'th-cap-red';
+  if (classes.includes('cap-orange')) return 'th-cap-orange';
+  return '';
+}
+
 function initials(nom) {
   return nom.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 }
 
 function avatarColor(nom) {
-  // Avatars en déclinaison de la charte Cyrias (bleu + vert)
   const colors = ['#E8EEF7','#EEF6D9','#D4DEEE','#E6DEF2','#FFF4D6','#DCE6F2','#E0E8F3','#FCE0E0'];
   let h = 0; for(let c of nom) h = (h*31 + c.charCodeAt(0)) & 0xfffff;
   return colors[h % colors.length];
@@ -770,7 +1443,7 @@ function renderWeekLabel() {
 function renderSidebar() {
   // Stats
   let onsite=0, remote=0, absent=0;
-  const officeIds = state.lieux.filter(l => !['teletravail','absence','formation','client'].includes(l.id)).map(l=>l.id);
+  const officeIds = state.lieux.filter(l => l.isOffice).map(l=>l.id);
   state.persons.forEach(p => {
     for(let d=0;d<5;d++) {
       const k = dateKey(addDays(currentMonday,d));
@@ -825,83 +1498,235 @@ function renderLegend() {
 }
 
 function renderSummaryBar() {
-  const total = state.persons.length * 5;
-  const officeIds = state.lieux.filter(l => !['teletravail','absence','formation','client'].includes(l.id)).map(l=>l.id);
-  let onsite=0, remote=0, absent=0, client=0;
-  state.persons.forEach(p => {
+  const officeLieux = state.lieux.filter(l => l.isOffice);
+  const groups = state.siteGroups || [];
+
+  // Determine which individual sites are "covered" by a group
+  const groupedSiteIds = new Set(groups.flatMap(g => g.siteIds));
+
+  // Build cards: groups first, then ungrouped sites
+  const cards = [];
+
+  groups.forEach(g => {
+    const memberLieux = g.siteIds.map(id => state.lieux.find(l => l.id === id)).filter(Boolean);
+    const max = g.maxPersons || 0;
+    const dayCounts = [];
     for(let d=0;d<5;d++) {
       const k = dateKey(addDays(currentMonday,d));
-      const v = getPresence(p.id, k);
-      if (!v) continue;
-      if (officeIds.includes(v)) onsite++;
-      else if (v === 'teletravail') remote++;
-      else if (v === 'client') client++;
-      else absent++;
+      let cnt = 0;
+      g.siteIds.forEach(sid => {
+        state.persons.forEach(p => { if (getPresence(p.id,k) === sid) cnt++; });
+      });
+      dayCounts.push(cnt);
     }
+    cards.push({ type: 'group', group: g, memberLieux, dayCounts, max });
   });
-  const pct = total > 0 ? Math.round(onsite/total*100) : 0;
-  document.getElementById('summaryBar').innerHTML = `
-    <div class="sum-card" style="border-top:3px solid #1B3F73;">
-      <div class="sum-val" style="color:#1B3F73;">${onsite}</div>
-      <div class="sum-lbl">Présences site</div>
-      <div class="sum-bar"><div class="sum-bar-fill" style="width:${pct}%;background:#1B3F73;"></div></div>
-    </div>
-    <div class="sum-card" style="border-top:3px solid #95C11F;">
-      <div class="sum-val" style="color:#5C7F0E;">${remote}</div>
-      <div class="sum-lbl">Télétravail</div>
-    </div>
-    <div class="sum-card" style="border-top:3px solid #E0B019;">
-      <div class="sum-val" style="color:#876200;">${client}</div>
-      <div class="sum-lbl">Client / déplacement</div>
-    </div>
-    <div class="sum-card" style="border-top:3px solid #C44;">
-      <div class="sum-val" style="color:#9A1F1F;">${absent}</div>
-      <div class="sum-lbl">Absences</div>
-    </div>
-    <div class="sum-card" style="border-top:3px solid #0F2C54;">
-      <div class="sum-val" style="color:#0F2C54;">${pct}%</div>
-      <div class="sum-lbl">Taux présence</div>
-    </div>
-  `;
+
+  // Ungrouped office sites
+  officeLieux.filter(l => !groupedSiteIds.has(l.id)).forEach(l => {
+    const dayCounts = [];
+    for(let d=0;d<5;d++) {
+      const k = dateKey(addDays(currentMonday,d));
+      let cnt = 0;
+      state.persons.forEach(p => { if (getPresence(p.id,k) === l.id) cnt++; });
+      dayCounts.push(cnt);
+    }
+    if (dayCounts.some(c => c > 0) || l.maxPersons > 0)
+      cards.push({ type: 'site', lieu: l, dayCounts, max: l.maxPersons || 0 });
+  });
+
+  if (cards.length === 0) {
+    document.getElementById('summaryBar').innerHTML = `<div style="font-size:13px;color:var(--text3);padding:8px 0;">Aucune présence sur site cette semaine.</div>`;
+    return;
+  }
+
+  const html = cards.map(card => {
+    const { dayCounts, max } = card;
+    const worstClass = dayCounts.reduce((worst, cnt) => {
+      const c = capClass(cnt, max);
+      const order = ['cap-empty','cap-green','cap-yellow','cap-orange','cap-red','cap-over'];
+      return order.indexOf(c) > order.indexOf(worst) ? c : worst;
+    }, 'cap-empty');
+    const borderColor = { 'cap-red':'#fca5a5','cap-over':'#d8b4fe','cap-orange':'#fed7aa','cap-yellow':'#fef08a','cap-green':'#86efac','cap-empty':'var(--border)' }[worstClass];
+
+    const dayHtml = dayCounts.map((cnt, d) => {
+      const bg = capBgColor(cnt, max);
+      const fg = capFgColor(cnt, max);
+      const cls = capClass(cnt, max);
+      return `<div class="site-cap-day">
+        <div class="site-cap-day-label">${DAYS_FR[d]}</div>
+        <div class="site-cap-pill ${cls}" style="background:${bg};color:${fg};">${cnt > 0 ? cnt : '—'}</div>
+        ${max > 0 && cnt > 0 ? `<div style="font-size:9px;color:var(--text3);">/${max}</div>` : '<div style="font-size:9px;">&nbsp;</div>'}
+      </div>`;
+    }).join('');
+
+    if (card.type === 'group') {
+      const g = card.group;
+      const memberPills = card.memberLieux.map(l =>
+        `<div class="site-group-member-pill" style="background:${l.bg};color:${l.fg};">${l.label}</div>`
+      ).join('');
+      return `<div class="site-group-card" style="border-color:${borderColor};">
+        <div class="site-group-header">
+          <span class="site-group-icon">🔗</span>
+          <div class="site-group-label">${g.label}${max > 0 ? `<span class="site-group-max">max ${max}</span>` : ''}</div>
+        </div>
+        <div class="site-group-members">${memberPills}</div>
+        <div class="site-cap-days">${dayHtml}</div>
+      </div>`;
+    } else {
+      const l = card.lieu;
+      return `<div class="site-cap-card" style="border-color:${borderColor};">
+        <div class="site-cap-header">
+          <div class="site-cap-dot" style="background:${l.fg};"></div>
+          <div class="site-cap-name">${l.label}${max > 0 ? `<span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:4px;">max ${max}</span>` : ''}</div>
+        </div>
+        <div class="site-cap-days">${dayHtml}</div>
+      </div>`;
+    }
+  }).join('');
+
+  document.getElementById('summaryBar').innerHTML = `<div class="site-indicators">${html}</div>`;
 }
 
 function renderTable() {
   const todayKey = dateKey(new Date());
-  // Head
+  const officeLieux = state.lieux.filter(l => l.isOffice);
+  const officeIds = officeLieux.map(l => l.id);
+  const total = state.persons.length;
+
+  // Pre-compute per-day stats with site breakdown
+  const dayStats = [];
+  for(let d=0;d<5;d++) {
+    const k = dateKey(addDays(currentMonday,d));
+    let onsite=0, remote=0, absent=0;
+    const onsitePersons = [];
+    const siteBreakdown = officeLieux.map(l => {
+      let count = 0;
+      state.persons.forEach(p => { if (getPresence(p.id,k) === l.id) count++; });
+      return { lieu: l, count, max: l.maxPersons || 0 };
+    }).filter(s => s.count > 0 || s.max > 0);
+
+    state.persons.forEach(p => {
+      const v = getPresence(p.id, k);
+      if (!v) return;
+      if (officeIds.includes(v)) { onsite++; onsitePersons.push(p); }
+      else if (v === 'teletravail') remote++;
+      else absent++;
+    });
+    dayStats.push({ k, onsite, remote, absent, onsitePersons, siteBreakdown });
+  }
+
+  // ── HEAD ──────────────────────────────────────────────────────────────
   let headHtml = '<tr><th class="th-person">Personne</th><th class="th-ref">Site réf.</th>';
   for(let d=0;d<5;d++) {
     const dd = addDays(currentMonday, d);
     const k = dateKey(dd);
     const isToday = k === todayKey;
-    headHtml += `<th${isToday?' class="th-today"':''}>
+    const ferie = getFerie(k);
+    const sol = state.solidarite && state.solidarite.date === k ? state.solidarite : null;
+    const s = dayStats[d];
+
+    if (ferie) {
+      headHtml += `<th class="th-day th-holiday-day">
+        <div class="th-day-name">${DAYS_FR[d]}</div>
+        <div class="th-day-date">${fmtDate(dd)}</div>
+        <div class="holiday-th-label" title="${ferie.label}">🎌 ${ferie.label}</div>
+      </th>`;
+      continue;
+    }
+
+    if (sol) {
+      headHtml += `<th class="th-day th-solidarite-day">
+        <div class="th-day-name">${DAYS_FR[d]}</div>
+        <div class="th-day-date">${fmtDate(dd)}</div>
+        <div class="solidarite-th-label" title="${sol.label}">🤝 ${sol.label}</div>
+      </th>`;
+      continue;
+    }
+
+    let worstSeverity = 0;
+    s.siteBreakdown.forEach(sb => {
+      const cls = capClass(sb.count, sb.max);
+      const sev = { 'cap-empty':0,'cap-green':0,'cap-yellow':1,'cap-orange':2,'cap-red':3,'cap-over':3 }[cls]||0;
+      if (sev > worstSeverity) worstSeverity = sev;
+    });
+    // Apply Cyrias today styling correctly while keeping severity alerts
+    const thBg = isToday ? 'var(--cyrias-blue-light)' : worstSeverity === 3 ? '#fff5f5' : worstSeverity === 2 ? '#fffbf0' : '';
+    const activeSites = s.siteBreakdown.filter(sb => sb.count > 0);
+    const siteBadges = activeSites.map(sb => {
+      const bg = capBgColor(sb.count, sb.max);
+      const fg = capFgColor(sb.count, sb.max);
+      const maxLabel = sb.max > 0 ? `/${sb.max}` : '';
+      return `<div class="day-site-badge" style="background:${bg};color:${fg};" title="${sb.lieu.label}">
+        <div style="width:5px;height:5px;border-radius:50%;background:${sb.lieu.fg};"></div>
+        ${sb.count}${maxLabel}
+      </div>`;
+    }).join('');
+    const dots = s.onsitePersons.slice(0,6).map(p => {
+      const l = getLieu(getPresence(p.id, k));
+      return `<div class="day-gauge-dot" style="background:${l?l.fg:'#94a3b8'};" title="${p.nom}"></div>`;
+    }).join('');
+    const more = s.onsitePersons.length > 6 ? `<span style="font-size:9px;color:var(--text3);">+${s.onsitePersons.length-6}</span>` : '';
+
+    headHtml += `<th class="th-day ${isToday ? 'th-today' : ''}" style="${thBg ? 'background:'+thBg+';' : ''}">
       <div class="th-day-name">${DAYS_FR[d]}</div>
       <div class="th-day-date">${fmtDate(dd)}</div>
+      <div style="margin-top:5px;">
+        <div class="day-gauge-count" style="color:${worstSeverity===3?'#991b1b':worstSeverity===2?'#c2410c': (isToday ? 'var(--cyrias-blue)' : 'var(--text)')};">${s.onsite}</div>
+        <div class="day-gauge-sub" style="color:${isToday ? 'var(--cyrias-blue)' : 'var(--text3)'}; opacity:${isToday?'.8':'1'}">sur site</div>
+      </div>
+      ${activeSites.length > 0 ? `<div class="day-site-breakdown">${siteBadges}</div>` : '<div class="day-gauge-bar" style="margin-top:4px;"><div class="day-gauge-fill" style="width:0%;background:#94a3b8;"></div></div>'}
+      <div class="day-gauge-dots" style="margin-top:4px;">${dots}${more}</div>
     </th>`;
   }
   headHtml += '</tr>';
   document.getElementById('tableHead').innerHTML = headHtml;
 
-  // Body
+  // ── BODY ──────────────────────────────────────────────────────────────
   let bodyHtml = '';
   state.persons.forEach(p => {
     const site = getLieu(p.site);
     const av = avatarColor(p.nom);
+    const onsiteCount = countOnsiteDays(p.id, currentMonday);
     bodyHtml += `<tr>
       <td class="td-person">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="avatar" style="background:${av};color:#333;width:26px;height:26px;font-size:10px;">${initials(p.nom)}</div>
-          <span>${p.nom}</span>
+        <div class="person-cell-inner">
+          <div class="avatar" style="background:${av};color:#333;width:24px;height:24px;font-size:10px;flex-shrink:0;">${initials(p.nom)}</div>
+          <span class="person-cell-name" title="${p.nom}">${p.nom}</span>
+          <span class="presence-count-badge${onsiteCount===0?' zero':''}" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site">${onsiteCount}</span>
+          <button class="row-dup-btn" onclick="openDupRowModal('${p.id}')" title="Dupliquer">⧉</button>
         </div>
       </td>
       <td class="td-ref">${site ? `<span class="presence-cell" style="background:${site.bg};color:${site.fg};font-size:11px;cursor:default;">${site.label}</span>` : '—'}</td>`;
     for(let d=0;d<5;d++) {
       const dd = addDays(currentMonday,d);
       const k = dateKey(dd);
+      const ferie = getFerie(k);
+      const sol = state.solidarite && state.solidarite.date === k ? state.solidarite : null;
       const v = getPresence(p.id, k);
       const attr = `onclick="openPresenceModal('${p.id}','${k}')"`;
+
+      if (ferie) {
+        bodyHtml += `<td class="td-holiday"><div class="holiday-cell"><div style="font-size:14px;">🎌</div><div class="holiday-label" title="${ferie.label}">${ferie.label}</div></div></td>`;
+        continue;
+      }
+      if (sol) {
+        const done = (sol.done || []).includes(p.id);
+        bodyHtml += `<td class="td-solidarite">
+          <div style="display:flex;align-items:center;justify-content:center;">
+            <span class="solidarite-badge${done?' solidarite-done':''}" onclick="toggleSolidarite('${p.id}')" title="${done?'Effectuée — cliquer pour annuler':'Cliquer pour marquer effectuée'}">
+              ${done ? '✓ Effectuée' : '🤝 À faire'}
+            </span>
+          </div>
+        </td>`;
+        continue;
+      }
+
+      const isOnsite = v && officeIds.includes(v);
+      const cellStyle = isOnsite ? 'background:rgba(27,63,115,.03);' : '';
       if (v) {
         const l = getLieu(v);
-        bodyHtml += `<td>${l ? `<span class="presence-cell" style="background:${l.bg};color:${l.fg};" ${attr}>${l.label}</span>` : `<span class="presence-empty" ${attr}>+</span>`}</td>`;
+        bodyHtml += `<td style="${cellStyle}">${l ? `<span class="presence-cell" style="background:${l.bg};color:${l.fg};" ${attr}>${l.label}</span>` : `<span class="presence-empty" ${attr}>+</span>`}</td>`;
       } else {
         bodyHtml += `<td><span class="presence-empty" ${attr}>+</span></td>`;
       }
@@ -910,25 +1735,65 @@ function renderTable() {
   });
   document.getElementById('tableBody').innerHTML = bodyHtml;
 
-  // Foot — group counts by lieu
-  const groupRows = [
-    { label: 'Total site', filter: l => !['teletravail','client','formation','absence'].includes(l.id) },
-    { label: 'Télétravail', filter: l => l.id === 'teletravail' },
-    { label: 'Client / dépl.', filter: l => ['client','formation'].includes(l.id) },
-    { label: 'Absences', filter: l => l.id === 'absence' },
-  ];
-  let footHtml = '';
-  groupRows.forEach(gr => {
-    const ids = state.lieux.filter(gr.filter).map(l=>l.id);
-    footHtml += `<tr><td class="td-person" colspan="2">${gr.label}</td>`;
+  // ── FOOT ──────────────────────────────────────────────────────────────
+  // Row 1: per-site capacity breakdown per day
+  const activeSitesAll = officeLieux.filter(l => {
     for(let d=0;d<5;d++) {
       const k = dateKey(addDays(currentMonday,d));
+      if (state.persons.some(p => getPresence(p.id,k) === l.id)) return true;
+    }
+    return l.maxPersons > 0;
+  });
+
+  let footHtml = `<tr class="foot-main">
+    <td class="td-person" colspan="2">Capacité par site</td>`;
+  for(let d=0;d<5;d++) {
+    const k = dateKey(addDays(currentMonday,d));
+    const ferie = getFerie(k);
+    const sol = state.solidarite && state.solidarite.date === k;
+    if (ferie) { footHtml += `<td class="td-holiday" style="text-align:center;font-size:11px;color:#854d0e;font-weight:500;">Férié</td>`; continue; }
+    if (sol) {
+      const doneCount = (state.solidarite.done || []).length;
+      const total = state.persons.length;
+      footHtml += `<td class="td-solidarite" style="text-align:center;font-size:11px;color:#5b21b6;font-weight:600;">${doneCount}/${total} effectuées</td>`;
+      continue;
+    }
+    const rowItems = activeSitesAll.map(l => {
+      const cnt = state.persons.filter(p => getPresence(p.id,k) === l.id).length;
+      if (cnt === 0 && l.maxPersons === 0) return '';
+      const bg = capBgColor(cnt, l.maxPersons);
+      const fg = capFgColor(cnt, l.maxPersons);
+      const maxStr = l.maxPersons > 0 ? `<span style="color:var(--text3);font-size:10px;">/${l.maxPersons}</span>` : '';
+      return `<div class="foot-cap-row" style="font-size:11px;">
+        <div class="foot-cap-site-dot" style="background:${l.fg};"></div>
+        <span style="font-size:10px;color:var(--text2);max-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${l.label}">${l.label.split(' ')[0]}</span>
+        <span class="foot-cap-num" style="background:${bg};color:${fg};border-radius:4px;padding:0 4px;">${cnt}</span>
+        ${maxStr}
+      </div>`;
+    }).filter(Boolean).join('');
+    footHtml += `<td><div class="foot-cap-cell">${rowItems || '<span style="color:var(--text3);font-size:11px;">—</span>'}</div></td>`;
+  }
+  footHtml += '</tr>';
+
+  // Row 2: télétravail / client / absence
+  const subRows = [
+    { label: 'Télétravail', ids: ['teletravail'], color: 'var(--cyrias-green-dark)' },
+    { label: 'Client / dépl.', ids: ['client','formation'], color: '#876200' },
+    { label: 'Absences', ids: ['absence'], color: '#9A1F1F' },
+  ];
+  subRows.forEach(gr => {
+    footHtml += `<tr class="foot-sub"><td class="td-person" colspan="2">${gr.label}</td>`;
+    for(let d=0;d<5;d++) {
+      const k = dateKey(addDays(currentMonday,d));
+      if (getFerie(k)) { footHtml += `<td class="td-holiday"></td>`; continue; }
+      if (state.solidarite && state.solidarite.date === k) { footHtml += `<td class="td-solidarite"></td>`; continue; }
       let cnt = 0;
-      state.persons.forEach(p => { if (ids.includes(getPresence(p.id,k))) cnt++; });
-      footHtml += `<td>${cnt > 0 ? `<span class="count-pill">${cnt}</span>` : '—'}</td>`;
+      state.persons.forEach(p => { if (gr.ids.includes(getPresence(p.id,k))) cnt++; });
+      footHtml += `<td><span class="foot-sub-val" style="${cnt>0?'color:'+gr.color+';font-weight:600;':''}">${cnt > 0 ? cnt : '—'}</span></td>`;
     }
     footHtml += '</tr>';
   });
+
   document.getElementById('tableFoot').innerHTML = footHtml;
 }
 
@@ -1000,7 +1865,6 @@ document.getElementById('deletePersonBtn').onclick = () => {
 
 // ── SETTINGS ─────────────────────────────────────────────────────────
 const COLOR_SWATCHES = [
-  // Charte Cyrias — bleu primaire + vert accent + neutres harmonisés
   '#E8EEF7','#D4DEEE','#C9D6E9','#1B3F73',
   '#EEF6D9','#D7E89B','#95C11F','#5C7F0E',
   '#FFF4D6','#E6DEF2','#FCE0E0','#F2F4F8',
@@ -1009,7 +1873,8 @@ const COLOR_SWATCHES = [
 function openSettings() {
   renderSettingsPersons();
   renderSettingsLieux();
-  renderSettingsSites();
+  renderSettingsGroupes();
+  renderSettingsFeries();
   populateSiteSelect('newPersonSite');
   document.getElementById('colorSwatches').innerHTML = COLOR_SWATCHES.map(c =>
     `<div class="color-swatch" style="background:${c};" onclick="pickColor('${c}')" title="${c}"></div>`
@@ -1034,12 +1899,18 @@ function renderSettingsPersons() {
 }
 
 function renderSettingsLieux() {
-  document.getElementById('lieuxEditList').innerHTML = state.lieux.map((l,i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
-      <div style="width:14px;height:14px;border-radius:50%;background:${l.fg};"></div>
-      <span class="presence-cell" style="background:${l.bg};color:${l.fg};cursor:default;font-size:12px;padding:2px 8px;">${l.label}</span>
-      <div style="flex:1;font-size:11px;color:var(--text3);">${l.bg} / ${l.fg}</div>
-      <button class="btn btn-sm btn-danger" onclick="deleteLieu('${l.id}')">✕</button>
+  document.getElementById('lieuxEditList').innerHTML = state.lieux.map((l) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+      <div style="width:12px;height:12px;border-radius:50%;background:${l.fg};flex-shrink:0;"></div>
+      <span class="presence-cell" style="background:${l.bg};color:${l.fg};cursor:default;font-size:12px;padding:2px 8px;flex-shrink:0;">${l.label}</span>
+      <div style="display:flex;align-items:center;gap:4px;margin-left:auto;">
+        <label style="font-size:11px;color:var(--text3);white-space:nowrap;">Max :</label>
+        <input type="number" min="0" value="${l.maxPersons||0}" style="width:52px;padding:3px 6px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;font-family:'DM Sans',sans-serif;" onchange="updateLieuMax('${l.id}',this.value)" title="0 = illimité">
+        <label style="display:flex;align-items:center;gap:3px;font-size:11px;color:var(--text2);cursor:pointer;margin-left:4px;">
+          <input type="checkbox" ${l.isOffice?'checked':''} onchange="updateLieuOffice('${l.id}',this.checked)"> Site physique
+        </label>
+        <button class="btn btn-sm btn-danger" onclick="deleteLieu('${l.id}')" style="margin-left:4px;">✕</button>
+      </div>
     </div>
   `).join('');
 }
@@ -1076,7 +1947,6 @@ document.getElementById('addPersonBtn').onclick = () => {
   document.getElementById('newPersonName').value = '';
   scheduleSave();
   renderSettingsPersons();
-  renderSettingsSites();
   render();
   toast(`${nom} ajouté(e)`);
 };
@@ -1085,18 +1955,37 @@ document.getElementById('addLieuBtn').onclick = () => {
   const name = document.getElementById('newLieuName').value.trim();
   const bg = document.getElementById('newLieuColor').value.trim() || '#f1f0e8';
   const fg = document.getElementById('newLieuTextColor').value.trim() || '#44403c';
+  const max = parseInt(document.getElementById('newLieuMax').value) || 0;
+  const isOffice = document.getElementById('newLieuIsOffice').checked;
   if (!name) return toast('Entrez un nom');
-  const id = name.toLowerCase().replace(/[^a-z0-9]/g,'-');
+  const id = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'-');
   if (state.lieux.find(l => l.id === id)) return toast('Ce lieu existe déjà');
-  state.lieux.push({ id, label: name, bg, fg });
+  state.lieux.push({ id, label: name, bg, fg, isOffice, maxPersons: max });
   document.getElementById('newLieuName').value = '';
   document.getElementById('newLieuColor').value = '';
   document.getElementById('newLieuTextColor').value = '';
+  document.getElementById('newLieuMax').value = '';
   scheduleSave();
   renderSettingsLieux();
   render();
   toast(`Lieu "${name}" ajouté`);
 };
+
+function updateLieuMax(id, val) {
+  const l = getLieu(id);
+  if (!l) return;
+  l.maxPersons = parseInt(val) || 0;
+  scheduleSave();
+  render();
+}
+
+function updateLieuOffice(id, val) {
+  const l = getLieu(id);
+  if (!l) return;
+  l.isOffice = val;
+  scheduleSave();
+  render();
+}
 
 function deleteLieu(id) {
   if (!confirm('Supprimer ce lieu ? Les présences associées seront effacées.')) return;
@@ -1119,7 +2008,8 @@ document.querySelectorAll('.tab').forEach(t => {
     if (panel) panel.style.display = '';
     if (t.dataset.tab === 'persons') { renderSettingsPersons(); populateSiteSelect('newPersonSite'); }
     if (t.dataset.tab === 'lieux') renderSettingsLieux();
-    if (t.dataset.tab === 'sites') renderSettingsSites();
+    if (t.dataset.tab === 'groupes') renderSettingsGroupes();
+    if (t.dataset.tab === 'feries') renderSettingsFeries();
   });
 });
 
@@ -1157,6 +2047,9 @@ document.getElementById('resetDataBtn').onclick = () => {
     lieux: JSON.parse(JSON.stringify(DEFAULT_LIEUX)),
     persons: JSON.parse(JSON.stringify(DEFAULT_PERSONS)),
     planning: JSON.parse(JSON.stringify(DEFAULT_PLANNING)),
+    feries: JSON.parse(JSON.stringify(FR_FERIES_DEFAULT)),
+    siteGroups: [{ id: 'g-massy', label: 'Massy (total)', siteIds: ['massy','voiture'], maxPersons: 24 }],
+    solidarite: null,
   };
   scheduleSave();
   closeOverlay('settingsOverlay');
@@ -1191,7 +2084,472 @@ document.getElementById('exportBtn').onclick = () => {
   toast('Export CSV téléchargé');
 };
 
-// ── OVERLAYS ──────────────────────────────────────────────────────────
+// ── DROPDOWN MENU ─────────────────────────────────────────────────────
+document.getElementById('actionsBtn').onclick = (e) => {
+  e.stopPropagation();
+  document.getElementById('actionsMenu').classList.toggle('open');
+};
+document.addEventListener('click', () => {
+  document.getElementById('actionsMenu').classList.remove('open');
+});
+
+// ── DUPLICATE SEMAINE SUIVANTE ─────────────────────────────────────────
+document.getElementById('dupNextWeekBtn').onclick = () => {
+  const srcMonday = currentMonday;
+  const dstMonday = addDays(srcMonday, 7);
+  const count = duplicateWeek(srcMonday, dstMonday, dstMonday);
+  scheduleSave();
+  render();
+  toast(`Planning dupliqué vers la semaine du ${fmtDate(dstMonday)} (${count} entrées)`);
+};
+
+// ── DUPLICATE VERS PÉRIODE ─────────────────────────────────────────────
+let dupMode = 'dup'; // 'dup'
+document.getElementById('dupPeriodBtn').onclick = () => {
+  dupMode = 'dup';
+  document.getElementById('dupModalTitle').textContent = 'Dupliquer vers une période';
+  document.getElementById('dupSourceLabel').textContent =
+    fmtDate(currentMonday) + ' – ' + fmtDate(addDays(currentMonday,4)) + ' ' + currentMonday.getFullYear();
+  const nextMon = addDays(currentMonday, 7);
+  document.getElementById('dupDateStart').value = dateKey(nextMon);
+  document.getElementById('dupDateEnd').value = dateKey(nextMon);
+  updateDupPreview();
+  closeDropdown();
+  openOverlay('dupOverlay');
+};
+
+function closeDropdown() {
+  document.getElementById('actionsMenu').classList.remove('open');
+}
+
+function updateDupPreview() {
+  const s = document.getElementById('dupDateStart').value;
+  const e = document.getElementById('dupDateEnd').value;
+  if (!s || !e) return;
+  const startMon = getMonday(new Date(s + 'T12:00:00'));
+  const endMon = getMonday(new Date(e + 'T12:00:00'));
+  if (endMon < startMon) {
+    document.getElementById('dupPreview').textContent = '⚠ La date de fin doit être après la date de début';
+    return;
+  }
+  let weeks = 0;
+  let d = new Date(startMon);
+  while (d <= endMon) { weeks++; d = addDays(d, 7); }
+  document.getElementById('dupPreview').innerHTML =
+    `📋 <strong>${weeks} semaine${weeks>1?'s':''}</strong> seront écrasées avec le planning de la semaine source.`;
+}
+
+document.getElementById('dupDateStart').addEventListener('input', updateDupPreview);
+document.getElementById('dupDateEnd').addEventListener('input', updateDupPreview);
+
+document.getElementById('dupConfirmBtn').onclick = () => {
+  const s = document.getElementById('dupDateStart').value;
+  const e = document.getElementById('dupDateEnd').value;
+  if (!s || !e) return toast('Sélectionnez les dates');
+  const startMon = getMonday(new Date(s + 'T12:00:00'));
+  const endMon = getMonday(new Date(e + 'T12:00:00'));
+  if (endMon < startMon) return toast('Date de fin invalide');
+  let total = 0;
+  let d = new Date(startMon);
+  while (d <= endMon) {
+    total += duplicateWeek(currentMonday, new Date(d), new Date(d));
+    d = addDays(d, 7);
+  }
+  scheduleSave();
+  render();
+  closeOverlay('dupOverlay');
+  toast(`Dupliqué sur ${Math.round(total/5 / state.persons.length * 7)} semaine(s) (${total} entrées)`);
+};
+
+function duplicateWeek(srcMonday, dstMonday) {
+  let count = 0;
+  state.persons.forEach(p => {
+    for(let d=0;d<5;d++) {
+      const srcKey = dateKey(addDays(srcMonday, d));
+      const dstKey = dateKey(addDays(dstMonday, d));
+      const v = getPresence(p.id, srcKey);
+      if (v) { setPresence(p.id, dstKey, v); count++; }
+      else {
+        // Clear destination if source is empty
+        if (!state.planning[p.id]) state.planning[p.id] = {};
+        delete state.planning[p.id][dstKey];
+      }
+    }
+  });
+  return count;
+}
+
+// ── VIDER SEMAINE COURANTE ─────────────────────────────────────────────
+document.getElementById('clearWeekBtn').onclick = () => {
+  closeDropdown();
+  if (!confirm(`Vider toutes les présences de la semaine du ${fmtDate(currentMonday)} ?`)) return;
+  clearWeekRange(currentMonday, currentMonday);
+  scheduleSave();
+  render();
+  toast('Semaine vidée');
+};
+
+// ── VIDER PÉRIODE ──────────────────────────────────────────────────────
+document.getElementById('clearPeriodBtn').onclick = () => {
+  closeDropdown();
+  const nextMon = addDays(currentMonday, 7);
+  document.getElementById('clearDateStart').value = dateKey(currentMonday);
+  document.getElementById('clearDateEnd').value = dateKey(addDays(currentMonday, 4));
+  openOverlay('clearPeriodOverlay');
+};
+
+document.getElementById('clearPeriodConfirmBtn').onclick = () => {
+  const s = document.getElementById('clearDateStart').value;
+  const e = document.getElementById('clearDateEnd').value;
+  if (!s || !e) return toast('Sélectionnez les dates');
+  const startMon = getMonday(new Date(s + 'T12:00:00'));
+  const endFri = new Date(e + 'T12:00:00');
+  clearWeekRange(startMon, getMonday(endFri));
+  scheduleSave();
+  render();
+  closeOverlay('clearPeriodOverlay');
+  toast('Période vidée');
+};
+
+function clearWeekRange(startMon, endMon) {
+  let d = new Date(startMon);
+  while (d <= endMon) {
+    state.persons.forEach(p => {
+      for(let i=0;i<5;i++) {
+        const k = dateKey(addDays(d, i));
+        if (state.planning[p.id]) delete state.planning[p.id][k];
+      }
+    });
+    d = addDays(d, 7);
+  }
+}
+
+// ── MÉMOIRE ────────────────────────────────────────────────────────────
+document.getElementById('memoryBtn').onclick = () => {
+  closeDropdown();
+  renderMemory();
+  openOverlay('memoryOverlay');
+};
+
+async function renderMemory() {
+  const raw = JSON.stringify(state);
+  const bytes = new Blob([raw]).size;
+  const kb = (bytes / 1024).toFixed(1);
+  const maxKb = 5120; // 5MB limit
+  const pct = Math.min(100, Math.round(bytes / (maxKb * 1024) * 100));
+
+  // Count planning entries
+  let totalEntries = 0;
+  const weekSet = new Set();
+  Object.values(state.planning).forEach(pp => {
+    Object.keys(pp).forEach(k => {
+      totalEntries++;
+      weekSet.add(k.slice(0,7)); // year-month
+    });
+  });
+
+  // Find oldest and newest dates
+  const allDates = [];
+  Object.values(state.planning).forEach(pp => Object.keys(pp).forEach(k => allDates.push(k)));
+  allDates.sort();
+  const oldest = allDates[0] || '—';
+  const newest = allDates[allDates.length-1] || '—';
+
+  // Purge candidates: entries older than 3 months
+  const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 3);
+  const cutoffKey = dateKey(cutoff);
+  let purgeCount = 0;
+  Object.values(state.planning).forEach(pp => {
+    Object.keys(pp).forEach(k => { if (k < cutoffKey) purgeCount++; });
+  });
+
+  const barColor = pct > 80 ? '#dc2626' : pct > 50 ? '#f59e0b' : 'var(--cyrias-green-dark)';
+
+  document.getElementById('memoryContent').innerHTML = `
+    <div class="mem-bar-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <span style="font-size:13px;font-weight:600;">${kb} Ko utilisés</span>
+        <span style="font-size:12px;color:var(--text3);">${pct}% / 5 Mo max</span>
+      </div>
+      <div class="mem-bar-track">
+        <div class="mem-bar-fill" style="width:${pct}%;background:${barColor};"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);">${(maxKb - bytes/1024).toFixed(0)} Ko disponibles</div>
+    </div>
+    <div class="mem-info-grid">
+      <div class="mem-info-card">
+        <div class="mem-info-val">${state.persons.length}</div>
+        <div class="mem-info-lbl">Personnes</div>
+      </div>
+      <div class="mem-info-card">
+        <div class="mem-info-val">${state.lieux.length}</div>
+        <div class="mem-info-lbl">Lieux / types</div>
+      </div>
+      <div class="mem-info-card">
+        <div class="mem-info-val">${totalEntries}</div>
+        <div class="mem-info-lbl">Entrées planning</div>
+      </div>
+      <div class="mem-info-card">
+        <div class="mem-info-val">${weekSet.size}</div>
+        <div class="mem-info-lbl">Mois distincts</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:12px;color:var(--text2);">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span>Première entrée</span><span style="font-family:'DM Mono',monospace;">${oldest}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span>Dernière entrée</span><span style="font-family:'DM Mono',monospace;">${newest}</span>
+      </div>
+    </div>
+    ${purgeCount > 0 ? `<div style="margin-top:10px;padding:8px 10px;background:#fef3c7;border-radius:var(--radius-sm);font-size:12px;color:#92400e;">
+      💡 <strong>${purgeCount} entrées</strong> sont antérieures à 3 mois. La purge libérerait ~${((purgeCount * 15) / 1024).toFixed(1)} Ko.
+    </div>` : `<div style="margin-top:10px;padding:8px 10px;background:var(--cyrias-green-light);border-radius:var(--radius-sm);font-size:12px;color:var(--cyrias-green-dark);">
+      ✓ Aucune donnée ancienne à purger.
+    </div>`}
+  `;
+
+  document.getElementById('purgePlanningBtn').style.display = purgeCount > 0 ? '' : 'none';
+  document.getElementById('purgePlanningBtn').onclick = () => {
+    if (!confirm(`Supprimer ${purgeCount} entrées antérieures au ${cutoffKey} ?`)) return;
+    Object.values(state.planning).forEach(pp => {
+      Object.keys(pp).forEach(k => { if (k < cutoffKey) delete pp[k]; });
+    });
+    scheduleSave();
+    renderMemory();
+    render();
+    toast(`${purgeCount} entrées supprimées`);
+  };
+}
+
+
+// ── SITE GROUPS ────────────────────────────────────────────────────────
+function renderSettingsGroupes() {
+  if (!state.siteGroups) state.siteGroups = [];
+  const officeLieux = state.lieux.filter(l => l.isOffice);
+
+  const html = state.siteGroups.map(g => {
+    const memberCheckboxes = officeLieux.map(l => {
+      const checked = g.siteIds.includes(l.id);
+      return `<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:2px 0;">
+        <input type="checkbox" ${checked?'checked':''} onchange="toggleGroupSite('${g.id}','${l.id}',this.checked)">
+        <span class="presence-cell" style="background:${l.bg};color:${l.fg};font-size:11px;padding:1px 6px;cursor:default;">${l.label}</span>
+      </label>`;
+    }).join('');
+
+    return `<div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:14px;">🔗</span>
+        <input class="form-input" value="${g.label}" style="flex:1;font-weight:600;" onchange="updateGroupLabel('${g.id}',this.value)">
+        <label style="font-size:11px;color:var(--text3);white-space:nowrap;">Max :</label>
+        <input type="number" min="0" value="${g.maxPersons||0}" style="width:52px;padding:3px 6px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;font-family:'DM Sans',sans-serif;" onchange="updateGroupMax('${g.id}',this.value)">
+        <button class="btn btn-sm btn-danger" onclick="deleteGroup('${g.id}')">✕</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px 12px;">${memberCheckboxes}</div>
+    </div>`;
+  }).join('') || '<p style="font-size:13px;color:var(--text3);">Aucun groupe. Créez-en un pour fusionner des sites.</p>';
+
+  // Solidarité status
+  const sol = state.solidarite;
+  document.getElementById('groupsEditList').innerHTML = html;
+  if (sol) {
+    document.getElementById('solidariteDate').value = sol.date;
+    document.getElementById('solidariteLabel').value = sol.label;
+    const doneCount = (sol.done||[]).length;
+    document.getElementById('solidariteStatus').innerHTML =
+      `<span style="background:var(--cyrias-green-light);color:var(--cyrias-green-dark);padding:3px 8px;border-radius:20px;font-size:12px;">✓ Configurée : ${sol.label} le ${sol.date} — ${doneCount}/${state.persons.length} effectuées</span>`;
+  } else {
+    document.getElementById('solidariteStatus').textContent = 'Aucune journée de solidarité configurée.';
+  }
+}
+
+document.getElementById('addGroupBtn').onclick = () => {
+  const name = document.getElementById('newGroupName').value.trim();
+  const max = parseInt(document.getElementById('newGroupMax').value) || 0;
+  if (!name) return toast('Entrez un nom de groupe');
+  if (!state.siteGroups) state.siteGroups = [];
+  const id = 'g-' + Date.now();
+  state.siteGroups.push({ id, label: name, siteIds: [], maxPersons: max });
+  document.getElementById('newGroupName').value = '';
+  document.getElementById('newGroupMax').value = '';
+  scheduleSave();
+  renderSettingsGroupes();
+  render();
+  toast(`Groupe "${name}" créé`);
+};
+
+function updateGroupLabel(groupId, val) {
+  const g = (state.siteGroups||[]).find(x => x.id === groupId);
+  if (g) { g.label = val; scheduleSave(); render(); }
+}
+function updateGroupMax(groupId, val) {
+  const g = (state.siteGroups||[]).find(x => x.id === groupId);
+  if (g) { g.maxPersons = parseInt(val)||0; scheduleSave(); render(); }
+}
+function toggleGroupSite(groupId, siteId, checked) {
+  const g = (state.siteGroups||[]).find(x => x.id === groupId);
+  if (!g) return;
+  if (checked && !g.siteIds.includes(siteId)) g.siteIds.push(siteId);
+  if (!checked) g.siteIds = g.siteIds.filter(id => id !== siteId);
+  scheduleSave(); render();
+}
+function deleteGroup(groupId) {
+  state.siteGroups = (state.siteGroups||[]).filter(g => g.id !== groupId);
+  scheduleSave(); renderSettingsGroupes(); render();
+  toast('Groupe supprimé');
+}
+
+// ── JOURNÉE DE SOLIDARITÉ ─────────────────────────────────────────────
+document.getElementById('saveSolidariteBtn').onclick = () => {
+  const date = document.getElementById('solidariteDate').value;
+  const label = document.getElementById('solidariteLabel').value.trim() || 'Journée de solidarité';
+  if (!date) return toast('Sélectionnez une date');
+  const existingDone = state.solidarite ? state.solidarite.done || [] : [];
+  state.solidarite = { date, label, done: existingDone };
+  scheduleSave(); renderSettingsGroupes(); render();
+  toast(`Journée de solidarité configurée le ${date}`);
+};
+
+document.getElementById('clearSolidariteBtn').onclick = () => {
+  state.solidarite = null;
+  scheduleSave(); renderSettingsGroupes(); render();
+  toast('Journée de solidarité supprimée');
+};
+
+function toggleSolidarite(personId) {
+  if (!state.solidarite) return;
+  const done = state.solidarite.done || [];
+  if (done.includes(personId)) {
+    state.solidarite.done = done.filter(id => id !== personId);
+  } else {
+    state.solidarite.done = [...done, personId];
+  }
+  scheduleSave(); render();
+}
+
+// ── DUP ROW MODAL ─────────────────────────────────────────────────────
+let dupRowPersonId = null;
+
+function openDupRowModal(personId) {
+  dupRowPersonId = personId;
+  const p = getPerson(personId);
+  document.getElementById('dupRowTitle').textContent = `Dupliquer la semaine de ${p.nom}`;
+  document.getElementById('dupRowSourceLabel').textContent =
+    fmtDate(currentMonday) + ' – ' + fmtDate(addDays(currentMonday,4)) + ' ' + currentMonday.getFullYear();
+  const nextMon = addDays(currentMonday, 7);
+  document.getElementById('dupRowDateTarget').value = dateKey(nextMon);
+  document.getElementById('dupRowPeriodStart').value = dateKey(nextMon);
+  document.getElementById('dupRowPeriodEnd').value = dateKey(nextMon);
+  openOverlay('dupRowOverlay');
+}
+
+document.getElementById('dupRowNextBtn').onclick = () => {
+  if (!dupRowPersonId) return;
+  const p = getPerson(dupRowPersonId);
+  const dstMon = addDays(currentMonday, 7);
+  const cnt = duplicatePersonWeek(dupRowPersonId, currentMonday, dstMon);
+  scheduleSave(); render();
+  closeOverlay('dupRowOverlay');
+  toast(`Semaine de ${p.nom} → sem. du ${fmtDate(dstMon)} (${cnt} j.)`);
+};
+
+document.getElementById('dupRowDateBtn').onclick = () => {
+  if (!dupRowPersonId) return;
+  const val = document.getElementById('dupRowDateTarget').value;
+  if (!val) return toast('Choisissez une date');
+  const p = getPerson(dupRowPersonId);
+  const dstMon = getMonday(new Date(val + 'T12:00:00'));
+  const cnt = duplicatePersonWeek(dupRowPersonId, currentMonday, dstMon);
+  scheduleSave(); render();
+  closeOverlay('dupRowOverlay');
+  toast(`${p.nom} → sem. du ${fmtDate(dstMon)} (${cnt} j.)`);
+};
+
+document.getElementById('dupRowPeriodBtn').onclick = () => {
+  if (!dupRowPersonId) return;
+  const s = document.getElementById('dupRowPeriodStart').value;
+  const e = document.getElementById('dupRowPeriodEnd').value;
+  if (!s || !e) return toast('Sélectionnez les dates');
+  const p = getPerson(dupRowPersonId);
+  const startMon = getMonday(new Date(s + 'T12:00:00'));
+  const endMon = getMonday(new Date(e + 'T12:00:00'));
+  if (endMon < startMon) return toast('Date de fin invalide');
+  let total = 0, weeks = 0;
+  let d = new Date(startMon);
+  while (d <= endMon) { total += duplicatePersonWeek(dupRowPersonId, currentMonday, new Date(d)); weeks++; d = addDays(d, 7); }
+  scheduleSave(); render();
+  closeOverlay('dupRowOverlay');
+  toast(`${p.nom} : ${weeks} semaine${weeks>1?'s':''} dupliquée${weeks>1?'s':''} (${total} j.)`);
+};
+
+function duplicatePersonWeek(personId, srcMonday, dstMonday) {
+  let count = 0;
+  for(let d=0;d<5;d++) {
+    const srcKey = dateKey(addDays(srcMonday, d));
+    const dstKey = dateKey(addDays(dstMonday, d));
+    const v = getPresence(personId, srcKey);
+    if (!state.planning[personId]) state.planning[personId] = {};
+    if (v) { state.planning[personId][dstKey] = v; count++; }
+    else { delete state.planning[personId][dstKey]; }
+  }
+  return count;
+}
+
+// ── JOURS FÉRIÉS SETTINGS ─────────────────────────────────────────────
+function renderSettingsFeries() {
+  if (!state.feries) state.feries = [];
+  const list = [...state.feries].sort((a,b) => a.date.localeCompare(b.date));
+  document.getElementById('feriesEditList').innerHTML = list.length === 0
+    ? '<p style="font-size:13px;color:var(--text3);">Aucun jour férié configuré.</p>'
+    : list.map(f => {
+        const d = new Date(f.date + 'T12:00:00');
+        const dayName = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][d.getDay()];
+        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);min-width:80px;">${f.date}</span>
+          <span style="font-size:11px;color:var(--text3);min-width:28px;">${dayName}</span>
+          ${isWeekend ? '<span style="font-size:10px;color:#92400e;background:#fef3c7;padding:1px 5px;border-radius:4px;">W-E</span>' : ''}
+          <span style="flex:1;font-size:13px;">${f.label}</span>
+          <button class="btn btn-sm btn-danger" onclick="deleteFerie('${f.date}')">✕</button>
+        </div>`;
+      }).join('');
+}
+
+document.getElementById('addFerieBtn').onclick = () => {
+  const date = document.getElementById('newFerieDate').value;
+  const label = document.getElementById('newFerieLabel').value.trim();
+  if (!date) return toast('Sélectionnez une date');
+  if (!label) return toast('Entrez un libellé');
+  if (!state.feries) state.feries = [];
+  if (state.feries.find(f => f.date === date)) return toast('Ce jour existe déjà');
+  state.feries.push({ date, label });
+  document.getElementById('newFerieDate').value = '';
+  document.getElementById('newFerieLabel').value = '';
+  scheduleSave();
+  renderSettingsFeries();
+  render();
+  toast(`"${label}" ajouté`);
+};
+
+document.getElementById('importFeriesFrBtn').onclick = () => {
+  if (!state.feries) state.feries = [];
+  let added = 0;
+  FR_FERIES_DEFAULT.forEach(f => {
+    if (!state.feries.find(x => x.date === f.date)) { state.feries.push({...f}); added++; }
+  });
+  scheduleSave();
+  renderSettingsFeries();
+  render();
+  toast(`${added} jour${added>1?'s':''} férié${added>1?'s':''} importé${added>1?'s':''}`);
+};
+
+function deleteFerie(date) {
+  state.feries = (state.feries || []).filter(f => f.date !== date);
+  scheduleSave();
+  renderSettingsFeries();
+  render();
+}
+
 function openOverlay(id) { document.getElementById(id).classList.add('open'); }
 function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -1225,6 +2583,9 @@ async function init() {
   const saved = await loadFromStorage();
   if (saved && saved.persons && saved.lieux) {
     state = saved;
+    if (!state.feries) state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
+    if (!state.siteGroups) state.siteGroups = [];
+    if (state.solidarite === undefined) state.solidarite = null;
   }
   render();
   setSyncing(false);

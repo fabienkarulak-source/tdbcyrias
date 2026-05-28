@@ -1,0 +1,33 @@
+{
+  "lieux": [
+    { "id": "massy",       "label": "Massy (siège)",    "bg": "#E8EEF7", "fg": "#1B3F73", "isOffice": true,  "maxPersons": 20 },
+    { "id": "voiture",     "label": "Massy - Voiture",  "bg": "#D4DEEE", "fg": "#0F2C54", "isOffice": true,  "maxPersons": 4  },
+    { "id": "vannes",      "label": "Vannes",            "bg": "#DCE6F2", "fg": "#1B3F73", "isOffice": true,  "maxPersons": 10 },
+    { "id": "nantes",      "label": "Nantes",            "bg": "#C9D6E9", "fg": "#0F2C54", "isOffice": true,  "maxPersons": 4  },
+    { "id": "bordeaux",    "label": "Bordeaux",          "bg": "#E0E8F3", "fg": "#1B3F73", "isOffice": true,  "maxPersons": 3  },
+    { "id": "montpellier", "label": "Montpellier",       "bg": "#CFDAEB", "fg": "#0F2C54", "isOffice": true,  "maxPersons": 3  },
+    { "id": "teletravail", "label": "Télétravail",       "bg": "#EEF6D9", "fg": "#5C7F0E", "isOffice": false, "maxPersons": 0  },
+    { "id": "client",      "label": "Client",            "bg": "#FFF4D6", "fg": "#876200", "isOffice": false, "maxPersons": 0  },
+    { "id": "formation",   "label": "Formation",         "bg": "#E6DEF2", "fg": "#46307A", "isOffice": false, "maxPersons": 0  },
+    { "id": "absence",     "label": "Absence",           "bg": "#FCE0E0", "fg": "#9A1F1F", "isOffice": false, "maxPersons": 0  }
+  ],
+  "persons": [],
+  "planning": {},
+  "feries": [
+    { "date": "2026-01-01", "label": "Jour de l'An"       },
+    { "date": "2026-04-06", "label": "Lundi de Pâques"    },
+    { "date": "2026-05-01", "label": "Fête du Travail"    },
+    { "date": "2026-05-08", "label": "Victoire 1945"      },
+    { "date": "2026-05-14", "label": "Ascension"          },
+    { "date": "2026-05-25", "label": "Lundi de Pentecôte" },
+    { "date": "2026-07-14", "label": "Fête Nationale"     },
+    { "date": "2026-08-15", "label": "Assomption"         },
+    { "date": "2026-11-01", "label": "Toussaint"          },
+    { "date": "2026-11-11", "label": "Armistice"          },
+    { "date": "2026-12-25", "label": "Noël"               }
+  ],
+  "siteGroups": [
+    { "id": "g-massy", "label": "Massy (total)", "siteIds": ["massy","voiture"], "maxPersons": 24 }
+  ],
+  "solidarite": null
+}

@@ -1829,7 +1829,7 @@ function renderTable() {
     const onsiteCount = countOnsiteDays(p.id, currentMonday);
     const isLow = onsiteCount < 3;
     const badgeClass = onsiteCount === 0 ? ' zero' : isLow ? ' low' : '';
-    const alertIcon = isLow ? `<span class="row-alert-icon" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site cette semaine — objectif minimum 3j">⚠️</span>` : '';
+    const alertIcon = isLow ? `<span class="row-alert-icon" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site cette semaine — Obligation minimum 3j">🚨</span>` : '';
     bodyHtml += `<tr${isLow ? ' class="row-alert-low"' : ''}>
       <td class="td-person">
         <div class="person-cell-inner">

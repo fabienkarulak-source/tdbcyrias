@@ -1168,7 +1168,6 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
       <div class="tab" data-tab="lieux">Lieux & Types</div>
       <div class="tab" data-tab="groupes">Groupes</div>
       <div class="tab" data-tab="feries">Fériés</div>
-      <div class="tab" data-tab="users">Utilisateurs</div>
       <div class="tab" data-tab="data">Données</div>
     </div>
     <div id="tabPersons" class="tab-panel">
@@ -1830,7 +1829,7 @@ function renderTable() {
     const onsiteCount = countOnsiteDays(p.id, currentMonday);
     const isLow = onsiteCount < 3;
     const badgeClass = onsiteCount === 0 ? ' zero' : isLow ? ' low' : '';
-    const alertIcon = isLow ? `<span class="row-alert-icon" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site cette semaine — Obligation minimum 3j">🚨</span>` : '';
+    const alertIcon = isLow ? `<span class="row-alert-icon" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site cette semaine — objectif minimum 3j">⚠️</span>` : '';
     bodyHtml += `<tr${isLow ? ' class="row-alert-low"' : ''}>
       <td class="td-person">
         <div class="person-cell-inner">
@@ -2021,12 +2020,10 @@ const COLOR_SWATCHES = [
 ];
 
 // ── Rendu de la liste des utilisateurs ───────────────────────────────
-// ── Rendu de la liste des utilisateurs ───────────────────────────────
 function renderUsersList() {
   const list = document.getElementById('usersEditList');
   if (!list) return;
-  if (!state.users) state.users = []; // Sécurise l'initialisation
-  const users = state.users;
+  const users = window.state.users || [];
 
   if (!users.length) {
     list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Aucun utilisateur configuré.</div>';
@@ -2055,13 +2052,13 @@ function addUser() {
   if (!email || !email.includes('@')) { toast('Email invalide'); return; }
   if (!nom) { toast('Le nom affiché est requis'); return; }
 
-  if (!state.users) state.users = [];
+  if (!window.state.users) window.state.users = [];
 
-  if (state.users.some(u => u.email.toLowerCase() === email)) {
+  if (window.state.users.some(u => u.email.toLowerCase() === email)) {
     toast('Cet email existe déjà'); return;
   }
 
-  state.users.push({ email, nom, role });
+  window.state.users.push({ email, nom, role });
   scheduleSave();
   renderUsersList();
 
@@ -2071,13 +2068,14 @@ function addUser() {
 }
 
 function removeUser(index) {
-  if (!state.users) return;
-  const user = state.users[index];
-  const adminsLeft = state.users.filter((u, i) => i !== index && u.role === 'admin');
+  if (!window.state.users) return;
+  // Empêcher la suppression du dernier admin
+  const user = window.state.users[index];
+  const adminsLeft = window.state.users.filter((u, i) => i !== index && u.role === 'admin');
   if (user.role === 'admin' && adminsLeft.length === 0) {
     toast('⚠️ Impossible de supprimer le dernier admin'); return;
   }
-  state.users.splice(index, 1);
+  window.state.users.splice(index, 1);
   scheduleSave();
   renderUsersList();
 }
@@ -2087,7 +2085,6 @@ function openSettings() {
   renderSettingsLieux();
   renderSettingsGroupes();
   renderSettingsFeries();
-  renderUsersList(); // <-- Ligne ajoutée ici
   populateSiteSelect('newPersonSite');
   document.getElementById('colorSwatches').innerHTML = COLOR_SWATCHES.map(c =>
     `<div class="color-swatch" style="background:${c};" onclick="pickColor('${c}')" title="${c}"></div>`
@@ -2219,12 +2216,10 @@ document.querySelectorAll('.tab').forEach(t => {
     document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
     const panel = document.getElementById('tab' + t.dataset.tab.charAt(0).toUpperCase() + t.dataset.tab.slice(1));
     if (panel) panel.style.display = '';
-    
     if (t.dataset.tab === 'persons') { renderSettingsPersons(); populateSiteSelect('newPersonSite'); }
     if (t.dataset.tab === 'lieux') renderSettingsLieux();
     if (t.dataset.tab === 'groupes') renderSettingsGroupes();
     if (t.dataset.tab === 'feries') renderSettingsFeries();
-    if (t.dataset.tab === 'users') renderUsersList(); // <-- Ligne ajoutée ici
   });
 });
 
@@ -2857,8 +2852,8 @@ async function init() {
   }, 60000);
 }
 
-// Bouton de connexion
-document.getElementById('loginBtn').addEventListener('click', loginWithMicrosoft);
+// Bouton de connexion : câblé plus bas (submitLogin → loginLocal)
+// dans le bloc auth, via users.json. (Ancien handler Microsoft retiré.)
 
 </script>
 
@@ -2901,11 +2896,63 @@ const DEFAULT_AUTH_USERS = [
   { email: 'admin@cyrias.com', role: 'admin', nom: 'Admin' },
 ];
 
-// Accès live à la liste (toujours à jour même si state change)
+// ═══════════════════════════════════════════════════════════════════
+// LISTE DES UTILISATEURS LUE DEPUIS users.json
+// Fichier statique placé À CÔTÉ de la page (même dossier que l'HTML,
+// ex. sur GitHub Pages : .../cyrias-planning/users.json).
+//
+// Format accepté (l'un ou l'autre) :
+//   [ { "email": "...", "role": "admin|editor|viewer", "nom": "..." }, ... ]
+//   { "users": [ { "email": "...", "role": "...", "nom": "..." }, ... ] }
+//
+// C'est la SOURCE D'AUTORITÉ des connexions : un email ne peut se
+// connecter que s'il figure dans users.json.
+// ═══════════════════════════════════════════════════════════════════
+let AUTH_USERS_JSON   = null;   // null = pas (encore) chargé / introuvable
+let _usersJsonPromise = null;   // évite les fetch concurrents
+
+function loadUsersJson() {
+  if (_usersJsonPromise) return _usersJsonPromise;
+  _usersJsonPromise = (async () => {
+    try {
+      const res = await fetch('users.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      // Accepte un tableau direct ou un objet { users: [...] }
+      const arr = Array.isArray(data) ? data
+                : (data && Array.isArray(data.users) ? data.users : null);
+      if (!arr) throw new Error('Format users.json invalide');
+
+      AUTH_USERS_JSON = arr
+        .filter(u => u && u.email)
+        .map(u => ({
+          email: String(u.email).trim(),
+          role:  String(u.role || 'viewer').toLowerCase(),
+          nom:   u.nom || u.name || String(u.email).split('@')[0],
+        }));
+      return AUTH_USERS_JSON;
+    } catch (e) {
+      // Échec (fichier absent, hors-ligne, file://, artifact…) :
+      // on retombera sur state.users / DEFAULT_AUTH_USERS.
+      console.warn('users.json non chargé :', e.message);
+      AUTH_USERS_JSON = null;
+      return null;
+    } finally {
+      _usersJsonPromise = null;
+    }
+  })();
+  return _usersJsonPromise;
+}
+
+// Accès live à la liste, par ordre de priorité :
+//   1. users.json (source d'autorité)
+//   2. liste gérée dans Paramètres > Utilisateurs (state.users)
+//   3. valeurs par défaut
 function getAuthUsers() {
-  return (window.state && window.state.users && window.state.users.length)
-    ? window.state.users
-    : DEFAULT_AUTH_USERS;
+  if (AUTH_USERS_JSON && AUTH_USERS_JSON.length) return AUTH_USERS_JSON;
+  if (window.state && window.state.users && window.state.users.length) return window.state.users;
+  return DEFAULT_AUTH_USERS;
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -2929,16 +2976,35 @@ let saveTimeout = null;
 })();
 
 // ─────────────────────────────────────────────────────────────────
-// CONNEXION LOCALE
+// CONNEXION LOCALE (email saisi → vérifié dans users.json)
 // ─────────────────────────────────────────────────────────────────
-function loginLocal(email) {
-  const e = email.trim().toLowerCase();
-  const user = getAuthUsers().find(u => u.email.toLowerCase() === e);
+function setLoginLoading(on) {
+  const sp  = document.getElementById('loginSpinner');
+  const fm  = document.getElementById('loginForm');
+  const btn = document.getElementById('loginBtn');
+  if (sp)  sp.style.display  = on ? 'block' : 'none';
+  if (fm)  fm.style.opacity  = on ? '0.45'  : '1';
+  if (btn) btn.disabled      = !!on;
+}
+
+async function loginLocal(email) {
+  const e = (email || '').trim().toLowerCase();
+  if (!e) { document.getElementById('loginEmailInput').focus(); return; }
+
+  // S'assurer que users.json est chargé AVANT de valider l'adresse.
+  if (!AUTH_USERS_JSON) {
+    document.getElementById('loginMsg').innerHTML = '';
+    setLoginLoading(true);
+    await loadUsersJson();
+    setLoginLoading(false);
+  }
+
+  const user = getAuthUsers().find(u => (u.email || '').toLowerCase() === e);
 
   if (!user) {
     showLoginScreen(
       `<span style="color:#ef4444;">⛔ Adresse non reconnue.<br>
-       Contactez un administrateur Cyrias.</span>`
+       Vérifiez votre email ou contactez un administrateur Cyrias.</span>`
     );
     return;
   }
@@ -3175,6 +3241,10 @@ async function init() {
 // WIRING DES BOUTONS
 // ─────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Précharge la liste des utilisateurs autorisés depuis users.json
+  // (en tâche de fond ; loginLocal réessaiera/attendra si besoin).
+  loadUsersJson();
+
   function submitLogin() {
     const email = (document.getElementById('loginEmailInput').value || '').trim();
     if (!email) {

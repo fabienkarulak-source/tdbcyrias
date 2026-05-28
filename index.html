@@ -1003,9 +1003,7 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
 }
 #loginBtn:hover { background: var(--cyrias-blue-dark); transform: translateY(-1px); }
 #loginBtn:active { transform: translateY(0); }
-.login-github-icon {
-  width: 20px; height: 20px; fill: #fff;
-}
+/* login-github-icon removed */
 .login-footer {
   margin-top: 20px;
   font-size: 11px; color: rgba(255,255,255,.45);
@@ -1019,7 +1017,7 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
 <body>
 
 
-<!-- ── Écran de connexion GitHub ── -->
+<!-- ── Écran de connexion ── -->
 <div id="loginScreen" style="display:flex;">
   <div class="login-card">
     <div class="login-logo">
@@ -1027,15 +1025,69 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
            onerror="this.src='https://www.cyrias.com/wp-content/uploads/2023/01/logo-cyrias-blanc.svg';this.style.filter='invert(1)'">
     </div>
     <div class="login-title">Planning de présence</div>
-    <div class="login-subtitle">Connectez-vous avec votre compte GitHub<br>pour accéder au planning Cyrias.</div>
+    <div class="login-subtitle">Connectez-vous avec votre compte Cyrias.</div>
     <div class="login-msg" id="loginMsg"></div>
     <div class="login-spinner" id="loginSpinner" style="display:none;"></div>
+
+    <!-- Bouton Microsoft SSO -->
     <button id="loginBtn">
-      <svg class="login-github-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+      <svg style="width:18px;height:18px;flex-shrink:0;" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
       </svg>
-      Se connecter avec GitHub
+      Se connecter avec Microsoft
     </button>
+
+    <!-- Séparateur -->
+    <div id="loginDivider" style="display:flex;align-items:center;gap:10px;margin:16px 0;">
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+      <span style="font-size:11px;color:var(--text3);white-space:nowrap;">ou par email</span>
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+    </div>
+
+    <!-- Bouton bascule email -->
+    <button id="loginEmailToggle" style="
+      width:100%;padding:10px 16px;
+      background:var(--surface2);color:var(--text2);
+      border:1px solid var(--border2);border-radius:var(--radius);
+      font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+      transition:background .15s;
+    " onmouseenter="this.style.background='var(--border)'" onmouseleave="this.style.background='var(--surface2)'">
+      ✉️ Recevoir un lien par email
+    </button>
+
+    <!-- Formulaire email (masqué par défaut) -->
+    <div id="loginEmailForm" style="display:none;margin-top:4px;">
+      <div style="display:flex;gap:8px;">
+        <input id="loginEmailInput" type="email"
+          placeholder="prenom.nom@cyrias.com"
+          autocomplete="email" spellcheck="false"
+          style="
+            flex:1;padding:10px 12px;
+            border:1.5px solid var(--border2);border-radius:var(--radius);
+            font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);
+            background:var(--surface);outline:none;transition:border-color .15s;
+          "
+          onfocus="this.style.borderColor='var(--cyrias-blue)'"
+          onblur="this.style.borderColor='var(--border2)'">
+        <button id="loginEmailSendBtn" style="
+          padding:10px 16px;
+          background:var(--cyrias-blue);color:#fff;
+          border:none;border-radius:var(--radius);
+          font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+          cursor:pointer;white-space:nowrap;transition:background .15s;
+        " onmouseenter="this.style.background='var(--cyrias-blue-dark)'" onmouseleave="this.style.background='var(--cyrias-blue)'">
+          Envoyer →
+        </button>
+      </div>
+      <button id="loginEmailBack" style="
+        margin-top:10px;background:none;border:none;
+        font-size:12px;color:var(--text3);cursor:pointer;padding:0;
+      ">← Retour</button>
+    </div>
   </div>
   <div class="login-footer">
     Planning de présence Cyrias &nbsp;·&nbsp; <a href="https://www.cyrias.com" target="_blank">cyrias.com</a>
@@ -1354,283 +1406,12 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
 // ── CONFIGURATION MICROSOFT 365 ───────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════
 const MS_CONFIG = {
-  // ① Application (client) ID — Azure App Registration
-  //    portal.azure.com → Entra ID → App registrations → Planning Cyrias → Overview
-  CLIENT_ID: 'VOTRE_AZURE_CLIENT_ID',
-
-  // ② Directory (tenant) ID — Azure App Registration (même page)
-  TENANT_ID: 'VOTRE_AZURE_TENANT_ID',
-
-  // ③ URL du Cloudflare Worker déployé
-  //    workers.cloudflare.com → cyrias-planning-auth → copier l'URL
-  WORKER_URL: 'https://cyrias-planning-auth.workers.dev',
-
-  // ④ URL où est hébergé ce fichier HTML (doit correspondre à ALLOWED_ORIGIN du Worker)
+  CLIENT_ID:    'VOTRE_AZURE_CLIENT_ID',
+  TENANT_ID:    'VOTRE_AZURE_TENANT_ID',
+  WORKER_URL:   'https://cyrias-planning-auth.workers.dev',
   REDIRECT_URI: 'https://fabienkarulak-source.github.io/cyrias-planning',
-
-  // Scopes Microsoft demandés (ne pas modifier)
-  SCOPES: ['openid', 'profile', 'email'],
+  SCOPES:       ['openid', 'profile', 'email'],
 };
-
-// MS_CONFIG est la seule chose à modifier pour la mise en prod.
-// Le Worker Cloudflare gère GitHub (PAT stocké côté serveur, jamais exposé).
-
-// ── AUTH STATE ────────────────────────────────────────────────────────
-let msIdToken  = sessionStorage.getItem('ms_id_token') || null;
-let msUser     = null;  // { email, name }
-let userRole   = null;  // 'admin' | 'editor' | 'viewer' | null
-let dataSha    = null;
-let saveTimeout = null;
-
-// ── MICROSOFT AUTH (PKCE — sans client_secret) ─────────────────────
-async function generatePKCE() {
-  const verifier = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
-    .replace(/[+]/g,'-').replace(/[/]/g,'_').replace(/=/g,'');
-  const data = new TextEncoder().encode(verifier);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  const challenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
-    .replace(/[+]/g,'-').replace(/[/]/g,'_').replace(/=/g,'');
-  return { verifier, challenge };
-}
-
-async function loginWithMicrosoft() {
-  const { verifier, challenge } = await generatePKCE();
-  sessionStorage.setItem('pkce_verifier', verifier);
-  const state = crypto.randomUUID();
-  sessionStorage.setItem('ms_state', state);
-  const params = new URLSearchParams({
-    client_id: MS_CONFIG.CLIENT_ID,
-    response_type: 'code',
-    redirect_uri: MS_CONFIG.REDIRECT_URI,
-    scope: MS_CONFIG.SCOPES.join(' '),
-    state,
-    code_challenge: challenge,
-    code_challenge_method: 'S256',
-    response_mode: 'query',
-  });
-  location.href = `https://login.microsoftonline.com/${MS_CONFIG.TENANT_ID}/oauth2/v2.0/authorize?${params}`;
-}
-
-async function handleMsCallback() {
-  const params = new URLSearchParams(location.search);
-  const code  = params.get('code');
-  if (!code) return false;
-  if (params.get('state') !== sessionStorage.getItem('ms_state')) {
-    showLoginScreen('Erreur de sécurité. Veuillez réessayer.');
-    return false;
-  }
-  history.replaceState({}, '', location.pathname);
-  showLoginScreen('Connexion Microsoft en cours…', true);
-  try {
-    const verifier = sessionStorage.getItem('pkce_verifier');
-    const tokenRes = await fetch(
-      `https://login.microsoftonline.com/${MS_CONFIG.TENANT_ID}/oauth2/v2.0/token`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_id:     MS_CONFIG.CLIENT_ID,
-          grant_type:    'authorization_code',
-          code,
-          redirect_uri:  MS_CONFIG.REDIRECT_URI,
-          code_verifier: verifier,
-          scope:         MS_CONFIG.SCOPES.join(' '),
-        }),
-      }
-    );
-    if (!tokenRes.ok) {
-      const err = await tokenRes.json().catch(() => ({}));
-      throw new Error(err.error_description || `HTTP ${tokenRes.status}`);
-    }
-    const tokens = await tokenRes.json();
-    msIdToken = tokens.id_token;
-    sessionStorage.setItem('ms_id_token', msIdToken);
-    sessionStorage.removeItem('pkce_verifier');
-    sessionStorage.removeItem('ms_state');
-    return true;
-  } catch(e) {
-    showLoginScreen(`Erreur Microsoft : ${e.message}`);
-    return false;
-  }
-}
-
-async function fetchUserAndRole() {
-  // Décoder le JWT localement pour afficher email/nom
-  const parts = msIdToken.split('.');
-  const pad   = parts[1].replace(/[-]/g,'+').replace(/[_]/g,'/');
-  const raw   = atob(pad.padEnd(pad.length + (4 - pad.length % 4) % 4, '='));
-  const payload = JSON.parse(raw);
-  msUser = {
-    email: payload.email || payload.preferred_username || '',
-    name:  payload.name  || '',
-  };
-  // Appel Worker pour vérifier le rôle (lit users.json via le PAT GitHub côté serveur)
-  const res = await fetch(`${MS_CONFIG.WORKER_URL}/auth`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id_token: msIdToken }),
-  });
-  if (!res.ok) {
-    if (res.status === 403) { userRole = null; return; }
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Worker ${res.status}`);
-  }
-  const data = await res.json();
-  userRole = data.role;
-  msUser.name = data.name || msUser.name;
-}
-
-function logout() {
-  sessionStorage.removeItem('ms_id_token');
-  msIdToken = null; msUser = null; userRole = null; dataSha = null;
-  showLoginScreen();
-}
-
-// ── LECTURE / ÉCRITURE VIA WORKER (PAT GitHub jamais exposé) ─────────
-async function workerPost(endpoint, body = {}) {
-  const res = await fetch(`${MS_CONFIG.WORKER_URL}${endpoint}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...body, id_token: msIdToken }),
-  });
-  if (res.status === 401) { logout(); throw new Error('Session expirée'); }
-  return res;
-}
-
-async function loadFromStorage() {
-  try {
-    const res = await workerPost('/read');
-    if (!res.ok) throw new Error(`Worker /read: ${res.status}`);
-    const data = await res.json();
-    dataSha = data.sha;
-    return data.content;
-  } catch(e) {
-    dataSha = null;
-    return null;
-  }
-}
-
-async function saveToStorage(data) {
-  setSyncing(true);
-  try {
-    const res = await workerPost('/write', { data, sha: dataSha });
-    if (res.status === 409) {
-      toast('⚠️ Conflit — rechargement…');
-      const fresh = await loadFromStorage();
-      if (fresh) { state = fresh; render(); }
-      saveTimeout = setTimeout(() => saveToStorage(state), 2000);
-      return;
-    }
-    if (!res.ok) throw new Error(`Worker /write: ${res.status}`);
-    const result = await res.json();
-    dataSha = result.sha;
-    setSyncing(false);
-  } catch(e) {
-    setSyncing(false, true);
-    console.error('Save error:', e);
-  }
-}
-
-function scheduleSave() {
-  if (userRole === 'viewer') return;
-  clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => saveToStorage(state), 2500);
-}
-
-function setSyncing(syncing, err) {
-  const dot = document.getElementById('syncDot');
-  const lbl = document.getElementById('syncLabel');
-  if (syncing) {
-    dot.className = 'sync-dot syncing';
-    lbl.textContent = 'Synchronisation…';
-  } else if (err) {
-    dot.className = 'sync-dot';
-    dot.style.background = '#ef4444';
-    lbl.textContent = 'Erreur sync';
-  } else {
-    dot.className = 'sync-dot';
-    dot.style.background = 'var(--cyrias-green)';
-    lbl.textContent = 'Synchronisé';
-  }
-}
-
-// ── ÉCRAN DE LOGIN ────────────────────────────────────────────
-function showLoginScreen(msg = '', loading = false) {
-  document.getElementById('appShell').style.display = 'none';
-  const el = document.getElementById('loginScreen');
-  el.style.display = 'flex';
-  document.getElementById('loginMsg').innerHTML = msg;
-  document.getElementById('loginSpinner').style.display = loading ? 'block' : 'none';
-  document.getElementById('loginBtn').style.display = loading ? 'none' : 'flex';
-}
-
-function hideLoginScreen() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appShell').style.display = '';
-}
-
-// ── AFFICHAGE UTILISATEUR CONNECTÉ ───────────────────────
-function renderUserBadge() {
-  const bar = document.getElementById('topbar-right');
-  const existing = document.getElementById('userBadge');
-  if (existing) existing.remove();
-  const roleLabel = { admin: 'Admin', editor: 'Éditeur', viewer: 'Lecteur' }[userRole] || '—';
-  const roleColor = { admin: 'var(--cyrias-green)', editor: 'rgba(255,255,255,.7)', viewer: '#f59e0b' }[userRole] || '#fff';
-  const badge = document.createElement('div');
-  badge.id = 'userBadge';
-  badge.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px 4px 6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:20px;cursor:pointer;transition:background .15s;';
-  badge.title = `Connecté en tant que ${msUser.email} (${roleLabel}) — cliquer pour se déconnecter`;
-  badge.innerHTML = `
-    ${null
-      ? '' style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);" alt="">`
-      : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">${msUser.email.slice(0,2).toUpperCase()}</div>`
-    }
-    <div style="line-height:1.2;">
-      <div style="font-size:12px;font-weight:600;color:#fff;">${msUser.name || msUser.email}</div>
-      <div style="font-size:10px;color:${roleColor};font-weight:500;">${roleLabel}</div>
-    </div>
-  `;
-  badge.addEventListener('mouseenter', () => badge.style.background = 'rgba(255,255,255,.18)');
-  badge.addEventListener('mouseleave', () => badge.style.background = 'rgba(255,255,255,.10)');
-  badge.addEventListener('click', () => { if (confirm(`Se déconnecter (${msUser.email}) ?`)) logout(); });
-  bar.insertBefore(badge, bar.firstChild);
-}
-
-// ── APPLICATION DES RÔLES ────────────────────────────────────
-function applyRole() {
-  if (!userRole) {
-    document.getElementById('appShell').style.display = 'none';
-    const el = document.getElementById('loginScreen');
-    el.style.display = 'flex';
-    document.getElementById('loginMsg').innerHTML =
-      `<span style="color:#fca5a5;">⛔ Compte <strong>${ghUser.login}</strong> non autorisé.<br>Contactez un administrateur Cyrias.</span>`;
-    document.getElementById('loginSpinner').style.display = 'none';
-    document.getElementById('loginBtn').style.display = 'flex';
-    document.getElementById('loginBtn').textContent = 'Se connecter avec un autre compte';
-    return false;
-  }
-
-  const canWrite = userRole !== 'viewer';
-  const isAdmin  = userRole === 'admin';
-
-  // Lecture seule pour viewers
-  if (!canWrite) {
-    const selectors = '.presence-cell,.presence-empty,.row-dup-btn,#actionsBtn,#exportBtn';
-    document.querySelectorAll(selectors).forEach(el => {
-      el.style.pointerEvents = 'none';
-      el.style.opacity = '0.55';
-      el.title = 'Lecture seule';
-    });
-  }
-
-  // Paramètres et ajout personne : admin uniquement
-  document.getElementById('settingsBtn').style.display        = isAdmin ? '' : 'none';
-  document.getElementById('addPersonSideBtn').style.display   = isAdmin ? '' : 'none';
-  document.getElementById('exportBtn').style.display          = isAdmin ? '' : 'none';
-  document.getElementById('actionsBtn').style.display         = isAdmin ? '' : 'none';
-
-  return true;
-}
 
 // ── DEFAULT STATE ─────────────────────────────────────────────────────
 const DEFAULT_LIEUX = [
@@ -3022,8 +2803,10 @@ async function init() {
 // Bouton de connexion
 document.getElementById('loginBtn').addEventListener('click', loginWithMicrosoft);
 
-init();
 </script>
+
+<!-- Auth Cyrias : Microsoft SSO + Magic link -->
+<script src="cyrias-auth.js"></script>
 </div><!-- /#appShell -->
 </body>
 </html>

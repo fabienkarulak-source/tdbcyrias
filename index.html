@@ -1168,6 +1168,7 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
       <div class="tab" data-tab="lieux">Lieux & Types</div>
       <div class="tab" data-tab="groupes">Groupes</div>
       <div class="tab" data-tab="feries">Fériés</div>
+      <div class="tab" data-tab="users">Utilisateurs</div>
       <div class="tab" data-tab="data">Données</div>
     </div>
     <div id="tabPersons" class="tab-panel">
@@ -2020,10 +2021,12 @@ const COLOR_SWATCHES = [
 ];
 
 // ── Rendu de la liste des utilisateurs ───────────────────────────────
+// ── Rendu de la liste des utilisateurs ───────────────────────────────
 function renderUsersList() {
   const list = document.getElementById('usersEditList');
   if (!list) return;
-  const users = window.state.users || [];
+  if (!state.users) state.users = []; // Sécurise l'initialisation
+  const users = state.users;
 
   if (!users.length) {
     list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Aucun utilisateur configuré.</div>';
@@ -2052,13 +2055,13 @@ function addUser() {
   if (!email || !email.includes('@')) { toast('Email invalide'); return; }
   if (!nom) { toast('Le nom affiché est requis'); return; }
 
-  if (!window.state.users) window.state.users = [];
+  if (!state.users) state.users = [];
 
-  if (window.state.users.some(u => u.email.toLowerCase() === email)) {
+  if (state.users.some(u => u.email.toLowerCase() === email)) {
     toast('Cet email existe déjà'); return;
   }
 
-  window.state.users.push({ email, nom, role });
+  state.users.push({ email, nom, role });
   scheduleSave();
   renderUsersList();
 
@@ -2068,14 +2071,13 @@ function addUser() {
 }
 
 function removeUser(index) {
-  if (!window.state.users) return;
-  // Empêcher la suppression du dernier admin
-  const user = window.state.users[index];
-  const adminsLeft = window.state.users.filter((u, i) => i !== index && u.role === 'admin');
+  if (!state.users) return;
+  const user = state.users[index];
+  const adminsLeft = state.users.filter((u, i) => i !== index && u.role === 'admin');
   if (user.role === 'admin' && adminsLeft.length === 0) {
     toast('⚠️ Impossible de supprimer le dernier admin'); return;
   }
-  window.state.users.splice(index, 1);
+  state.users.splice(index, 1);
   scheduleSave();
   renderUsersList();
 }
@@ -2085,6 +2087,7 @@ function openSettings() {
   renderSettingsLieux();
   renderSettingsGroupes();
   renderSettingsFeries();
+  renderUsersList(); // <-- Ligne ajoutée ici
   populateSiteSelect('newPersonSite');
   document.getElementById('colorSwatches').innerHTML = COLOR_SWATCHES.map(c =>
     `<div class="color-swatch" style="background:${c};" onclick="pickColor('${c}')" title="${c}"></div>`
@@ -2216,10 +2219,12 @@ document.querySelectorAll('.tab').forEach(t => {
     document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
     const panel = document.getElementById('tab' + t.dataset.tab.charAt(0).toUpperCase() + t.dataset.tab.slice(1));
     if (panel) panel.style.display = '';
+    
     if (t.dataset.tab === 'persons') { renderSettingsPersons(); populateSiteSelect('newPersonSite'); }
     if (t.dataset.tab === 'lieux') renderSettingsLieux();
     if (t.dataset.tab === 'groupes') renderSettingsGroupes();
     if (t.dataset.tab === 'feries') renderSettingsFeries();
+    if (t.dataset.tab === 'users') renderUsersList(); // <-- Ligne ajoutée ici
   });
 });
 

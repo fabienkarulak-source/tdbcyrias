@@ -1025,75 +1025,42 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
            onerror="this.src='https://www.cyrias.com/wp-content/uploads/2023/01/logo-cyrias-blanc.svg';this.style.filter='invert(1)'">
     </div>
     <div class="login-title">Planning de présence</div>
-    <div class="login-subtitle">Connectez-vous avec votre compte Cyrias.</div>
+    <div class="login-subtitle">Saisissez votre adresse email pour accéder au planning.</div>
+
     <div class="login-msg" id="loginMsg"></div>
     <div class="login-spinner" id="loginSpinner" style="display:none;"></div>
 
-    <!-- Bouton Microsoft SSO -->
-    <button id="loginBtn">
-      <svg style="width:18px;height:18px;flex-shrink:0;" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-      </svg>
-      Se connecter avec Microsoft
-    </button>
-
-    <!-- Séparateur -->
-    <div id="loginDivider" style="display:flex;align-items:center;gap:10px;margin:16px 0;">
-      <div style="flex:1;height:1px;background:var(--border);"></div>
-      <span style="font-size:11px;color:var(--text3);white-space:nowrap;">ou par email</span>
-      <div style="flex:1;height:1px;background:var(--border);"></div>
-    </div>
-
-    <!-- Bouton bascule email -->
-    <button id="loginEmailToggle" style="
-      width:100%;padding:10px 16px;
-      background:var(--surface2);color:var(--text2);
-      border:1px solid var(--border2);border-radius:var(--radius);
-      font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
-      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
-      transition:background .15s;
-    " onmouseenter="this.style.background='var(--border)'" onmouseleave="this.style.background='var(--surface2)'">
-      ✉️ Recevoir un lien par email
-    </button>
-
-    <!-- Formulaire email (masqué par défaut) -->
-    <div id="loginEmailForm" style="display:none;margin-top:4px;">
-      <div style="display:flex;gap:8px;">
-        <input id="loginEmailInput" type="email"
-          placeholder="prenom.nom@cyrias.com"
-          autocomplete="email" spellcheck="false"
-          style="
-            flex:1;padding:10px 12px;
-            border:1.5px solid var(--border2);border-radius:var(--radius);
-            font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);
-            background:var(--surface);outline:none;transition:border-color .15s;
-          "
-          onfocus="this.style.borderColor='var(--cyrias-blue)'"
-          onblur="this.style.borderColor='var(--border2)'">
-        <button id="loginEmailSendBtn" style="
-          padding:10px 16px;
+    <div id="loginForm">
+      <input id="loginEmailInput" type="email"
+        placeholder="prenom.nom@cyrias.com"
+        autocomplete="email" spellcheck="false"
+        style="
+          width:100%;padding:11px 14px;margin-bottom:10px;
+          border:1.5px solid var(--border2);border-radius:var(--radius);
+          font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);
+          background:var(--surface);outline:none;transition:border-color .15s;box-sizing:border-box;
+        "
+        onfocus="this.style.borderColor='var(--cyrias-blue)'"
+        onblur="this.style.borderColor='var(--border2)'">
+      <button id="loginBtn"
+        style="
+          width:100%;padding:11px 20px;
           background:var(--cyrias-blue);color:#fff;
           border:none;border-radius:var(--radius);
-          font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
-          cursor:pointer;white-space:nowrap;transition:background .15s;
-        " onmouseenter="this.style.background='var(--cyrias-blue-dark)'" onmouseleave="this.style.background='var(--cyrias-blue)'">
-          Envoyer →
-        </button>
-      </div>
-      <button id="loginEmailBack" style="
-        margin-top:10px;background:none;border:none;
-        font-size:12px;color:var(--text3);cursor:pointer;padding:0;
-      ">← Retour</button>
+          font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;
+          cursor:pointer;transition:background .15s,transform .1s;
+          display:flex;align-items:center;justify-content:center;gap:8px;
+        "
+        onmouseenter="this.style.background='var(--cyrias-blue-dark)'"
+        onmouseleave="this.style.background='var(--cyrias-blue)'">
+        Accéder au planning →
+      </button>
     </div>
   </div>
   <div class="login-footer">
     Planning de présence Cyrias &nbsp;·&nbsp; <a href="https://www.cyrias.com" target="_blank">cyrias.com</a>
   </div>
 </div>
-
 <div id="appShell" style="display:none;">
 <div class="app">
 
@@ -1851,9 +1818,10 @@ function renderTable() {
         <div class="person-cell-inner">
           <div class="avatar" style="background:${av};color:#333;width:24px;height:24px;font-size:10px;flex-shrink:0;">${initials(p.nom)}</div>
           <span class="person-cell-name" title="${p.nom}">${p.nom}</span>
+          ${(typeof canEditPerson === 'function' && canEditPerson(p.id) && window.userRole === 'editor') ? '<span title="Votre ligne" style="font-size:10px;background:var(--cyrias-green-light);color:var(--cyrias-green-dark);padding:1px 5px;border-radius:8px;font-weight:600;flex-shrink:0;">vous</span>' : ''}
           ${alertIcon}
           <span class="presence-count-badge${badgeClass}" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site">${onsiteCount}</span>
-          <button class="row-dup-btn" onclick="openDupRowModal('${p.id}')" title="Dupliquer la semaine de ${p.nom}">⧉</button>
+          ${(typeof canEditPerson === 'function' ? canEditPerson(p.id) : true) ? `<button class="row-dup-btn" onclick="openDupRowModal('${p.id}')" title="Dupliquer la semaine de ${p.nom}">⧉</button>` : ''}
         </div>
       </td>
       <td class="td-ref">${site ? `<span class="presence-cell" style="background:${site.bg};color:${site.fg};font-size:11px;cursor:default;">${site.label}</span>` : '—'}</td>`;
@@ -1863,7 +1831,10 @@ function renderTable() {
       const ferie = getFerie(k);
       const sol = state.solidarite && state.solidarite.date === k ? state.solidarite : null;
       const v = getPresence(p.id, k);
-      const attr = `onclick="openPresenceModal('${p.id}','${k}')"`;
+      const _canEdit = (typeof canEditPerson === 'function') ? canEditPerson(p.id) : true;
+      const attr = _canEdit
+        ? `onclick="openPresenceModal('${p.id}','${k}')"`
+        : `style="cursor:default;opacity:.7;" title="Vous ne pouvez modifier que votre propre ligne"`;
 
       if (ferie) {
         bodyHtml += `<td class="td-holiday"><div class="holiday-cell"><div style="font-size:14px;">🎌</div><div class="holiday-label" title="${ferie.label}">${ferie.label}</div></div></td>`;
@@ -1958,6 +1929,8 @@ function renderTable() {
 
 // ── MODAL PRÉSENCE ────────────────────────────────────────────────────
 function openPresenceModal(personId, dayKey) {
+  // Sécurité : un editor ne peut ouvrir que sa propre ligne
+  if (typeof canEditPerson === 'function' && !canEditPerson(personId)) return;
   editCell = { personId, dayKey };
   const p = getPerson(personId);
   const d = new Date(dayKey);
@@ -2590,6 +2563,7 @@ function toggleSolidarite(personId) {
 let dupRowPersonId = null;
 
 function openDupRowModal(personId) {
+  if (typeof canEditPerson === 'function' && !canEditPerson(personId)) return;
   dupRowPersonId = personId;
   const p = getPerson(personId);
   document.getElementById('dupRowTitle').textContent = `Dupliquer la semaine de ${p.nom}`;
@@ -2805,8 +2779,320 @@ document.getElementById('loginBtn').addEventListener('click', loginWithMicrosoft
 
 </script>
 
-<!-- Auth Cyrias : Microsoft SSO + Magic link -->
-<script src="cyrias-auth.js"></script>
+<!-- Auth Cyrias — mode local (extensible MS SSO / magic link) -->
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════
+// CONFIGURATION AUTH
+// Changer AUTH_CONFIG.mode pour activer un autre mode plus tard :
+//   'local'      → vérification email dans AUTH_USERS (actuel)
+//   'microsoft'  → Microsoft 365 SSO (nécessite Azure App + Worker)
+//   'magiclink'  → lien email via Microsoft Graph + Cloudflare KV
+// ═══════════════════════════════════════════════════════════════════
+const AUTH_CONFIG = {
+  mode: 'local',   // <-- changer ici quand prêt pour la prod
+
+  // Paramètres pour les modes futurs (ignorés en mode 'local')
+  microsoft: {
+    clientId:    'VOTRE_AZURE_CLIENT_ID',
+    tenantId:    'VOTRE_AZURE_TENANT_ID',
+    redirectUri: 'https://fabienkarulak-source.github.io/cyrias-planning',
+    scopes:      ['openid', 'profile', 'email'],
+  },
+  worker: {
+    url: 'https://cyrias-planning-auth.workers.dev',
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// LISTE DES UTILISATEURS AUTORISÉS
+// Format : { email, role, nom }
+//   role : 'admin' | 'editor' | 'viewer'
+//   nom  : doit correspondre exactement au nom dans le planning
+//          (pour le mode "modification de sa propre ligne uniquement")
+// ═══════════════════════════════════════════════════════════════════
+const AUTH_USERS = [
+  // Admins
+  { email: 'admin@cyrias.com',            role: 'admin',  nom: 'Admin' },
+
+  // Éditeurs — peuvent remplir uniquement leur propre ligne
+  { email: 'xavier.dupont@cyrias.com',    role: 'editor', nom: 'Xavier' },
+  { email: 'amelie.martin@cyrias.com',    role: 'editor', nom: 'Amélie' },
+  { email: 'thomas.bernard@cyrias.com',   role: 'editor', nom: 'Thomas' },
+  { email: 'sophie.leroy@cyrias.com',     role: 'editor', nom: 'Sophie' },
+  { email: 'marc.petit@cyrias.com',       role: 'editor', nom: 'Marc'   },
+  { email: 'julie.moreau@cyrias.com',     role: 'editor', nom: 'Julie'  },
+
+  // Lecteurs
+  // { email: 'direction@cyrias.com',     role: 'viewer', nom: 'Direction' },
+];
+
+// ─────────────────────────────────────────────────────────────────
+// STATE AUTH
+// ─────────────────────────────────────────────────────────────────
+let msUser     = null;   // { email, nom, name }
+let userRole   = null;   // 'admin' | 'editor' | 'viewer' | null
+let dataSha    = null;
+let saveTimeout = null;
+
+// Persistance de session (rechargement de page)
+(function restoreSession() {
+  try {
+    const saved = sessionStorage.getItem('cyrias_session');
+    if (saved) {
+      const s = JSON.parse(saved);
+      msUser   = s.msUser;
+      userRole = s.userRole;
+    }
+  } catch(e) {}
+})();
+
+// ─────────────────────────────────────────────────────────────────
+// CONNEXION LOCALE
+// ─────────────────────────────────────────────────────────────────
+function loginLocal(email) {
+  const e = email.trim().toLowerCase();
+  const user = AUTH_USERS.find(u => u.email.toLowerCase() === e);
+
+  if (!user) {
+    showLoginScreen(
+      `<span style="color:#ef4444;">⛔ Adresse non reconnue.<br>
+       Contactez un administrateur Cyrias.</span>`
+    );
+    return;
+  }
+
+  msUser   = { email: user.email, nom: user.nom, name: user.nom };
+  userRole = user.role;
+  sessionStorage.setItem('cyrias_session', JSON.stringify({ msUser, userRole }));
+
+  hideLoginScreen();
+  renderUserBadge();
+  if (!applyRole()) return;
+  _loadAndRender();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// CORRESPONDANCE EMAIL ↔ LIGNE DU PLANNING
+// ─────────────────────────────────────────────────────────────────
+function canEditPerson(personId) {
+  if (!userRole || userRole === 'viewer') return false;
+  if (userRole === 'admin') return true;
+  if (!msUser) return false;
+  const person = window.state && window.state.persons
+    ? window.state.persons.find(p => p.id === personId)
+    : null;
+  if (!person) return false;
+  // Comparaison via le champ nom de AUTH_USERS (précis, sans déduction d'email)
+  const normalize = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return normalize(person.nom) === normalize(msUser.nom || '');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// DÉCONNEXION
+// ─────────────────────────────────────────────────────────────────
+function logout() {
+  sessionStorage.removeItem('cyrias_session');
+  msUser = null; userRole = null; dataSha = null;
+  showLoginScreen();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// STOCKAGE — window.storage (Claude artifacts) ou GitHub via Worker
+// ─────────────────────────────────────────────────────────────────
+async function loadFromStorage() {
+  if (AUTH_CONFIG.mode !== 'local') {
+    // Futur : appel Worker
+    return null;
+  }
+  try {
+    const result = await window.storage.get('planning-presence-v2', true);
+    if (result && result.value) return JSON.parse(result.value);
+  } catch(e) {}
+  return null;
+}
+
+async function saveToStorage(data) {
+  setSyncing(true);
+  if (AUTH_CONFIG.mode !== 'local') {
+    // Futur : appel Worker
+    setSyncing(false);
+    return;
+  }
+  try {
+    await window.storage.set('planning-presence-v2', JSON.stringify(data), true);
+    setSyncing(false);
+  } catch(e) {
+    setSyncing(false, true);
+  }
+}
+
+function scheduleSave() {
+  if (userRole === 'viewer') return;
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => saveToStorage(window.state), 2500);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// UI — écran login
+// ─────────────────────────────────────────────────────────────────
+function showLoginScreen(msg = '') {
+  document.getElementById('appShell').style.display  = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginMsg').innerHTML = msg;
+  document.getElementById('loginSpinner').style.display = 'none';
+  const input = document.getElementById('loginEmailInput');
+  if (input) { input.value = ''; setTimeout(() => input.focus(), 80); }
+}
+
+function hideLoginScreen() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').style.display    = '';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// UI — badge utilisateur (topbar)
+// ─────────────────────────────────────────────────────────────────
+function renderUserBadge() {
+  const bar = document.getElementById('topbar-right');
+  const old = document.getElementById('userBadge');
+  if (old) old.remove();
+
+  const roleLabel = { admin: 'Admin', editor: 'Éditeur', viewer: 'Lecteur' }[userRole] || '—';
+  const roleColor = { admin: 'var(--cyrias-green)', editor: 'rgba(255,255,255,.75)', viewer: '#f59e0b' }[userRole] || '#fff';
+  const initStr   = (msUser.nom || msUser.email).slice(0, 2).toUpperCase();
+
+  const badge = document.createElement('div');
+  badge.id = 'userBadge';
+  badge.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px 4px 6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:20px;cursor:pointer;transition:background .15s;';
+  badge.title = `${msUser.email} · ${roleLabel} · cliquer pour se déconnecter`;
+  badge.innerHTML = `
+    <div style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;">${initStr}</div>
+    <div style="line-height:1.2;">
+      <div style="font-size:12px;font-weight:600;color:#fff;">${msUser.nom || msUser.email.split('@')[0]}</div>
+      <div style="font-size:10px;color:${roleColor};font-weight:500;">${roleLabel}</div>
+    </div>`;
+  badge.addEventListener('mouseenter', () => badge.style.background = 'rgba(255,255,255,.18)');
+  badge.addEventListener('mouseleave', () => badge.style.background = 'rgba(255,255,255,.10)');
+  badge.addEventListener('click', () => { if (confirm(`Se déconnecter ?\n${msUser.email}`)) logout(); });
+  bar.insertBefore(badge, bar.firstChild);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// UI — application des rôles
+// ─────────────────────────────────────────────────────────────────
+function applyRole() {
+  if (!userRole) { showLoginScreen(); return false; }
+
+  const isAdmin  = userRole === 'admin';
+  const canWrite = userRole !== 'viewer';
+
+  if (!canWrite) {
+    document.querySelectorAll('.presence-cell,.presence-empty,.row-dup-btn').forEach(el => {
+      el.style.pointerEvents = 'none';
+      el.style.opacity = '0.55';
+      el.title = 'Lecture seule';
+    });
+  }
+  document.getElementById('settingsBtn').style.display      = isAdmin ? '' : 'none';
+  document.getElementById('addPersonSideBtn').style.display = isAdmin ? '' : 'none';
+  document.getElementById('exportBtn').style.display        = isAdmin ? '' : 'none';
+  document.getElementById('actionsBtn').style.display       = isAdmin ? '' : 'none';
+  return true;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SYNC DOT
+// ─────────────────────────────────────────────────────────────────
+function setSyncing(syncing, err) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  if (syncing) {
+    dot.className   = 'sync-dot syncing';
+    lbl.textContent = 'Synchronisation…';
+  } else if (err) {
+    dot.className        = 'sync-dot';
+    dot.style.background = '#ef4444';
+    lbl.textContent      = 'Erreur sync';
+  } else {
+    dot.className        = 'sync-dot';
+    dot.style.background = 'var(--cyrias-green)';
+    lbl.textContent      = 'Synchronisé';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// CHARGEMENT DU PLANNING
+// ─────────────────────────────────────────────────────────────────
+async function _loadAndRender() {
+  setSyncing(true);
+  try {
+    const saved = await loadFromStorage();
+    if (saved && saved.persons && saved.lieux) {
+      window.state = saved;
+      if (!window.state.feries)     window.state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
+      if (!window.state.siteGroups) window.state.siteGroups = [];
+      if (window.state.solidarite === undefined) window.state.solidarite = null;
+    }
+  } catch(e) { toast('⚠️ Impossible de charger le planning'); }
+  render();
+  setSyncing(false);
+
+  // Auto-refresh 60s
+  setInterval(async () => {
+    if (document.hidden || !userRole || saveTimeout) return;
+    try {
+      const fresh = await loadFromStorage();
+      if (fresh && fresh.persons && fresh.lieux) {
+        window.state = fresh;
+        if (!window.state.feries)     window.state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
+        if (!window.state.siteGroups) window.state.siteGroups = [];
+        if (window.state.solidarite === undefined) window.state.solidarite = null;
+        render();
+      }
+    } catch(e) {}
+  }, 60_000);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────
+async function init() {
+  // Session restaurée depuis sessionStorage ?
+  if (msUser && userRole) {
+    hideLoginScreen();
+    renderUserBadge();
+    if (!applyRole()) return;
+    await _loadAndRender();
+    return;
+  }
+  // Sinon afficher l'écran de connexion
+  showLoginScreen();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// WIRING DES BOUTONS
+// ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  function submitLogin() {
+    const email = (document.getElementById('loginEmailInput').value || '').trim();
+    if (!email) {
+      document.getElementById('loginEmailInput').focus();
+      return;
+    }
+    loginLocal(email);
+  }
+
+  document.getElementById('loginBtn')
+    .addEventListener('click', submitLogin);
+
+  document.getElementById('loginEmailInput')
+    .addEventListener('keydown', e => { if (e.key === 'Enter') submitLogin(); });
+
+  init();
+});
+</script>
 </div><!-- /#appShell -->
 </body>
 </html>

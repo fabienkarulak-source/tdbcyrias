@@ -788,61 +788,19 @@ tfoot tr.foot-sub td.td-person {
 }
 .row-dup-btn {
   flex-shrink: 0;
-  width: 26px; height: 26px;
+  width: 22px; height: 22px;
   border-radius: var(--radius-sm);
-  border: 1.5px solid var(--cyrias-blue);
-  background: var(--cyrias-blue-light);
+  border: 1px solid var(--border2);
+  background: var(--surface);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px;
-  color: var(--cyrias-blue);
-  opacity: 1;
-  transition: background .15s, border-color .15s, transform .1s, box-shadow .15s;
-  box-shadow: 0 1px 3px rgba(27,63,115,.15);
-  title: "Dupliquer la semaine";
+  font-size: 12px;
+  color: var(--text3);
+  opacity: 0;
+  transition: opacity .15s, background .1s;
 }
-.row-dup-btn:hover {
-  background: var(--cyrias-blue);
-  border-color: var(--cyrias-blue-dark);
-  color: #fff;
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(27,63,115,.35);
-}
-
-/* Low presence alert row (< 3 jours sur site) */
-tbody tr.row-alert-low {
-  background: #fff8ed !important;
-}
-tbody tr.row-alert-low td {
-  border-bottom-color: #fed7aa;
-}
-tbody tr.row-alert-low td.td-person {
-  background: #fff8ed !important;
-  border-left: 3px solid #f97316;
-}
-tbody tr.row-alert-low:hover {
-  background: #fff2dc !important;
-}
-tbody tr.row-alert-low:hover td.td-person {
-  background: #fff2dc !important;
-}
-.presence-count-badge.low {
-  background: #fff7ed;
-  color: #c2410c;
-  border: 1px solid #fed7aa;
-}
-.presence-count-badge.zero {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fca5a5;
-}
-.row-alert-icon {
-  flex-shrink: 0;
-  font-size: 13px;
-  line-height: 1;
-  margin-left: 1px;
-  cursor: default;
-}
+tbody tr:hover .row-dup-btn { opacity: 1; }
+.row-dup-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
 
 /* Holiday column */
 td.td-holiday, th.th-holiday {
@@ -945,104 +903,10 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
 .solidarite-badge:hover { background: #ddd6fe; }
 .solidarite-done { background: #dcfce7 !important; color: #166534 !important; border-color: #86efac !important; }
 .solidarite-done:hover { background: #bbf7d0 !important; }
-
-/* ── Login Screen ── */
-#loginScreen {
-  position: fixed; inset: 0; z-index: 1000;
-  background: var(--cyrias-blue);
-  display: flex; align-items: center; justify-content: center;
-  flex-direction: column;
-  gap: 0;
-}
-.login-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 40px 44px;
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-  box-shadow: 0 24px 60px rgba(0,0,0,.25);
-}
-.login-logo { margin-bottom: 24px; }
-.login-logo img { height: 38px; }
-.login-title {
-  font-size: 17px; font-weight: 700;
-  color: var(--cyrias-blue-dark);
-  margin-bottom: 6px;
-}
-.login-subtitle {
-  font-size: 13px; color: var(--text3);
-  margin-bottom: 28px; line-height: 1.5;
-}
-.login-msg {
-  font-size: 13px; color: var(--text2);
-  margin-bottom: 16px; min-height: 18px;
-  line-height: 1.5;
-}
-.login-spinner {
-  width: 28px; height: 28px;
-  border: 3px solid var(--border);
-  border-top-color: var(--cyrias-blue);
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
-  margin: 0 auto 16px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-#loginBtn {
-  display: flex; align-items: center; justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 11px 20px;
-  background: var(--cyrias-blue);
-  color: #fff;
-  border: none; border-radius: var(--radius);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px; font-weight: 600;
-  cursor: pointer;
-  transition: background .15s, transform .1s;
-}
-#loginBtn:hover { background: var(--cyrias-blue-dark); transform: translateY(-1px); }
-#loginBtn:active { transform: translateY(0); }
-.login-github-icon {
-  width: 20px; height: 20px; fill: #fff;
-}
-.login-footer {
-  margin-top: 20px;
-  font-size: 11px; color: rgba(255,255,255,.45);
-  text-align: center;
-}
-.login-footer a { color: rgba(255,255,255,.65); }
-/* topbar-right helper */
-#topbar-right { display: flex; gap: 8px; align-items: center; }
 </style>
 </head>
 <body>
 
-
-<!-- ── Écran de connexion GitHub ── -->
-<div id="loginScreen" style="display:flex;">
-  <div class="login-card">
-    <div class="login-logo">
-      <img src="https://www.cyrias.com/wp-content/uploads/2023/01/logo-cyrias.svg" alt="Cyrias"
-           onerror="this.src='https://www.cyrias.com/wp-content/uploads/2023/01/logo-cyrias-blanc.svg';this.style.filter='invert(1)'">
-    </div>
-    <div class="login-title">Planning de présence</div>
-    <div class="login-subtitle">Connectez-vous avec votre compte GitHub<br>pour accéder au planning Cyrias.</div>
-    <div class="login-msg" id="loginMsg"></div>
-    <div class="login-spinner" id="loginSpinner" style="display:none;"></div>
-    <button id="loginBtn">
-      <svg class="login-github-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-      </svg>
-      Se connecter avec GitHub
-    </button>
-  </div>
-  <div class="login-footer">
-    Planning de présence Cyrias &nbsp;·&nbsp; <a href="https://www.cyrias.com" target="_blank">cyrias.com</a>
-  </div>
-</div>
-
-<div id="appShell" style="display:none;">
 <div class="app">
 
   <header class="topbar">
@@ -1058,7 +922,7 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
       </div>
       <button class="btn btn-sm" id="todayBtn">Aujourd'hui</button>
     </div>
-    <div class="topbar-right" id="topbar-right">
+    <div class="topbar-right">
       <div class="sync-badge">
         <div class="sync-dot" id="syncDot"></div>
         <span id="syncLabel">Synchronisé</span>
@@ -1350,206 +1214,31 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════════
-// ── CONFIGURATION GITHUB ─────────────────────────────────────────────
-// ═══════════════════════════════════════════════════════════════════════
-const GH_CONFIG = {
-  // ① Créer une GitHub OAuth App sur https://github.com/settings/developers
-  //    Homepage URL     : URL où est hébergé ce fichier HTML
-  //    Callback URL     : même URL
-  CLIENT_ID: 'VOTRE_GITHUB_CLIENT_ID',
-
-  // ② Déployer le Worker Cloudflare (voir README) et coller son URL ici
-  //    Le Worker échange le code OAuth → access_token sans exposer le secret
-  WORKER_URL: 'https://votre-worker.workers.dev',
-
-  // ③ Repo GitHub qui stocke les données (doit être privé)
-  //    Format : 'organisation-ou-user/nom-du-repo'
-  REPO: 'cyrias/cyrias-planning-data',
-
-  // ④ Branche cible
-  BRANCH: 'main',
-
-  // Fichiers dans le repo
-  FILE_DATA:  'planning.json',   // données de l'app
-  FILE_USERS: 'users.json',      // permissions par login GitHub
-};
-
-// ── STRUCTURE DE users.json ATTENDUE ──────────────────────────────────
-// {
-//   "admins":  ["github-login-admin1", "github-login-admin2"],
-//   "editors": ["github-login-user1",  "github-login-user2"],
-//   "viewers": ["github-login-view1"]
-// }
-// admins  → tout (paramètres, personnes, lieux, planning)
-// editors → modifier les cases du planning uniquement
-// viewers → lecture seule
-
-// ── AUTH STATE ────────────────────────────────────────────────────────
-let ghToken   = sessionStorage.getItem('gh_token') || null;
-let ghUser    = null;   // { login, name, avatar_url }
-let userRole  = null;   // 'admin' | 'editor' | 'viewer' | null
-let dataSha   = null;   // SHA du fichier planning.json (nécessaire pour PUT)
+// ── STORAGE (shared via window.storage) ──────────────────────────────
+const STORAGE_KEY = 'planning-presence-v2';
 let saveTimeout = null;
 
-// ── GITHUB API HELPERS ────────────────────────────────────────────────
-async function ghFetch(path, opts = {}) {
-  const res = await fetch(`https://api.github.com${path}`, {
-    ...opts,
-    headers: {
-      Authorization: `Bearer ${ghToken}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-      ...(opts.headers || {}),
-    },
-  });
-  if (res.status === 401) { logout(); throw new Error('Token expiré'); }
-  return res;
-}
-
-async function ghGetJSON(path) {
-  const res = await ghFetch(path);
-  if (!res.ok) throw new Error(`GitHub ${res.status} sur ${path}`);
-  return res.json();
-}
-
-async function ghGetFile(filePath) {
-  const res = await ghFetch(
-    `/repos/${GH_CONFIG.REPO}/contents/${filePath}?ref=${GH_CONFIG.BRANCH}`
-  );
-  if (!res.ok) throw new Error(`Fichier introuvable : ${filePath}`);
-  const data = await res.json();
-  return { content: JSON.parse(atob(data.content.replace(/\n/g,''))), sha: data.sha };
-}
-
-async function ghPutFile(filePath, content, sha, message) {
-  const res = await ghFetch(
-    `/repos/${GH_CONFIG.REPO}/contents/${filePath}`,
-    {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message,
-        content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
-        sha,
-        branch: GH_CONFIG.BRANCH,
-      }),
-    }
-  );
-  if (res.status === 409) return 'conflict';
-  if (!res.ok) throw new Error(`Erreur écriture GitHub : ${res.status}`);
-  const data = await res.json();
-  return data.content.sha; // nouveau SHA
-}
-
-// ── OAUTH FLOW ────────────────────────────────────────────────────────
-function loginWithGitHub() {
-  const params = new URLSearchParams({
-    client_id: GH_CONFIG.CLIENT_ID,
-    scope: 'repo',
-    redirect_uri: location.origin + location.pathname,
-    state: crypto.randomUUID(),
-  });
-  location.href = `https://github.com/login/oauth/authorize?${params}`;
-}
-
-async function handleOAuthCallback() {
-  const params = new URLSearchParams(location.search);
-  const code = params.get('code');
-  if (!code) return false;
-  history.replaceState({}, '', location.pathname);
-  showLoginScreen('Connexion à GitHub…', true);
-  try {
-    const res = await fetch(GH_CONFIG.WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
-    });
-    if (!res.ok) throw new Error('Erreur Worker');
-    const data = await res.json();
-    if (!data.access_token) throw new Error(data.error || 'Token absent');
-    ghToken = data.access_token;
-    sessionStorage.setItem('gh_token', ghToken);
-    return true;
-  } catch(e) {
-    showLoginScreen(`Erreur d'authentification : ${e.message}`);
-    return false;
-  }
-}
-
-async function fetchUserAndRole() {
-  // Récupère le profil GitHub de l'utilisateur connecté
-  ghUser = await ghGetJSON('/user');
-  // Lit le fichier users.json dans le repo pour déterminer le rôle
-  try {
-    const { content: users } = await ghGetFile(GH_CONFIG.FILE_USERS);
-    if ((users.admins || []).includes(ghUser.login))  userRole = 'admin';
-    else if ((users.editors || []).includes(ghUser.login)) userRole = 'editor';
-    else if ((users.viewers || []).includes(ghUser.login)) userRole = 'viewer';
-    else userRole = null;
-  } catch(e) {
-    // Si users.json n'existe pas encore → premier admin = toute personne connectée au repo
-    userRole = 'admin';
-  }
-}
-
-function logout() {
-  sessionStorage.removeItem('gh_token');
-  ghToken = null; ghUser = null; userRole = null; dataSha = null;
-  showLoginScreen();
-}
-
-// ── CHARGEMENT / SAUVEGARDE GITHUB ────────────────────────────────────
 async function loadFromStorage() {
   try {
-    const { content, sha } = await ghGetFile(GH_CONFIG.FILE_DATA);
-    dataSha = sha;
-    return content;
-  } catch(e) {
-    // Le fichier n'existe pas encore → données par défaut, on créera au premier save
-    dataSha = null;
-    return null;
-  }
+    const result = await window.storage.get(STORAGE_KEY, true);
+    if (result && result.value) return JSON.parse(result.value);
+  } catch(e) {}
+  return null;
 }
 
 async function saveToStorage(data) {
   setSyncing(true);
   try {
-    const msg = `Planning mis à jour par ${ghUser ? ghUser.login : 'utilisateur'} — ${new Date().toISOString().slice(0,16).replace('T',' ')}`;
-    if (dataSha) {
-      // Mise à jour du fichier existant
-      const newSha = await ghPutFile(GH_CONFIG.FILE_DATA, data, dataSha, msg);
-      if (newSha === 'conflict') {
-        // Quelqu'un d'autre a sauvegardé entre-temps → on recharge et on réessaie
-        toast('⚠️ Conflit — rechargement et nouvel essai…');
-        const fresh = await loadFromStorage();
-        if (fresh) {
-          // Merge : on garde les modifications locales sur le state rechargé
-          // Stratégie simple : le planning local écrase sur les entrées que l'user a modifiées
-          state = fresh;
-          render();
-          // On re-planifie un save dans 2s pour laisser le temps à l'UI de se stabiliser
-          saveTimeout = setTimeout(() => saveToStorage(state), 2000);
-          return;
-        }
-      } else {
-        dataSha = newSha;
-      }
-    } else {
-      // Création du fichier (première fois)
-      dataSha = await ghPutFile(GH_CONFIG.FILE_DATA, data, null, '✨ Initialisation du planning');
-    }
+    await window.storage.set(STORAGE_KEY, JSON.stringify(data), true);
     setSyncing(false);
   } catch(e) {
     setSyncing(false, true);
-    console.error('Save error:', e);
   }
 }
 
 function scheduleSave() {
-  if (userRole === 'viewer') return; // viewers ne sauvegardent jamais
   clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => saveToStorage(state), 2500); // debounce 2.5s
+  saveTimeout = setTimeout(() => saveToStorage(state), 800);
 }
 
 function setSyncing(syncing, err) {
@@ -1567,84 +1256,6 @@ function setSyncing(syncing, err) {
     dot.style.background = 'var(--cyrias-green)';
     lbl.textContent = 'Synchronisé';
   }
-}
-
-// ── ÉCRAN DE LOGIN ────────────────────────────────────────────
-function showLoginScreen(msg = '', loading = false) {
-  document.getElementById('appShell').style.display = 'none';
-  const el = document.getElementById('loginScreen');
-  el.style.display = 'flex';
-  document.getElementById('loginMsg').innerHTML = msg;
-  document.getElementById('loginSpinner').style.display = loading ? 'block' : 'none';
-  document.getElementById('loginBtn').style.display = loading ? 'none' : 'flex';
-}
-
-function hideLoginScreen() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appShell').style.display = '';
-}
-
-// ── AFFICHAGE UTILISATEUR CONNECTÉ ───────────────────────
-function renderUserBadge() {
-  const bar = document.getElementById('topbar-right');
-  const existing = document.getElementById('userBadge');
-  if (existing) existing.remove();
-  const roleLabel = { admin: 'Admin', editor: 'Éditeur', viewer: 'Lecteur' }[userRole] || '—';
-  const roleColor = { admin: 'var(--cyrias-green)', editor: 'rgba(255,255,255,.7)', viewer: '#f59e0b' }[userRole] || '#fff';
-  const badge = document.createElement('div');
-  badge.id = 'userBadge';
-  badge.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px 4px 6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:20px;cursor:pointer;transition:background .15s;';
-  badge.title = `Connecté en tant que ${ghUser.login} (${roleLabel}) — cliquer pour se déconnecter`;
-  badge.innerHTML = `
-    ${ghUser.avatar_url
-      ? `<img src="${ghUser.avatar_url}" style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);" alt="">`
-      : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">${ghUser.login.slice(0,2).toUpperCase()}</div>`
-    }
-    <div style="line-height:1.2;">
-      <div style="font-size:12px;font-weight:600;color:#fff;">${ghUser.name || ghUser.login}</div>
-      <div style="font-size:10px;color:${roleColor};font-weight:500;">${roleLabel}</div>
-    </div>
-  `;
-  badge.addEventListener('mouseenter', () => badge.style.background = 'rgba(255,255,255,.18)');
-  badge.addEventListener('mouseleave', () => badge.style.background = 'rgba(255,255,255,.10)');
-  badge.addEventListener('click', () => { if (confirm(`Se déconnecter (${ghUser.login}) ?`)) logout(); });
-  bar.insertBefore(badge, bar.firstChild);
-}
-
-// ── APPLICATION DES RÔLES ────────────────────────────────────
-function applyRole() {
-  if (!userRole) {
-    document.getElementById('appShell').style.display = 'none';
-    const el = document.getElementById('loginScreen');
-    el.style.display = 'flex';
-    document.getElementById('loginMsg').innerHTML =
-      `<span style="color:#fca5a5;">⛔ Compte <strong>${ghUser.login}</strong> non autorisé.<br>Contactez un administrateur Cyrias.</span>`;
-    document.getElementById('loginSpinner').style.display = 'none';
-    document.getElementById('loginBtn').style.display = 'flex';
-    document.getElementById('loginBtn').textContent = 'Se connecter avec un autre compte';
-    return false;
-  }
-
-  const canWrite = userRole !== 'viewer';
-  const isAdmin  = userRole === 'admin';
-
-  // Lecture seule pour viewers
-  if (!canWrite) {
-    const selectors = '.presence-cell,.presence-empty,.row-dup-btn,#actionsBtn,#exportBtn';
-    document.querySelectorAll(selectors).forEach(el => {
-      el.style.pointerEvents = 'none';
-      el.style.opacity = '0.55';
-      el.title = 'Lecture seule';
-    });
-  }
-
-  // Paramètres et ajout personne : admin uniquement
-  document.getElementById('settingsBtn').style.display        = isAdmin ? '' : 'none';
-  document.getElementById('addPersonSideBtn').style.display   = isAdmin ? '' : 'none';
-  document.getElementById('exportBtn').style.display          = isAdmin ? '' : 'none';
-  document.getElementById('actionsBtn').style.display         = isAdmin ? '' : 'none';
-
-  return true;
 }
 
 // ── DEFAULT STATE ─────────────────────────────────────────────────────
@@ -2077,17 +1688,13 @@ function renderTable() {
     const site = getLieu(p.site);
     const av = avatarColor(p.nom);
     const onsiteCount = countOnsiteDays(p.id, currentMonday);
-    const isLow = onsiteCount < 3;
-    const badgeClass = onsiteCount === 0 ? ' zero' : isLow ? ' low' : '';
-    const alertIcon = isLow ? `<span class="row-alert-icon" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site cette semaine — objectif minimum 3j">⚠️</span>` : '';
-    bodyHtml += `<tr${isLow ? ' class="row-alert-low"' : ''}>
+    bodyHtml += `<tr>
       <td class="td-person">
         <div class="person-cell-inner">
           <div class="avatar" style="background:${av};color:#333;width:24px;height:24px;font-size:10px;flex-shrink:0;">${initials(p.nom)}</div>
           <span class="person-cell-name" title="${p.nom}">${p.nom}</span>
-          ${alertIcon}
-          <span class="presence-count-badge${badgeClass}" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site">${onsiteCount}</span>
-          <button class="row-dup-btn" onclick="openDupRowModal('${p.id}')" title="Dupliquer la semaine de ${p.nom}">⧉</button>
+          <span class="presence-count-badge${onsiteCount===0?' zero':''}" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site">${onsiteCount}</span>
+          <button class="row-dup-btn" onclick="openDupRowModal('${p.id}')" title="Dupliquer">⧉</button>
         </div>
       </td>
       <td class="td-ref">${site ? `<span class="presence-cell" style="background:${site.bg};color:${site.fg};font-size:11px;cursor:default;">${site.label}</span>` : '—'}</td>`;
@@ -2970,75 +2577,21 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────────────
 async function init() {
-  // 1. Callback OAuth ? (retour de github.com/login/oauth/authorize)
-  if (location.search.includes('code=')) {
-    const ok = await handleOAuthCallback();
-    if (!ok) return;
-  }
-
-  // 2. Pas de token → afficher l'écran de connexion
-  if (!ghToken) {
-    showLoginScreen();
-    return;
-  }
-
-  // 3. Token disponible → charger profil + rôle
-  showLoginScreen('Chargement du profil…', true);
-  try {
-    await fetchUserAndRole();
-  } catch(e) {
-    showLoginScreen(`Erreur : ${e.message}`);
-    return;
-  }
-
-  // 4. Vérifier les droits
-  hideLoginScreen();
-  renderUserBadge();
-  const allowed = applyRole();
-  if (!allowed) return;
-
-  // 5. Charger les données depuis GitHub
   setSyncing(true);
-  try {
-    const saved = await loadFromStorage();
-    if (saved && saved.persons && saved.lieux) {
-      state = saved;
-      if (!state.feries) state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
-      if (!state.siteGroups) state.siteGroups = [];
-      if (state.solidarite === undefined) state.solidarite = null;
-    }
-  } catch(e) {
-    toast('⚠️ Impossible de charger le planning depuis GitHub');
+  const saved = await loadFromStorage();
+  if (saved && saved.persons && saved.lieux) {
+    state = saved;
+    if (!state.feries) state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
+    if (!state.siteGroups) state.siteGroups = [];
+    if (state.solidarite === undefined) state.solidarite = null;
   }
   render();
   setSyncing(false);
-
-  // 6. Auto-refresh toutes les 60s
-  setInterval(async () => {
-    if (document.hidden || userRole === null) return;
-    try {
-      const fresh = await loadFromStorage();
-      if (fresh && fresh.persons && fresh.lieux) {
-        // Ne pas écraser les données locales non encore sauvées
-        if (!saveTimeout) {
-          state = fresh;
-          if (!state.feries) state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
-          if (!state.siteGroups) state.siteGroups = [];
-          if (state.solidarite === undefined) state.solidarite = null;
-          render();
-        }
-      }
-    } catch(e) { /* silencieux */ }
-  }, 60000);
 }
-
-// Bouton de connexion
-document.getElementById('loginBtn').addEventListener('click', loginWithGitHub);
 
 init();
 </script>
-</div><!-- /#appShell -->
 </body>
 </html>

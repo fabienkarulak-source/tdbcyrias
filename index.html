@@ -1458,6 +1458,9 @@ let state = {
   ],
   solidarite: null, // { date, label, done: [personId, ...] }
 };
+// IMPORTANT : window.state et state désignent le MÊME objet.
+// (le rendu utilise `state`, la sauvegarde/les accès utilisent `window.state`)
+window.state = state;
 
 // ── DATE UTILS ────────────────────────────────────────────────────────
 const MONTHS_FR = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
@@ -1942,6 +1945,10 @@ function renderTable() {
   });
 
   document.getElementById('tableFoot').innerHTML = footHtml;
+
+  // Ré-applique les restrictions de rôle après chaque rendu (utile lors du
+  // rafraîchissement partagé toutes les 60 s en mode 'github').
+  if (typeof userRole !== 'undefined' && userRole && typeof applyRole === 'function') applyRole();
 }
 
 // ── MODAL PRÉSENCE ────────────────────────────────────────────────────
@@ -2242,6 +2249,7 @@ document.getElementById('importFile').addEventListener('change', e => {
       if (!imported.persons || !imported.lieux) return toast('Format invalide');
       if (!confirm('Remplacer toutes les données par le fichier importé ?')) return;
       state = imported;
+      window.state = state;
       scheduleSave();
       render();
       toast('Données importées');
@@ -2261,6 +2269,7 @@ document.getElementById('resetDataBtn').onclick = () => {
     siteGroups: [{ id: 'g-massy', label: 'Massy (total)', siteIds: ['massy','voiture'], maxPersons: 24 }],
     solidarite: null,
   };
+  window.state = state;
   scheduleSave();
   closeOverlay('settingsOverlay');
   render();
@@ -2862,16 +2871,31 @@ async function init() {
 'use strict';
 
 // ═══════════════════════════════════════════════════════════════════
-// CONFIGURATION AUTH
-// Changer AUTH_CONFIG.mode pour activer un autre mode plus tard :
-//   'local'      → vérification email dans AUTH_USERS (actuel)
-//   'microsoft'  → Microsoft 365 SSO (nécessite Azure App + Worker)
-//   'magiclink'  → lien email via Microsoft Graph + Cloudflare KV
+// CONFIGURATION AUTH + STOCKAGE
+// AUTH_CONFIG.mode :
+//   'local'   → stockage local (window.storage / localStorage). Aucune infra.
+//   'github'  → "base de données" PARTAGÉE = fichiers JSON dans un dépôt GitHub
+//               (aucun SQL). 
+//                 • Lecture  : directe depuis GitHub (dépôt public, sans secret)
+//                 • Écriture : via un mini proxy Cloudflare Worker qui détient
+//                              le token GitHub (jamais exposé dans la page).
+//               → laisser workerUrl vide = portail partagé en LECTURE SEULE.
 // ═══════════════════════════════════════════════════════════════════
 const AUTH_CONFIG = {
-  mode: 'local',   // <-- changer ici quand prêt pour la prod
+  mode: 'local',   // <-- passer à 'github' une fois le dépôt + Worker prêts
 
-  // Paramètres pour les modes futurs (ignorés en mode 'local')
+  // ── "Base de données" GitHub (utilisée si mode === 'github') ──
+  github: {
+    owner:     'fabienkarulak-source',   // propriétaire du dépôt
+    repo:      'cyrias-planning',         // nom du dépôt
+    branch:    'main',                    // branche
+    dataPath:  'data.json',               // "table" planning  (état complet)
+    usersPath: 'users.json',              // "table" accès      (utilisateurs)
+    // Proxy d'ÉCRITURE. Vide => lecture seule partagée (personne ne peut écrire).
+    workerUrl: '',                        // ex: 'https://cyrias-planning.xxx.workers.dev'
+  },
+
+  // Modes SSO futurs (ignorés sinon)
   microsoft: {
     clientId:    'VOTRE_AZURE_CLIENT_ID',
     tenantId:    'VOTRE_AZURE_TENANT_ID',
@@ -2915,7 +2939,14 @@ function loadUsersJson() {
   if (_usersJsonPromise) return _usersJsonPromise;
   _usersJsonPromise = (async () => {
     try {
-      const res = await fetch('users.json', { cache: 'no-store' });
+      // En mode 'github', on lit users.json directement dans le dépôt (raw).
+      // Sinon, fichier relatif déposé à côté de la page.
+      let url = 'users.json';
+      if (AUTH_CONFIG.mode === 'github' && AUTH_CONFIG.github && AUTH_CONFIG.github.owner) {
+        const g = AUTH_CONFIG.github;
+        url = `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${g.branch}/${g.usersPath}`;
+      }
+      const res = await fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
@@ -3047,9 +3078,68 @@ function logout() {
 // ─────────────────────────────────────────────────────────────────
 // STOCKAGE — window.storage (Claude artifacts) ou GitHub via Worker
 // ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// "BASE DE DONNÉES" GITHUB  (mode 'github') — pas de SQL
+// data.json  = état complet du planning (≈ une table)
+// users.json = accès (≈ une table) — chargé par loadUsersJson()
+// Lecture directe depuis GitHub ; écriture via proxy Worker (token serveur).
+// ─────────────────────────────────────────────────────────────────
+function ghCfg()      { return AUTH_CONFIG.github || {}; }
+function ghWorker()   { return (ghCfg().workerUrl || '').replace(/\/+$/, ''); }
+function ghRawUrl(p)  { const g = ghCfg(); return `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${g.branch}/${p}`; }
+
+async function githubLoadData() {
+  const g = ghCfg();
+  // 1) Si un Worker est configuré : il renvoie { data, sha } (sha utile à l'écriture)
+  if (ghWorker()) {
+    try {
+      const r = await fetch(ghWorker() + '/data', { cache: 'no-store' });
+      if (r.ok) {
+        const j = await r.json();
+        if (j && j.data) { dataSha = j.sha || null; return j.data; }
+      }
+    } catch (e) { /* on bascule sur la lecture directe */ }
+  }
+  // 2) Lecture directe (dépôt public)
+  try {
+    const r = await fetch(ghRawUrl(g.dataPath) + '?t=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) return await r.json();
+  } catch (e) {}
+  return null;
+}
+
+async function githubSaveData(data) {
+  if (!ghWorker()) {
+    throw new Error('Écriture indisponible : AUTH_CONFIG.github.workerUrl non configuré (portail en lecture seule).');
+  }
+  const r = await fetch(ghWorker() + '/data', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      data,
+      sha:   dataSha || null,
+      email: (msUser && msUser.email) || null,
+      role:  userRole || null,
+    }),
+  });
+  if (!r.ok) throw new Error('Worker HTTP ' + r.status);
+  const j = await r.json().catch(() => ({}));
+  if (j && j.sha) dataSha = j.sha;   // mémorise le sha pour le prochain commit
+  return true;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// STOCKAGE — local (window.storage / localStorage) OU GitHub
+// ─────────────────────────────────────────────────────────────────
 async function loadFromStorage() {
-  if (AUTH_CONFIG.mode !== 'local') {
-    // Futur : appel Worker (GitHub via Cloudflare)
+  if (AUTH_CONFIG.mode === 'github') {
+    const remote = await githubLoadData();
+    if (remote) {
+      try { localStorage.setItem('planning-presence-v2', JSON.stringify(remote)); } catch(e){}
+      return remote;
+    }
+    // repli : dernière copie locale connue
+    try { const raw = localStorage.getItem('planning-presence-v2'); if (raw) return JSON.parse(raw); } catch(e){}
     return null;
   }
   // 1. Essayer window.storage (Claude artifacts)
@@ -3069,9 +3159,17 @@ async function loadFromStorage() {
 
 async function saveToStorage(data) {
   setSyncing(true);
-  if (AUTH_CONFIG.mode !== 'local') {
-    // Futur : appel Worker (GitHub via Cloudflare)
-    setSyncing(false);
+  if (AUTH_CONFIG.mode === 'github') {
+    // Copie locale immédiate (filet de sécurité hors-ligne)
+    try { localStorage.setItem('planning-presence-v2', JSON.stringify(data)); } catch(e){}
+    try {
+      await githubSaveData(data);
+      setSyncing(false);
+    } catch (e) {
+      console.warn('Sauvegarde GitHub échouée :', e.message);
+      toast('⚠️ ' + e.message);
+      setSyncing(false, true);
+    }
     return;
   }
   let ok = false;
@@ -3194,7 +3292,7 @@ async function _loadAndRender() {
   try {
     const saved = await loadFromStorage();
     if (saved && saved.persons && saved.lieux) {
-      window.state = saved;
+      state = saved; window.state = state;   // même objet (rendu + sauvegarde)
       if (!window.state.feries)     window.state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
       if (!window.state.siteGroups) window.state.siteGroups = [];
       if (window.state.solidarite === undefined) window.state.solidarite = null;
@@ -3210,7 +3308,7 @@ async function _loadAndRender() {
     try {
       const fresh = await loadFromStorage();
       if (fresh && fresh.persons && fresh.lieux) {
-        window.state = fresh;
+        state = fresh; window.state = state;   // même objet
         if (!window.state.feries)     window.state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
         if (!window.state.siteGroups) window.state.siteGroups = [];
         if (window.state.solidarite === undefined) window.state.solidarite = null;

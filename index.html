@@ -1238,6 +1238,23 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
       </div>
       <div id="feriesEditList"></div>
     </div>
+    <div id="tabUsers" class="tab-panel" style="display:none;">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5;">
+        Gérez ici les emails autorisés à accéder au planning.<br>
+        <strong>Rôles :</strong> Admin (tout), Éditeur (sa ligne), Lecteur (lecture seule).
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+        <input class="form-input" id="newUserEmail" placeholder="prenom.nom@cyrias.com" style="flex:2;min-width:160px;" type="email">
+        <input class="form-input" id="newUserNom" placeholder="Nom affiché" style="flex:1;min-width:100px;">
+        <select class="form-input form-select" id="newUserRole" style="width:110px;">
+          <option value="editor">Éditeur</option>
+          <option value="admin">Admin</option>
+          <option value="viewer">Lecteur</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="addUserBtn">+ Ajouter</button>
+      </div>
+      <div id="usersEditList"></div>
+    </div>
     <div id="tabData" class="tab-panel" style="display:none;">
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button class="btn" id="exportJsonBtn">⬇ Exporter JSON (sauvegarde)</button>
@@ -2001,6 +2018,67 @@ const COLOR_SWATCHES = [
   '#EEF6D9','#D7E89B','#95C11F','#5C7F0E',
   '#FFF4D6','#E6DEF2','#FCE0E0','#F2F4F8',
 ];
+
+// ── Rendu de la liste des utilisateurs ───────────────────────────────
+function renderUsersList() {
+  const list = document.getElementById('usersEditList');
+  if (!list) return;
+  const users = window.state.users || [];
+
+  if (!users.length) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Aucun utilisateur configuré.</div>';
+    return;
+  }
+
+  const roleLabel = { admin: '🔑 Admin', editor: '✏️ Éditeur', viewer: '👁 Lecteur' };
+  const roleColor = { admin: 'var(--cyrias-blue)', editor: 'var(--cyrias-green-dark)', viewer: '#876200' };
+
+  list.innerHTML = users.map((u, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;background:var(--surface2);margin-bottom:5px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.nom}</div>
+        <div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.email}</div>
+      </div>
+      <span style="font-size:11px;font-weight:600;color:${roleColor[u.role]||'var(--text3)'};white-space:nowrap;flex-shrink:0;">${roleLabel[u.role]||u.role}</span>
+      <button onclick="removeUser(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0 2px;flex-shrink:0;" title="Supprimer">×</button>
+    </div>`).join('');
+}
+
+function addUser() {
+  const email = (document.getElementById('newUserEmail').value || '').trim().toLowerCase();
+  const nom   = (document.getElementById('newUserNom').value   || '').trim();
+  const role  = document.getElementById('newUserRole').value;
+
+  if (!email || !email.includes('@')) { toast('Email invalide'); return; }
+  if (!nom) { toast('Le nom affiché est requis'); return; }
+
+  if (!window.state.users) window.state.users = [];
+
+  if (window.state.users.some(u => u.email.toLowerCase() === email)) {
+    toast('Cet email existe déjà'); return;
+  }
+
+  window.state.users.push({ email, nom, role });
+  scheduleSave();
+  renderUsersList();
+
+  document.getElementById('newUserEmail').value = '';
+  document.getElementById('newUserNom').value   = '';
+  toast('✓ Utilisateur ajouté');
+}
+
+function removeUser(index) {
+  if (!window.state.users) return;
+  // Empêcher la suppression du dernier admin
+  const user = window.state.users[index];
+  const adminsLeft = window.state.users.filter((u, i) => i !== index && u.role === 'admin');
+  if (user.role === 'admin' && adminsLeft.length === 0) {
+    toast('⚠️ Impossible de supprimer le dernier admin'); return;
+  }
+  window.state.users.splice(index, 1);
+  scheduleSave();
+  renderUsersList();
+}
 
 function openSettings() {
   renderSettingsPersons();
@@ -2812,21 +2890,18 @@ const AUTH_CONFIG = {
 //   nom  : doit correspondre exactement au nom dans le planning
 //          (pour le mode "modification de sa propre ligne uniquement")
 // ═══════════════════════════════════════════════════════════════════
-const AUTH_USERS = [
-  // Admins
-  { email: 'admin@cyrias.com',            role: 'admin',  nom: 'Admin' },
-
-  // Éditeurs — peuvent remplir uniquement leur propre ligne
-  { email: 'xavier.dupont@cyrias.com',    role: 'editor', nom: 'Xavier' },
-  { email: 'amelie.martin@cyrias.com',    role: 'editor', nom: 'Amélie' },
-  { email: 'thomas.bernard@cyrias.com',   role: 'editor', nom: 'Thomas' },
-  { email: 'sophie.leroy@cyrias.com',     role: 'editor', nom: 'Sophie' },
-  { email: 'marc.petit@cyrias.com',       role: 'editor', nom: 'Marc'   },
-  { email: 'julie.moreau@cyrias.com',     role: 'editor', nom: 'Julie'  },
-
-  // Lecteurs
-  // { email: 'direction@cyrias.com',     role: 'viewer', nom: 'Direction' },
+// AUTH_USERS est maintenant lu depuis state.users (géré dans Paramètres > Utilisateurs).
+// Ces valeurs sont les valeurs par défaut si state.users est vide.
+const DEFAULT_AUTH_USERS = [
+  { email: 'admin@cyrias.com', role: 'admin', nom: 'Admin' },
 ];
+
+// Accès live à la liste (toujours à jour même si state change)
+function getAuthUsers() {
+  return (window.state && window.state.users && window.state.users.length)
+    ? window.state.users
+    : DEFAULT_AUTH_USERS;
+}
 
 // ─────────────────────────────────────────────────────────────────
 // STATE AUTH
@@ -2853,7 +2928,7 @@ let saveTimeout = null;
 // ─────────────────────────────────────────────────────────────────
 function loginLocal(email) {
   const e = email.trim().toLowerCase();
-  const user = AUTH_USERS.find(u => u.email.toLowerCase() === e);
+  const user = getAuthUsers().find(u => u.email.toLowerCase() === e);
 
   if (!user) {
     showLoginScreen(
@@ -2903,12 +2978,20 @@ function logout() {
 // ─────────────────────────────────────────────────────────────────
 async function loadFromStorage() {
   if (AUTH_CONFIG.mode !== 'local') {
-    // Futur : appel Worker
+    // Futur : appel Worker (GitHub via Cloudflare)
     return null;
   }
+  // 1. Essayer window.storage (Claude artifacts)
   try {
-    const result = await window.storage.get('planning-presence-v2', true);
-    if (result && result.value) return JSON.parse(result.value);
+    if (window.storage) {
+      const result = await window.storage.get('planning-presence-v2', true);
+      if (result && result.value) return JSON.parse(result.value);
+    }
+  } catch(e) {}
+  // 2. Fallback localStorage (hébergement web standard)
+  try {
+    const raw = localStorage.getItem('planning-presence-v2');
+    if (raw) return JSON.parse(raw);
   } catch(e) {}
   return null;
 }
@@ -2916,16 +2999,26 @@ async function loadFromStorage() {
 async function saveToStorage(data) {
   setSyncing(true);
   if (AUTH_CONFIG.mode !== 'local') {
-    // Futur : appel Worker
+    // Futur : appel Worker (GitHub via Cloudflare)
     setSyncing(false);
     return;
   }
+  let ok = false;
+  // 1. Essayer window.storage (Claude artifacts)
   try {
-    await window.storage.set('planning-presence-v2', JSON.stringify(data), true);
-    setSyncing(false);
-  } catch(e) {
-    setSyncing(false, true);
+    if (window.storage) {
+      await window.storage.set('planning-presence-v2', JSON.stringify(data), true);
+      ok = true;
+    }
+  } catch(e) {}
+  // 2. Fallback localStorage
+  if (!ok) {
+    try {
+      localStorage.setItem('planning-presence-v2', JSON.stringify(data));
+      ok = true;
+    } catch(e) {}
   }
+  ok ? setSyncing(false) : setSyncing(false, true);
 }
 
 function scheduleSave() {
@@ -3034,6 +3127,7 @@ async function _loadAndRender() {
       if (!window.state.feries)     window.state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
       if (!window.state.siteGroups) window.state.siteGroups = [];
       if (window.state.solidarite === undefined) window.state.solidarite = null;
+      if (!window.state.users)      window.state.users = [...DEFAULT_AUTH_USERS];
     }
   } catch(e) { toast('⚠️ Impossible de charger le planning'); }
   render();
@@ -3049,6 +3143,7 @@ async function _loadAndRender() {
         if (!window.state.feries)     window.state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
         if (!window.state.siteGroups) window.state.siteGroups = [];
         if (window.state.solidarite === undefined) window.state.solidarite = null;
+        if (!window.state.users)      window.state.users = [...DEFAULT_AUTH_USERS];
         render();
       }
     } catch(e) {}
@@ -3086,6 +3181,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('loginBtn')
     .addEventListener('click', submitLogin);
+
+  // Gestion des utilisateurs dans Paramètres
+  document.addEventListener('click', e => {
+    if (e.target && e.target.id === 'addUserBtn') addUser();
+  });
 
   document.getElementById('loginEmailInput')
     .addEventListener('keydown', e => { if (e.key === 'Enter') submitLogin(); });

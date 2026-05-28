@@ -788,19 +788,61 @@ tfoot tr.foot-sub td.td-person {
 }
 .row-dup-btn {
   flex-shrink: 0;
-  width: 22px; height: 22px;
+  width: 26px; height: 26px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border2);
-  background: var(--surface);
+  border: 1.5px solid var(--cyrias-blue);
+  background: var(--cyrias-blue-light);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px;
-  color: var(--text3);
-  opacity: 0;
-  transition: opacity .15s, background .1s;
+  font-size: 13px;
+  color: var(--cyrias-blue);
+  opacity: 1;
+  transition: background .15s, border-color .15s, transform .1s, box-shadow .15s;
+  box-shadow: 0 1px 3px rgba(27,63,115,.15);
+  title: "Dupliquer la semaine";
 }
-tbody tr:hover .row-dup-btn { opacity: 1; }
-.row-dup-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.row-dup-btn:hover {
+  background: var(--cyrias-blue);
+  border-color: var(--cyrias-blue-dark);
+  color: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(27,63,115,.35);
+}
+
+/* Low presence alert row (< 3 jours sur site) */
+tbody tr.row-alert-low {
+  background: #fff8ed !important;
+}
+tbody tr.row-alert-low td {
+  border-bottom-color: #fed7aa;
+}
+tbody tr.row-alert-low td.td-person {
+  background: #fff8ed !important;
+  border-left: 3px solid #f97316;
+}
+tbody tr.row-alert-low:hover {
+  background: #fff2dc !important;
+}
+tbody tr.row-alert-low:hover td.td-person {
+  background: #fff2dc !important;
+}
+.presence-count-badge.low {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+.presence-count-badge.zero {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+.row-alert-icon {
+  flex-shrink: 0;
+  font-size: 13px;
+  line-height: 1;
+  margin-left: 1px;
+  cursor: default;
+}
 
 /* Holiday column */
 td.td-holiday, th.th-holiday {
@@ -903,10 +945,104 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
 .solidarite-badge:hover { background: #ddd6fe; }
 .solidarite-done { background: #dcfce7 !important; color: #166534 !important; border-color: #86efac !important; }
 .solidarite-done:hover { background: #bbf7d0 !important; }
+
+/* ── Login Screen ── */
+#loginScreen {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--cyrias-blue);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  gap: 0;
+}
+.login-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 44px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.25);
+}
+.login-logo { margin-bottom: 24px; }
+.login-logo img { height: 38px; }
+.login-title {
+  font-size: 17px; font-weight: 700;
+  color: var(--cyrias-blue-dark);
+  margin-bottom: 6px;
+}
+.login-subtitle {
+  font-size: 13px; color: var(--text3);
+  margin-bottom: 28px; line-height: 1.5;
+}
+.login-msg {
+  font-size: 13px; color: var(--text2);
+  margin-bottom: 16px; min-height: 18px;
+  line-height: 1.5;
+}
+.login-spinner {
+  width: 28px; height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--cyrias-blue);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loginBtn {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 20px;
+  background: var(--cyrias-blue);
+  color: #fff;
+  border: none; border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+}
+#loginBtn:hover { background: var(--cyrias-blue-dark); transform: translateY(-1px); }
+#loginBtn:active { transform: translateY(0); }
+.login-github-icon {
+  width: 20px; height: 20px; fill: #fff;
+}
+.login-footer {
+  margin-top: 20px;
+  font-size: 11px; color: rgba(255,255,255,.45);
+  text-align: center;
+}
+.login-footer a { color: rgba(255,255,255,.65); }
+/* topbar-right helper */
+#topbar-right { display: flex; gap: 8px; align-items: center; }
 </style>
 </head>
 <body>
 
+
+<!-- ── Écran de connexion GitHub ── -->
+<div id="loginScreen" style="display:flex;">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="https://www.cyrias.com/wp-content/uploads/2023/01/logo-cyrias.svg" alt="Cyrias"
+           onerror="this.src='https://www.cyrias.com/wp-content/uploads/2023/01/logo-cyrias-blanc.svg';this.style.filter='invert(1)'">
+    </div>
+    <div class="login-title">Planning de présence</div>
+    <div class="login-subtitle">Connectez-vous avec votre compte GitHub<br>pour accéder au planning Cyrias.</div>
+    <div class="login-msg" id="loginMsg"></div>
+    <div class="login-spinner" id="loginSpinner" style="display:none;"></div>
+    <button id="loginBtn">
+      <svg class="login-github-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+      </svg>
+      Se connecter avec GitHub
+    </button>
+  </div>
+  <div class="login-footer">
+    Planning de présence Cyrias &nbsp;·&nbsp; <a href="https://www.cyrias.com" target="_blank">cyrias.com</a>
+  </div>
+</div>
+
+<div id="appShell" style="display:none;">
 <div class="app">
 
   <header class="topbar">
@@ -922,7 +1058,7 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
       </div>
       <button class="btn btn-sm" id="todayBtn">Aujourd'hui</button>
     </div>
-    <div class="topbar-right">
+    <div class="topbar-right" id="topbar-right">
       <div class="sync-badge">
         <div class="sync-dot" id="syncDot"></div>
         <span id="syncLabel">Synchronisé</span>
@@ -1214,31 +1350,191 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
 </div>
 
 <script>
-// ── STORAGE (shared via window.storage) ──────────────────────────────
-const STORAGE_KEY = 'planning-presence-v2';
+// ═══════════════════════════════════════════════════════════════════════
+// ── CONFIGURATION MICROSOFT 365 ───────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+const MS_CONFIG = {
+  // ① Application (client) ID — Azure App Registration
+  //    portal.azure.com → Entra ID → App registrations → Planning Cyrias → Overview
+  CLIENT_ID: 'VOTRE_AZURE_CLIENT_ID',
+
+  // ② Directory (tenant) ID — Azure App Registration (même page)
+  TENANT_ID: 'VOTRE_AZURE_TENANT_ID',
+
+  // ③ URL du Cloudflare Worker déployé
+  //    workers.cloudflare.com → cyrias-planning-auth → copier l'URL
+  WORKER_URL: 'https://cyrias-planning-auth.workers.dev',
+
+  // ④ URL où est hébergé ce fichier HTML (doit correspondre à ALLOWED_ORIGIN du Worker)
+  REDIRECT_URI: 'https://fabienkarulak-source.github.io/cyrias-planning',
+
+  // Scopes Microsoft demandés (ne pas modifier)
+  SCOPES: ['openid', 'profile', 'email'],
+};
+
+// MS_CONFIG est la seule chose à modifier pour la mise en prod.
+// Le Worker Cloudflare gère GitHub (PAT stocké côté serveur, jamais exposé).
+
+// ── AUTH STATE ────────────────────────────────────────────────────────
+let msIdToken  = sessionStorage.getItem('ms_id_token') || null;
+let msUser     = null;  // { email, name }
+let userRole   = null;  // 'admin' | 'editor' | 'viewer' | null
+let dataSha    = null;
 let saveTimeout = null;
+
+// ── MICROSOFT AUTH (PKCE — sans client_secret) ─────────────────────
+async function generatePKCE() {
+  const verifier = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
+    .replace(/[+]/g,'-').replace(/[/]/g,'_').replace(/=/g,'');
+  const data = new TextEncoder().encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  const challenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/[+]/g,'-').replace(/[/]/g,'_').replace(/=/g,'');
+  return { verifier, challenge };
+}
+
+async function loginWithMicrosoft() {
+  const { verifier, challenge } = await generatePKCE();
+  sessionStorage.setItem('pkce_verifier', verifier);
+  const state = crypto.randomUUID();
+  sessionStorage.setItem('ms_state', state);
+  const params = new URLSearchParams({
+    client_id: MS_CONFIG.CLIENT_ID,
+    response_type: 'code',
+    redirect_uri: MS_CONFIG.REDIRECT_URI,
+    scope: MS_CONFIG.SCOPES.join(' '),
+    state,
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+    response_mode: 'query',
+  });
+  location.href = `https://login.microsoftonline.com/${MS_CONFIG.TENANT_ID}/oauth2/v2.0/authorize?${params}`;
+}
+
+async function handleMsCallback() {
+  const params = new URLSearchParams(location.search);
+  const code  = params.get('code');
+  if (!code) return false;
+  if (params.get('state') !== sessionStorage.getItem('ms_state')) {
+    showLoginScreen('Erreur de sécurité. Veuillez réessayer.');
+    return false;
+  }
+  history.replaceState({}, '', location.pathname);
+  showLoginScreen('Connexion Microsoft en cours…', true);
+  try {
+    const verifier = sessionStorage.getItem('pkce_verifier');
+    const tokenRes = await fetch(
+      `https://login.microsoftonline.com/${MS_CONFIG.TENANT_ID}/oauth2/v2.0/token`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id:     MS_CONFIG.CLIENT_ID,
+          grant_type:    'authorization_code',
+          code,
+          redirect_uri:  MS_CONFIG.REDIRECT_URI,
+          code_verifier: verifier,
+          scope:         MS_CONFIG.SCOPES.join(' '),
+        }),
+      }
+    );
+    if (!tokenRes.ok) {
+      const err = await tokenRes.json().catch(() => ({}));
+      throw new Error(err.error_description || `HTTP ${tokenRes.status}`);
+    }
+    const tokens = await tokenRes.json();
+    msIdToken = tokens.id_token;
+    sessionStorage.setItem('ms_id_token', msIdToken);
+    sessionStorage.removeItem('pkce_verifier');
+    sessionStorage.removeItem('ms_state');
+    return true;
+  } catch(e) {
+    showLoginScreen(`Erreur Microsoft : ${e.message}`);
+    return false;
+  }
+}
+
+async function fetchUserAndRole() {
+  // Décoder le JWT localement pour afficher email/nom
+  const parts = msIdToken.split('.');
+  const pad   = parts[1].replace(/[-]/g,'+').replace(/[_]/g,'/');
+  const raw   = atob(pad.padEnd(pad.length + (4 - pad.length % 4) % 4, '='));
+  const payload = JSON.parse(raw);
+  msUser = {
+    email: payload.email || payload.preferred_username || '',
+    name:  payload.name  || '',
+  };
+  // Appel Worker pour vérifier le rôle (lit users.json via le PAT GitHub côté serveur)
+  const res = await fetch(`${MS_CONFIG.WORKER_URL}/auth`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_token: msIdToken }),
+  });
+  if (!res.ok) {
+    if (res.status === 403) { userRole = null; return; }
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Worker ${res.status}`);
+  }
+  const data = await res.json();
+  userRole = data.role;
+  msUser.name = data.name || msUser.name;
+}
+
+function logout() {
+  sessionStorage.removeItem('ms_id_token');
+  msIdToken = null; msUser = null; userRole = null; dataSha = null;
+  showLoginScreen();
+}
+
+// ── LECTURE / ÉCRITURE VIA WORKER (PAT GitHub jamais exposé) ─────────
+async function workerPost(endpoint, body = {}) {
+  const res = await fetch(`${MS_CONFIG.WORKER_URL}${endpoint}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...body, id_token: msIdToken }),
+  });
+  if (res.status === 401) { logout(); throw new Error('Session expirée'); }
+  return res;
+}
 
 async function loadFromStorage() {
   try {
-    const result = await window.storage.get(STORAGE_KEY, true);
-    if (result && result.value) return JSON.parse(result.value);
-  } catch(e) {}
-  return null;
+    const res = await workerPost('/read');
+    if (!res.ok) throw new Error(`Worker /read: ${res.status}`);
+    const data = await res.json();
+    dataSha = data.sha;
+    return data.content;
+  } catch(e) {
+    dataSha = null;
+    return null;
+  }
 }
 
 async function saveToStorage(data) {
   setSyncing(true);
   try {
-    await window.storage.set(STORAGE_KEY, JSON.stringify(data), true);
+    const res = await workerPost('/write', { data, sha: dataSha });
+    if (res.status === 409) {
+      toast('⚠️ Conflit — rechargement…');
+      const fresh = await loadFromStorage();
+      if (fresh) { state = fresh; render(); }
+      saveTimeout = setTimeout(() => saveToStorage(state), 2000);
+      return;
+    }
+    if (!res.ok) throw new Error(`Worker /write: ${res.status}`);
+    const result = await res.json();
+    dataSha = result.sha;
     setSyncing(false);
   } catch(e) {
     setSyncing(false, true);
+    console.error('Save error:', e);
   }
 }
 
 function scheduleSave() {
+  if (userRole === 'viewer') return;
   clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => saveToStorage(state), 800);
+  saveTimeout = setTimeout(() => saveToStorage(state), 2500);
 }
 
 function setSyncing(syncing, err) {
@@ -1256,6 +1552,84 @@ function setSyncing(syncing, err) {
     dot.style.background = 'var(--cyrias-green)';
     lbl.textContent = 'Synchronisé';
   }
+}
+
+// ── ÉCRAN DE LOGIN ────────────────────────────────────────────
+function showLoginScreen(msg = '', loading = false) {
+  document.getElementById('appShell').style.display = 'none';
+  const el = document.getElementById('loginScreen');
+  el.style.display = 'flex';
+  document.getElementById('loginMsg').innerHTML = msg;
+  document.getElementById('loginSpinner').style.display = loading ? 'block' : 'none';
+  document.getElementById('loginBtn').style.display = loading ? 'none' : 'flex';
+}
+
+function hideLoginScreen() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = '';
+}
+
+// ── AFFICHAGE UTILISATEUR CONNECTÉ ───────────────────────
+function renderUserBadge() {
+  const bar = document.getElementById('topbar-right');
+  const existing = document.getElementById('userBadge');
+  if (existing) existing.remove();
+  const roleLabel = { admin: 'Admin', editor: 'Éditeur', viewer: 'Lecteur' }[userRole] || '—';
+  const roleColor = { admin: 'var(--cyrias-green)', editor: 'rgba(255,255,255,.7)', viewer: '#f59e0b' }[userRole] || '#fff';
+  const badge = document.createElement('div');
+  badge.id = 'userBadge';
+  badge.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px 4px 6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:20px;cursor:pointer;transition:background .15s;';
+  badge.title = `Connecté en tant que ${msUser.email} (${roleLabel}) — cliquer pour se déconnecter`;
+  badge.innerHTML = `
+    ${null
+      ? '' style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);" alt="">`
+      : `<div style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;">${msUser.email.slice(0,2).toUpperCase()}</div>`
+    }
+    <div style="line-height:1.2;">
+      <div style="font-size:12px;font-weight:600;color:#fff;">${msUser.name || msUser.email}</div>
+      <div style="font-size:10px;color:${roleColor};font-weight:500;">${roleLabel}</div>
+    </div>
+  `;
+  badge.addEventListener('mouseenter', () => badge.style.background = 'rgba(255,255,255,.18)');
+  badge.addEventListener('mouseleave', () => badge.style.background = 'rgba(255,255,255,.10)');
+  badge.addEventListener('click', () => { if (confirm(`Se déconnecter (${msUser.email}) ?`)) logout(); });
+  bar.insertBefore(badge, bar.firstChild);
+}
+
+// ── APPLICATION DES RÔLES ────────────────────────────────────
+function applyRole() {
+  if (!userRole) {
+    document.getElementById('appShell').style.display = 'none';
+    const el = document.getElementById('loginScreen');
+    el.style.display = 'flex';
+    document.getElementById('loginMsg').innerHTML =
+      `<span style="color:#fca5a5;">⛔ Compte <strong>${ghUser.login}</strong> non autorisé.<br>Contactez un administrateur Cyrias.</span>`;
+    document.getElementById('loginSpinner').style.display = 'none';
+    document.getElementById('loginBtn').style.display = 'flex';
+    document.getElementById('loginBtn').textContent = 'Se connecter avec un autre compte';
+    return false;
+  }
+
+  const canWrite = userRole !== 'viewer';
+  const isAdmin  = userRole === 'admin';
+
+  // Lecture seule pour viewers
+  if (!canWrite) {
+    const selectors = '.presence-cell,.presence-empty,.row-dup-btn,#actionsBtn,#exportBtn';
+    document.querySelectorAll(selectors).forEach(el => {
+      el.style.pointerEvents = 'none';
+      el.style.opacity = '0.55';
+      el.title = 'Lecture seule';
+    });
+  }
+
+  // Paramètres et ajout personne : admin uniquement
+  document.getElementById('settingsBtn').style.display        = isAdmin ? '' : 'none';
+  document.getElementById('addPersonSideBtn').style.display   = isAdmin ? '' : 'none';
+  document.getElementById('exportBtn').style.display          = isAdmin ? '' : 'none';
+  document.getElementById('actionsBtn').style.display         = isAdmin ? '' : 'none';
+
+  return true;
 }
 
 // ── DEFAULT STATE ─────────────────────────────────────────────────────
@@ -1688,13 +2062,17 @@ function renderTable() {
     const site = getLieu(p.site);
     const av = avatarColor(p.nom);
     const onsiteCount = countOnsiteDays(p.id, currentMonday);
-    bodyHtml += `<tr>
+    const isLow = onsiteCount < 3;
+    const badgeClass = onsiteCount === 0 ? ' zero' : isLow ? ' low' : '';
+    const alertIcon = isLow ? `<span class="row-alert-icon" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site cette semaine — objectif minimum 3j">⚠️</span>` : '';
+    bodyHtml += `<tr${isLow ? ' class="row-alert-low"' : ''}>
       <td class="td-person">
         <div class="person-cell-inner">
           <div class="avatar" style="background:${av};color:#333;width:24px;height:24px;font-size:10px;flex-shrink:0;">${initials(p.nom)}</div>
           <span class="person-cell-name" title="${p.nom}">${p.nom}</span>
-          <span class="presence-count-badge${onsiteCount===0?' zero':''}" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site">${onsiteCount}</span>
-          <button class="row-dup-btn" onclick="openDupRowModal('${p.id}')" title="Dupliquer">⧉</button>
+          ${alertIcon}
+          <span class="presence-count-badge${badgeClass}" title="${onsiteCount} jour${onsiteCount>1?'s':''} sur site">${onsiteCount}</span>
+          <button class="row-dup-btn" onclick="openDupRowModal('${p.id}')" title="Dupliquer la semaine de ${p.nom}">⧉</button>
         </div>
       </td>
       <td class="td-ref">${site ? `<span class="presence-cell" style="background:${site.bg};color:${site.fg};font-size:11px;cursor:default;">${site.label}</span>` : '—'}</td>`;
@@ -2577,21 +2955,75 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
+  // 1. Callback OAuth ? (retour de github.com/login/oauth/authorize)
+  if (location.search.includes('code=')) {
+    const ok = await handleMsCallback();
+    if (!ok) return;
+  }
+
+  // 2. Pas de token → afficher l'écran de connexion
+  if (!ghToken) {
+    showLoginScreen();
+    return;
+  }
+
+  // 3. Token MS disponible → charger profil + rôle
+  showLoginScreen('Chargement du profil…', true);
+  try {
+    await fetchUserAndRole();
+  } catch(e) {
+    showLoginScreen(`Erreur : ${e.message}`);
+    return;
+  }
+
+  // 4. Vérifier les droits
+  hideLoginScreen();
+  renderUserBadge();
+  const allowed = applyRole();
+  if (!allowed) return;
+
+  // 5. Charger les données depuis GitHub
   setSyncing(true);
-  const saved = await loadFromStorage();
-  if (saved && saved.persons && saved.lieux) {
-    state = saved;
-    if (!state.feries) state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
-    if (!state.siteGroups) state.siteGroups = [];
-    if (state.solidarite === undefined) state.solidarite = null;
+  try {
+    const saved = await loadFromStorage();
+    if (saved && saved.persons && saved.lieux) {
+      state = saved;
+      if (!state.feries) state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
+      if (!state.siteGroups) state.siteGroups = [];
+      if (state.solidarite === undefined) state.solidarite = null;
+    }
+  } catch(e) {
+    toast('⚠️ Impossible de charger le planning depuis GitHub');
   }
   render();
   setSyncing(false);
+
+  // 6. Auto-refresh toutes les 60s
+  setInterval(async () => {
+    if (document.hidden || userRole === null) return;
+    try {
+      const fresh = await loadFromStorage();
+      if (fresh && fresh.persons && fresh.lieux) {
+        // Ne pas écraser les données locales non encore sauvées
+        if (!saveTimeout) {
+          state = fresh;
+          if (!state.feries) state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
+          if (!state.siteGroups) state.siteGroups = [];
+          if (state.solidarite === undefined) state.solidarite = null;
+          render();
+        }
+      }
+    } catch(e) { /* silencieux */ }
+  }, 60000);
 }
+
+// Bouton de connexion
+document.getElementById('loginBtn').addEventListener('click', loginWithMicrosoft);
 
 init();
 </script>
+</div><!-- /#appShell -->
 </body>
 </html>

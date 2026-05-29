@@ -171,7 +171,32 @@
       "2026-05-25": "voiture",
       "2026-05-26": "voiture",
       "2026-05-27": "voiture",
-      "2026-05-28": "teletravail"
+      "2026-05-28": "teletravail",
+      "2026-05-31": "teletravail",
+      "2026-06-01": "voiture",
+      "2026-06-02": "voiture",
+      "2026-06-03": "voiture",
+      "2026-06-04": "teletravail",
+      "2026-06-07": "teletravail",
+      "2026-06-08": "voiture",
+      "2026-06-09": "voiture",
+      "2026-06-10": "voiture",
+      "2026-06-11": "teletravail",
+      "2026-06-14": "teletravail",
+      "2026-06-15": "voiture",
+      "2026-06-16": "voiture",
+      "2026-06-17": "voiture",
+      "2026-06-18": "teletravail",
+      "2026-06-21": "teletravail",
+      "2026-06-22": "voiture",
+      "2026-06-23": "voiture",
+      "2026-06-24": "voiture",
+      "2026-06-25": "teletravail",
+      "2026-06-28": "teletravail",
+      "2026-06-29": "voiture",
+      "2026-06-30": "voiture",
+      "2026-07-01": "voiture",
+      "2026-07-02": "teletravail"
     },
     "p1780040683259f7nx": {
       "2026-05-24": "teletravail",
@@ -267,5 +292,5 @@
       "personId": "p1780040683259f7nx"
     }
   ],
-  "updatedAt": 1780068546033
+  "updatedAt": 1780068555978
 }

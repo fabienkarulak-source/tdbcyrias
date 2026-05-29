@@ -6,8 +6,10 @@
  *        dans la page partagée.
  *
  * Endpoints :
- *   GET  /data  -> { data: <objet planning>, sha: <sha du fichier> }
- *   POST /data  -> body { data, sha?, email?, role? } ; commit data.json ; renvoie { sha }
+ *   GET  /data   -> { data: <objet planning>, sha }
+ *   POST /data   -> body { data, sha?, email?, role? } ; commit data.json ; renvoie { sha }
+ *   GET  /users  -> { data: <objet users>, sha }
+ *   POST /users  -> body { data:{users:[...]}, email?, role? } ; commit users.json
  *
  * Variables d'environnement (Settings > Variables du Worker) :
  *   GITHUB_TOKEN  (secret)  Personal Access Token "fine-grained" avec
@@ -16,6 +18,7 @@
  *   REPO          ex: cyrias-planning
  *   BRANCH        ex: main
  *   DATA_PATH     ex: data.json
+ *   USERS_PATH    ex: users.json
  *   ALLOW_ORIGIN  ex: https://fabienkarulak-source.github.io   (ou * en test)
  *   PORTAL_KEY    (optionnel) secret partagé attendu dans l'en-tête X-Portal-Key
  */
@@ -37,11 +40,14 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
 
     const url = new URL(request.url);
-    if (!url.pathname.endsWith('/data')) return json({ error: 'not found' }, 404);
+    // Route -> fichier GitHub correspondant
+    let path = null;
+    if (url.pathname.endsWith('/data'))  path = env.DATA_PATH  || 'data.json';
+    if (url.pathname.endsWith('/users')) path = env.USERS_PATH || 'users.json';
+    if (!path) return json({ error: 'not found' }, 404);
 
     const owner  = env.OWNER, repo = env.REPO;
     const branch = env.BRANCH || 'main';
-    const path   = env.DATA_PATH || 'data.json';
     const api    = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
     const ghHeaders = {
       'Authorization': `Bearer ${env.GITHUB_TOKEN}`,
@@ -82,7 +88,7 @@ export default {
         method:  'PUT',
         headers: { ...ghHeaders, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `MAJ planning${who} — ${new Date().toISOString()}`,
+          message: `MAJ ${path}${who} — ${new Date().toISOString()}`,
           content: utf8ToB64(JSON.stringify(body.data, null, 2)),
           branch,
           ...(sha ? { sha } : {}),

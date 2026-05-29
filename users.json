@@ -3,13 +3,20 @@
     {
       "email": "admin@cyrias.com",
       "role": "admin",
-      "nom": "Admin"
+      "nom": "Admin",
+      "personId": null
     },
     {
       "email": "fabien.karulak@cyrias.com",
       "role": "editor",
       "nom": "Fabien",
       "personId": "p1780040519428v5k7"
+    },
+    {
+      "email": "stephane.verardo@cyrias.com",
+      "role": "editor",
+      "nom": "Stéphane",
+      "personId": "p1780040683259f7nx"
     }
   ]
 }

@@ -3349,7 +3349,10 @@ async function githubSaveData(data) {
         role:  userRole || null,
       }),
     });
-    if (!r.ok) throw new Error('Worker HTTP ' + r.status);
+    if (!r.ok) {
+      let d = ''; try { const e = await r.json(); d = e.error ? (' — ' + e.error + (e.detail ? ': ' + e.detail : '')) : ''; } catch(_) {}
+      throw new Error('Écriture refusée par GitHub (HTTP ' + r.status + ')' + d);
+    }
     const j = await r.json().catch(() => ({}));
     if (j && j.sha) dataSha = j.sha;
     return true;
@@ -3372,7 +3375,10 @@ async function githubSaveUsers(users) {
         role:  userRole || null,
       }),
     });
-    if (!r.ok) throw new Error('Worker HTTP ' + r.status);
+    if (!r.ok) {
+      let d = ''; try { const e = await r.json(); d = e.error ? (' — ' + e.error + (e.detail ? ': ' + e.detail : '')) : ''; } catch(_) {}
+      throw new Error('Écriture refusée par GitHub (HTTP ' + r.status + ')' + d);
+    }
     return true;
   }
   if (getGhToken()) return githubPutFile(ghCfg().usersPath, { users });

@@ -167,13 +167,10 @@
       "2026-05-29": "teletravail"
     },
     "p1780040519428v5k7": {
-      "2026-05-24": "massy",
-      "2026-05-27": "absence"
+      "2026-05-24": "massy"
     },
     "p1780040683259f7nx": {
-      "2026-05-24": "nantes",
-      "2026-05-26": "montpellier",
-      "2026-05-27": "montpellier"
+      "2026-05-24": "teletravail"
     }
   },
   "feries": [
@@ -250,14 +247,20 @@
     {
       "email": "admin@cyrias.com",
       "role": "admin",
-      "nom": "Admin"
+      "nom": "Admin",
+      "personId": null
     },
     {
       "email": "fabien.karulak@cyrias.com",
       "role": "editor",
       "nom": "Fabien",
       "personId": "p1780040519428v5k7"
+    },
+    {
+      "email": "stephane.verardo@cyrias.com",
+      "role": "editor",
+      "nom": "Stéphane",
+      "personId": "p1780040683259f7nx"
     }
-  ],
-  "updatedAt": 1780047818379
+  ]
 }

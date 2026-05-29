@@ -207,10 +207,6 @@
       "label": "Ascension"
     },
     {
-      "date": "2026-05-25",
-      "label": "Lundi de Pentecôte"
-    },
-    {
       "date": "2026-07-14",
       "label": "Fête Nationale"
     },
@@ -262,5 +258,6 @@
       "nom": "Stéphane",
       "personId": "p1780040683259f7nx"
     }
-  ]
+  ],
+  "updatedAt": 1780068450259
 }

@@ -170,7 +170,9 @@
       "2026-05-24": "massy"
     },
     "p1780040683259f7nx": {
-      "2026-05-24": "teletravail"
+      "2026-05-24": "teletravail",
+      "2026-05-26": "vannes",
+      "2026-05-27": "vannes"
     }
   },
   "feries": [
@@ -205,6 +207,10 @@
     {
       "date": "2026-05-14",
       "label": "Ascension"
+    },
+    {
+      "date": "2026-05-25",
+      "label": "Lundi de Pentecôte"
     },
     {
       "date": "2026-07-14",
@@ -259,5 +265,5 @@
       "personId": "p1780040683259f7nx"
     }
   ],
-  "updatedAt": 1780068450259
+  "updatedAt": 1780068453282
 }

@@ -1,0 +1,250 @@
+{
+  "lieux": [
+    {
+      "id": "massy",
+      "label": "Massy (siège)",
+      "bg": "#E8EEF7",
+      "fg": "#1B3F73",
+      "isOffice": true,
+      "maxPersons": 20
+    },
+    {
+      "id": "voiture",
+      "label": "Massy - Voiture",
+      "bg": "#D4DEEE",
+      "fg": "#0F2C54",
+      "isOffice": true,
+      "maxPersons": 4
+    },
+    {
+      "id": "vannes",
+      "label": "Vannes",
+      "bg": "#DCE6F2",
+      "fg": "#1B3F73",
+      "isOffice": true,
+      "maxPersons": 10
+    },
+    {
+      "id": "nantes",
+      "label": "Nantes",
+      "bg": "#C9D6E9",
+      "fg": "#0F2C54",
+      "isOffice": true,
+      "maxPersons": 4
+    },
+    {
+      "id": "bordeaux",
+      "label": "Bordeaux",
+      "bg": "#E0E8F3",
+      "fg": "#1B3F73",
+      "isOffice": true,
+      "maxPersons": 3
+    },
+    {
+      "id": "montpellier",
+      "label": "Montpellier",
+      "bg": "#CFDAEB",
+      "fg": "#0F2C54",
+      "isOffice": true,
+      "maxPersons": 3
+    },
+    {
+      "id": "teletravail",
+      "label": "Télétravail",
+      "bg": "#EEF6D9",
+      "fg": "#5C7F0E",
+      "isOffice": false,
+      "maxPersons": 0
+    },
+    {
+      "id": "client",
+      "label": "Client",
+      "bg": "#FFF4D6",
+      "fg": "#876200",
+      "isOffice": false,
+      "maxPersons": 0
+    },
+    {
+      "id": "formation",
+      "label": "Formation",
+      "bg": "#E6DEF2",
+      "fg": "#46307A",
+      "isOffice": false,
+      "maxPersons": 0
+    },
+    {
+      "id": "absence",
+      "label": "Absence",
+      "bg": "#FCE0E0",
+      "fg": "#9A1F1F",
+      "isOffice": false,
+      "maxPersons": 0
+    }
+  ],
+  "persons": [
+    {
+      "id": "p1",
+      "nom": "Xavier",
+      "site": "bordeaux"
+    },
+    {
+      "id": "p2",
+      "nom": "Amélie",
+      "site": "massy"
+    },
+    {
+      "id": "p3",
+      "nom": "Thomas",
+      "site": "vannes"
+    },
+    {
+      "id": "p4",
+      "nom": "Sophie",
+      "site": "nantes"
+    },
+    {
+      "id": "p5",
+      "nom": "Marc",
+      "site": "massy"
+    },
+    {
+      "id": "p6",
+      "nom": "Julie",
+      "site": "teletravail"
+    },
+    {
+      "id": "p1780040519428v5k7",
+      "nom": "Fabien",
+      "site": "massy"
+    },
+    {
+      "id": "p1780040683259f7nx",
+      "nom": "Stéphane",
+      "site": "vannes"
+    }
+  ],
+  "planning": {
+    "p1": {
+      "2026-05-25": "teletravail",
+      "2026-05-26": "massy",
+      "2026-05-27": "client",
+      "2026-05-28": "massy",
+      "2026-05-29": "teletravail"
+    },
+    "p2": {
+      "2026-05-25": "absence",
+      "2026-05-26": "teletravail",
+      "2026-05-27": "absence",
+      "2026-05-28": "massy",
+      "2026-05-29": "massy"
+    },
+    "p3": {
+      "2026-05-25": "vannes",
+      "2026-05-26": "vannes",
+      "2026-05-27": "teletravail",
+      "2026-05-28": "vannes",
+      "2026-05-29": "vannes"
+    },
+    "p4": {
+      "2026-05-25": "nantes",
+      "2026-05-26": "nantes",
+      "2026-05-27": "nantes",
+      "2026-05-28": "teletravail",
+      "2026-05-29": "nantes"
+    },
+    "p5": {
+      "2026-05-25": "massy",
+      "2026-05-26": "teletravail",
+      "2026-05-27": "massy",
+      "2026-05-28": "massy",
+      "2026-05-29": "client"
+    },
+    "p6": {
+      "2026-05-25": "teletravail",
+      "2026-05-26": "teletravail",
+      "2026-05-27": "teletravail",
+      "2026-05-28": "teletravail",
+      "2026-05-29": "teletravail"
+    },
+    "p1780040519428v5k7": {
+      "2026-05-24": "massy"
+    }
+  },
+  "feries": [
+    {
+      "date": "2025-11-01",
+      "label": "Toussaint"
+    },
+    {
+      "date": "2025-11-11",
+      "label": "Armistice"
+    },
+    {
+      "date": "2025-12-25",
+      "label": "Noël"
+    },
+    {
+      "date": "2026-01-01",
+      "label": "Jour de l'An"
+    },
+    {
+      "date": "2026-04-06",
+      "label": "Lundi de Pâques"
+    },
+    {
+      "date": "2026-05-01",
+      "label": "Fête du Travail"
+    },
+    {
+      "date": "2026-05-08",
+      "label": "Victoire 1945"
+    },
+    {
+      "date": "2026-05-14",
+      "label": "Ascension"
+    },
+    {
+      "date": "2026-05-25",
+      "label": "Lundi de Pentecôte"
+    },
+    {
+      "date": "2026-07-14",
+      "label": "Fête Nationale"
+    },
+    {
+      "date": "2026-08-15",
+      "label": "Assomption"
+    },
+    {
+      "date": "2026-11-01",
+      "label": "Toussaint"
+    },
+    {
+      "date": "2026-11-11",
+      "label": "Armistice"
+    },
+    {
+      "date": "2026-12-25",
+      "label": "Noël"
+    }
+  ],
+  "siteGroups": [
+    {
+      "id": "g-massy",
+      "label": "Massy (total)",
+      "siteIds": [
+        "massy",
+        "voiture"
+      ],
+      "maxPersons": 24
+    }
+  ],
+  "solidarite": null,
+  "users": [
+    {
+      "email": "admin@cyrias.com",
+      "role": "admin",
+      "nom": "Admin"
+    }
+  ]
+}

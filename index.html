@@ -1168,6 +1168,7 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
       <div class="tab" data-tab="lieux">Lieux & Types</div>
       <div class="tab" data-tab="groupes">Groupes</div>
       <div class="tab" data-tab="feries">Fériés</div>
+      <div class="tab" data-tab="users">Utilisateurs</div>
       <div class="tab" data-tab="data">Données</div>
     </div>
     <div id="tabPersons" class="tab-panel">
@@ -1240,20 +1241,25 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
     </div>
     <div id="tabUsers" class="tab-panel" style="display:none;">
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5;">
-        Gérez ici les emails autorisés à accéder au planning.<br>
-        <strong>Rôles :</strong> Admin (tout), Éditeur (sa ligne), Lecteur (lecture seule).
+        Console d'administration des accès.<br>
+        <strong>Rôles :</strong> 🔑 Admin (tout) · ✏️ Éditeur (sa ligne uniquement) · 👁 Lecteur (lecture seule).<br>
+        <strong>Lier un compte à une personne</strong> : choisissez la personne du planning dans la liste « Personne liée ». L'éditeur ne pourra modifier que cette ligne. (Les personnes se créent dans l'onglet <em>Personnes</em>.)
       </div>
-      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:6px;">Ajouter un compte</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center;">
         <input class="form-input" id="newUserEmail" placeholder="prenom.nom@cyrias.com" style="flex:2;min-width:160px;" type="email">
-        <input class="form-input" id="newUserNom" placeholder="Nom affiché" style="flex:1;min-width:100px;">
-        <select class="form-input form-select" id="newUserRole" style="width:110px;">
-          <option value="editor">Éditeur</option>
-          <option value="admin">Admin</option>
-          <option value="viewer">Lecteur</option>
+        <select class="form-input form-select" id="newUserRole" style="width:120px;">
+          <option value="editor">✏️ Éditeur</option>
+          <option value="admin">🔑 Admin</option>
+          <option value="viewer">👁 Lecteur</option>
         </select>
+        <select class="form-input form-select" id="newUserPerson" style="flex:1;min-width:150px;" title="Personne du planning à lier"></select>
         <button class="btn btn-primary btn-sm" id="addUserBtn">+ Ajouter</button>
       </div>
-      <div id="usersEditList"></div>
+      <div id="usersEditList" style="margin-top:10px;"></div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-sm" id="exportUsersBtn">⬇ Exporter users.json</button>
+      </div>
     </div>
     <div id="tabData" class="tab-panel" style="display:none;">
       <div style="display:flex;flex-direction:column;gap:10px;">
@@ -2027,64 +2033,132 @@ const COLOR_SWATCHES = [
 ];
 
 // ── Rendu de la liste des utilisateurs ───────────────────────────────
+// ── CONSOLE D'ADMINISTRATION DES ACCÈS ────────────────────────────
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+// Options <option> des personnes du planning (pour lier un compte)
+function personOptionsHtml(selectedId) {
+  const persons = (window.state && window.state.persons) ? window.state.persons.slice() : [];
+  persons.sort((a, b) => (a.nom || '').localeCompare(b.nom || '', 'fr'));
+  let html = `<option value="">— Aucune (admin / observateur) —</option>`;
+  html += persons.map(p =>
+    `<option value="${escHtml(p.id)}" ${p.id === selectedId ? 'selected' : ''}>${escHtml(p.nom)}</option>`
+  ).join('');
+  if (selectedId && !persons.some(p => p.id === selectedId)) {
+    html += `<option value="${escHtml(selectedId)}" selected>⚠️ personne supprimée</option>`;
+  }
+  return html;
+}
+
 function renderUsersList() {
+  // Remplit aussi le sélecteur "Personne liée" du formulaire d'ajout
+  const addSel = document.getElementById('newUserPerson');
+  if (addSel) addSel.innerHTML = personOptionsHtml('');
+
   const list = document.getElementById('usersEditList');
   if (!list) return;
-  const users = window.state.users || [];
+  const users = getAuthUsers();
 
   if (!users.length) {
-    list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Aucun utilisateur configuré.</div>';
+    list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0;">Aucun compte configuré.</div>';
     return;
   }
 
-  const roleLabel = { admin: '🔑 Admin', editor: '✏️ Éditeur', viewer: '👁 Lecteur' };
-  const roleColor = { admin: 'var(--cyrias-blue)', editor: 'var(--cyrias-green-dark)', viewer: '#876200' };
-
   list.innerHTML = users.map((u, i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;background:var(--surface2);margin-bottom:5px;">
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.nom}</div>
-        <div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.email}</div>
+    <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;background:var(--surface2);margin-bottom:6px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:140px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(u.nom || u.email)}</div>
+        <div style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(u.email)}</div>
       </div>
-      <span style="font-size:11px;font-weight:600;color:${roleColor[u.role]||'var(--text3)'};white-space:nowrap;flex-shrink:0;">${roleLabel[u.role]||u.role}</span>
-      <button onclick="removeUser(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0 2px;flex-shrink:0;" title="Supprimer">×</button>
+      <select class="form-input form-select" style="width:118px;" onchange="updateUserRole(${i}, this.value)" title="Rôle">
+        <option value="editor" ${u.role==='editor'?'selected':''}>✏️ Éditeur</option>
+        <option value="admin"  ${u.role==='admin' ?'selected':''}>🔑 Admin</option>
+        <option value="viewer" ${u.role==='viewer'?'selected':''}>👁 Lecteur</option>
+      </select>
+      <select class="form-input form-select" style="min-width:150px;flex:1;" onchange="updateUserPerson(${i}, this.value)" title="Personne du planning liée"
+        ${u.role==='admin' ? 'disabled' : ''}>
+        ${personOptionsHtml(u.personId || '')}
+      </select>
+      <button onclick="removeUser(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;padding:0 2px;flex-shrink:0;" title="Supprimer le compte">×</button>
     </div>`).join('');
 }
 
 function addUser() {
-  const email = (document.getElementById('newUserEmail').value || '').trim().toLowerCase();
-  const nom   = (document.getElementById('newUserNom').value   || '').trim();
-  const role  = document.getElementById('newUserRole').value;
+  const email    = (document.getElementById('newUserEmail').value || '').trim().toLowerCase();
+  const role     = document.getElementById('newUserRole').value;
+  const personId = document.getElementById('newUserPerson').value || null;
 
   if (!email || !email.includes('@')) { toast('Email invalide'); return; }
-  if (!nom) { toast('Le nom affiché est requis'); return; }
 
-  if (!window.state.users) window.state.users = [];
+  const users = getAuthUsers().slice();
+  if (users.some(u => (u.email || '').toLowerCase() === email)) { toast('Cet email existe déjà'); return; }
 
-  if (window.state.users.some(u => u.email.toLowerCase() === email)) {
-    toast('Cet email existe déjà'); return;
-  }
+  const person = personId && window.state.persons ? window.state.persons.find(p => p.id === personId) : null;
+  const nom = person ? person.nom : email.split('@')[0];
 
-  window.state.users.push({ email, nom, role });
-  scheduleSave();
+  users.push({ email, role, nom, personId });
+  setAuthUsers(users);
+  persistUsers();
   renderUsersList();
 
   document.getElementById('newUserEmail').value = '';
-  document.getElementById('newUserNom').value   = '';
-  toast('✓ Utilisateur ajouté');
+  document.getElementById('newUserPerson').value = '';
+  toast('✓ Compte ajouté' + (person ? ` et lié à ${person.nom}` : ''));
+}
+
+function updateUserRole(index, role) {
+  const users = getAuthUsers().slice();
+  if (!users[index]) return;
+  // Ne pas retirer le dernier admin
+  if (users[index].role === 'admin' && role !== 'admin') {
+    const others = users.filter((u, i) => i !== index && u.role === 'admin');
+    if (!others.length) { toast('⚠️ Conservez au moins un admin'); renderUsersList(); return; }
+  }
+  users[index] = { ...users[index], role };
+  // Un admin n'est lié à aucune ligne en particulier
+  if (role === 'admin') users[index].personId = null;
+  setAuthUsers(users);
+  persistUsers();
+  renderUsersList();
+  toast('✓ Rôle mis à jour');
+}
+
+function updateUserPerson(index, personId) {
+  const users = getAuthUsers().slice();
+  if (!users[index]) return;
+  const person = personId && window.state.persons ? window.state.persons.find(p => p.id === personId) : null;
+  users[index] = { ...users[index], personId: personId || null };
+  if (person) users[index].nom = person.nom;  // garde le nom affiché synchronisé
+  setAuthUsers(users);
+  persistUsers();
+  renderUsersList();
+  toast(person ? `✓ Compte lié à ${person.nom}` : '✓ Lien retiré');
 }
 
 function removeUser(index) {
-  if (!window.state.users) return;
-  // Empêcher la suppression du dernier admin
-  const user = window.state.users[index];
-  const adminsLeft = window.state.users.filter((u, i) => i !== index && u.role === 'admin');
-  if (user.role === 'admin' && adminsLeft.length === 0) {
-    toast('⚠️ Impossible de supprimer le dernier admin'); return;
-  }
-  window.state.users.splice(index, 1);
-  scheduleSave();
+  const users = getAuthUsers().slice();
+  const user = users[index];
+  if (!user) return;
+  const adminsLeft = users.filter((u, i) => i !== index && u.role === 'admin');
+  if (user.role === 'admin' && adminsLeft.length === 0) { toast('⚠️ Impossible de supprimer le dernier admin'); return; }
+  if (!confirm(`Supprimer le compte ${user.email} ?`)) return;
+  users.splice(index, 1);
+  setAuthUsers(users);
+  persistUsers();
   renderUsersList();
+}
+
+// Télécharge users.json (à committer dans le dépôt en mode 'local')
+function exportUsersJson() {
+  const blob = new Blob([JSON.stringify({ users: getAuthUsers() }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'users.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 function openSettings() {
@@ -2227,6 +2301,7 @@ document.querySelectorAll('.tab').forEach(t => {
     if (t.dataset.tab === 'lieux') renderSettingsLieux();
     if (t.dataset.tab === 'groupes') renderSettingsGroupes();
     if (t.dataset.tab === 'feries') renderSettingsFeries();
+    if (t.dataset.tab === 'users') renderUsersList();
   });
 });
 
@@ -2961,6 +3036,7 @@ function loadUsersJson() {
           email: String(u.email).trim(),
           role:  String(u.role || 'viewer').toLowerCase(),
           nom:   u.nom || u.name || String(u.email).split('@')[0],
+          personId: u.personId || null,
         }));
       return AUTH_USERS_JSON;
     } catch (e) {
@@ -2984,6 +3060,27 @@ function getAuthUsers() {
   if (AUTH_USERS_JSON && AUTH_USERS_JSON.length) return AUTH_USERS_JSON;
   if (window.state && window.state.users && window.state.users.length) return window.state.users;
   return DEFAULT_AUTH_USERS;
+}
+
+// Écrit la nouvelle liste partout où elle est lue (mémoire + "base" data.json)
+function setAuthUsers(arr) {
+  const list = (arr || []).slice();
+  AUTH_USERS_JSON = list.slice();          // liste de connexion en mémoire
+  if (!window.state) window.state = {};
+  window.state.users = list.slice();       // miroir dans la base (data.json)
+}
+
+// Persiste la liste des accès : data.json (toujours) + users.json partagé (mode github)
+let _usersSaveTimer = null;
+function persistUsers() {
+  scheduleSave();                          // enregistre data.json (state.users)
+  if (AUTH_CONFIG.mode === 'github' && ghWorker()) {
+    clearTimeout(_usersSaveTimer);
+    _usersSaveTimer = setTimeout(async () => {
+      try { await githubSaveUsers(getAuthUsers()); }
+      catch (e) { toast('⚠️ users.json non enregistré : ' + e.message); }
+    }, 1200);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -3040,7 +3137,7 @@ async function loginLocal(email) {
     return;
   }
 
-  msUser   = { email: user.email, nom: user.nom, name: user.nom };
+  msUser   = { email: user.email, nom: user.nom, name: user.nom, personId: user.personId || null };
   userRole = user.role;
   sessionStorage.setItem('cyrias_session', JSON.stringify({ msUser, userRole }));
 
@@ -3061,8 +3158,10 @@ function canEditPerson(personId) {
     ? window.state.persons.find(p => p.id === personId)
     : null;
   if (!person) return false;
-  // Comparaison via le champ nom de AUTH_USERS (précis, sans déduction d'email)
-  const normalize = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // 1) Lien explicite compte ↔ personne (robuste aux renommages)
+  if (msUser.personId) return msUser.personId === person.id;
+  // 2) Repli : correspondance par nom normalisé
+  const normalize = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   return normalize(person.nom) === normalize(msUser.nom || '');
 }
 
@@ -3125,6 +3224,22 @@ async function githubSaveData(data) {
   if (!r.ok) throw new Error('Worker HTTP ' + r.status);
   const j = await r.json().catch(() => ({}));
   if (j && j.sha) dataSha = j.sha;   // mémorise le sha pour le prochain commit
+  return true;
+}
+
+// Enregistre la liste des accès dans users.json du dépôt (via le Worker)
+async function githubSaveUsers(users) {
+  if (!ghWorker()) throw new Error('workerUrl non configuré');
+  const r = await fetch(ghWorker() + '/users', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      data:  { users },
+      email: (msUser && msUser.email) || null,
+      role:  userRole || null,
+    }),
+  });
+  if (!r.ok) throw new Error('Worker HTTP ' + r.status);
   return true;
 }
 
@@ -3357,7 +3472,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Gestion des utilisateurs dans Paramètres
   document.addEventListener('click', e => {
-    if (e.target && e.target.id === 'addUserBtn') addUser();
+    if (e.target && e.target.id === 'addUserBtn')     addUser();
+    if (e.target && e.target.id === 'exportUsersBtn') exportUsersJson();
   });
 
   document.getElementById('loginEmailInput')

@@ -1250,7 +1250,7 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
           <button class="btn btn-sm" id="ghTokenClearBtn">Oublier</button>
         </div>
         <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5;">
-          Le token reste <strong>uniquement dans ce navigateur</strong> (session en cours) et n'est jamais publié.
+          Le token reste <strong>sur cet appareil uniquement</strong> (mémorisé pour ne pas le ressaisir) et n'est jamais publié.
           Créez-en un sur GitHub : <em>Settings → Developer settings → Fine-grained tokens</em>, accès au seul dépôt, permission <em>Contents : Read &amp; Write</em>.
         </div>
       </div>
@@ -3033,7 +3033,7 @@ const AUTH_CONFIG = {
     dataPath:  'data.json',               // "table" planning  (état complet)
     usersPath: 'users.json',              // "table" accès      (utilisateurs)
     // Proxy d'ÉCRITURE. Vide => lecture seule partagée (personne ne peut écrire).
-    workerUrl: '',                        // ex: 'https://cyrias-planning.xxx.workers.dev'
+    workerUrl: 'https://falling-frost-fb35.fabien-karulak.workers.dev',
   },
 
   // Modes SSO futurs (ignorés sinon)
@@ -3080,16 +3080,25 @@ function loadUsersJson() {
   if (_usersJsonPromise) return _usersJsonPromise;
   _usersJsonPromise = (async () => {
     try {
-      // En mode 'github', on lit users.json directement dans le dépôt (raw).
-      // Sinon, fichier relatif déposé à côté de la page.
-      let url = 'users.json';
-      if (AUTH_CONFIG.mode === 'github' && AUTH_CONFIG.github && AUTH_CONFIG.github.owner) {
-        const g = AUTH_CONFIG.github;
-        url = `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${g.branch}/${g.usersPath}`;
+      let data = null;
+      // Priorité au Worker (gère le bon dépôt + dépôt privé possible)
+      if (AUTH_CONFIG.mode === 'github' && typeof ghWorker === 'function' && ghWorker()) {
+        try {
+          const r = await fetch(ghWorker() + '/users', { cache: 'no-store' });
+          if (r.ok) { const j = await r.json(); if (j && j.data) data = j.data; }
+        } catch (e) { /* on tentera la lecture directe */ }
       }
-      const res = await fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
+      // Sinon : lecture directe (raw GitHub en mode 'github', fichier relatif sinon)
+      if (data === null) {
+        let url = 'users.json';
+        if (AUTH_CONFIG.mode === 'github' && AUTH_CONFIG.github && AUTH_CONFIG.github.owner) {
+          const g = AUTH_CONFIG.github;
+          url = `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${g.branch}/${g.usersPath}`;
+        }
+        const res = await fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        data = await res.json();
+      }
 
       // Accepte un tableau direct ou un objet { users: [...] }
       const arr = Array.isArray(data) ? data
@@ -3259,9 +3268,9 @@ function ghCfg()      { return AUTH_CONFIG.github || {}; }
 function ghWorker()   { return (ghCfg().workerUrl || '').replace(/\/+$/, ''); }
 function ghRawUrl(p)  { const g = ghCfg(); return `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${g.branch}/${p}`; }
 
-// Token GitHub de l'admin (session courante uniquement)
-function getGhToken()   { try { return sessionStorage.getItem('cyrias_gh_token') || ''; } catch (e) { return ''; } }
-function setGhToken(t)  { try { t ? sessionStorage.setItem('cyrias_gh_token', t) : sessionStorage.removeItem('cyrias_gh_token'); } catch (e) {} }
+// Token GitHub de l'admin — conservé sur CET appareil uniquement (jamais publié)
+function getGhToken()   { try { return localStorage.getItem('cyrias_gh_token') || ''; } catch (e) { return ''; } }
+function setGhToken(t)  { try { t ? localStorage.setItem('cyrias_gh_token', t) : localStorage.removeItem('cyrias_gh_token'); } catch (e) {} }
 function hasGhWrite()   { return !!ghWorker() || !!getGhToken(); }
 function ghAuthHeaders(token) {
   return { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
@@ -3376,13 +3385,17 @@ async function githubSaveUsers(users) {
 async function loadFromStorage() {
   if (AUTH_CONFIG.mode === 'github') {
     const remote = await githubLoadData();
-    if (remote) {
+    let local = null;
+    try { const raw = localStorage.getItem('planning-presence-v2'); if (raw) local = JSON.parse(raw); } catch(e){}
+    const rT = (remote && remote.updatedAt) || 0;
+    const lT = (local  && local.updatedAt)  || 0;
+    // On garde la version la PLUS RÉCENTE (évite qu'un dépôt obsolète
+    // écrase une saisie locale non encore partagée).
+    if (remote && (!local || rT >= lT)) {
       try { localStorage.setItem('planning-presence-v2', JSON.stringify(remote)); } catch(e){}
       return remote;
     }
-    // repli : dernière copie locale connue
-    try { const raw = localStorage.getItem('planning-presence-v2'); if (raw) return JSON.parse(raw); } catch(e){}
-    return null;
+    return local || remote || null;
   }
   // 1. Essayer window.storage (Claude artifacts)
   try {
@@ -3436,6 +3449,7 @@ async function saveToStorage(data) {
 
 function scheduleSave() {
   if (userRole === 'viewer') return;
+  if (window.state) window.state.updatedAt = Date.now();  // horodatage pour départager local/distant
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(() => saveToStorage(window.state), 2500);
 }
@@ -3546,12 +3560,13 @@ async function _loadAndRender() {
   render();
   setSyncing(false);
 
-  // Auto-refresh 60s
+  // Auto-refresh 60s — n'adopte le distant que s'il est plus récent que le local
   setInterval(async () => {
     if (document.hidden || !userRole || saveTimeout) return;
     try {
       const fresh = await loadFromStorage();
-      if (fresh && fresh.persons && fresh.lieux) {
+      if (fresh && fresh.persons && fresh.lieux &&
+          (fresh.updatedAt || 0) >= (window.state.updatedAt || 0)) {
         state = fresh; window.state = state;   // même objet
         if (!window.state.feries)     window.state.feries = JSON.parse(JSON.stringify(FR_FERIES_DEFAULT));
         if (!window.state.siteGroups) window.state.siteGroups = [];

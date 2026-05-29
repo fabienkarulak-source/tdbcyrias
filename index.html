@@ -1240,6 +1240,20 @@ thead th.th-solidarite-day .th-day-date { color: #7c3aed; }
       <div id="feriesEditList"></div>
     </div>
     <div id="tabUsers" class="tab-panel" style="display:none;">
+      <div id="ghSharePanel" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:6px;">Partage GitHub — écriture</div>
+        <div id="ghStatus" style="font-size:12px;margin-bottom:8px;line-height:1.5;"></div>
+        <div id="ghTokenRow" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <input class="form-input" id="ghTokenInput" type="password" autocomplete="off"
+                 placeholder="Token GitHub (ghp_… ou github_pat_…)" style="flex:2;min-width:200px;">
+          <button class="btn btn-primary btn-sm" id="ghTokenSaveBtn">Activer l'écriture</button>
+          <button class="btn btn-sm" id="ghTokenClearBtn">Oublier</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5;">
+          Le token reste <strong>uniquement dans ce navigateur</strong> (session en cours) et n'est jamais publié.
+          Créez-en un sur GitHub : <em>Settings → Developer settings → Fine-grained tokens</em>, accès au seul dépôt, permission <em>Contents : Read &amp; Write</em>.
+        </div>
+      </div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5;">
         Console d'administration des accès.<br>
         <strong>Rôles :</strong> 🔑 Admin (tout) · ✏️ Éditeur (sa ligne uniquement) · 👁 Lecteur (lecture seule).<br>
@@ -1399,7 +1413,7 @@ const MS_CONFIG = {
   CLIENT_ID:    'VOTRE_AZURE_CLIENT_ID',
   TENANT_ID:    'VOTRE_AZURE_TENANT_ID',
   WORKER_URL:   'https://cyrias-planning-auth.workers.dev',
-  REDIRECT_URI: 'https://fabienkarulak-source.github.io/cyrias-planning',
+  REDIRECT_URI: 'https://fabienkarulak-source.github.io/tdbcyrias',
   SCOPES:       ['openid', 'profile', 'email'],
 };
 
@@ -2054,6 +2068,7 @@ function personOptionsHtml(selectedId) {
 }
 
 function renderUsersList() {
+  renderGhSharePanel();
   // Remplit aussi le sélecteur "Personne liée" du formulaire d'ajout
   const addSel = document.getElementById('newUserPerson');
   if (addSel) addSel.innerHTML = personOptionsHtml('');
@@ -2159,6 +2174,56 @@ function exportUsersJson() {
   a.download = 'users.json';
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+// État du partage GitHub (panneau en haut de la console)
+function renderGhSharePanel() {
+  const panel = document.getElementById('ghSharePanel');
+  if (!panel) return;
+  const isGithub = (typeof AUTH_CONFIG !== 'undefined' && AUTH_CONFIG.mode === 'github');
+  panel.style.display = isGithub ? '' : 'none';
+  if (!isGithub) return;
+
+  const statusEl = document.getElementById('ghStatus');
+  const tokenRow = document.getElementById('ghTokenRow');
+  const g = ghCfg();
+  const repo = `${g.owner}/${g.repo}@${g.branch}`;
+
+  if (ghWorker()) {
+    statusEl.innerHTML = `🟢 Écriture partagée via Worker.<br><span style="color:var(--text3);">Dépôt : ${escHtml(repo)}</span>`;
+    if (tokenRow) tokenRow.style.display = 'none';
+    return;
+  }
+  if (tokenRow) tokenRow.style.display = 'flex';
+  if (getGhToken()) {
+    statusEl.innerHTML = `🟢 Écriture partagée activée (token de ce navigateur).<br><span style="color:var(--text3);">Dépôt : ${escHtml(repo)}</span>`;
+  } else {
+    statusEl.innerHTML = `🔒 Lecture seule. Saisissez un token GitHub pour écrire dans le dépôt partagé.<br><span style="color:var(--text3);">Dépôt : ${escHtml(repo)}</span>`;
+  }
+}
+
+async function activateGhToken() {
+  const inp = document.getElementById('ghTokenInput');
+  const t = (inp.value || '').trim();
+  if (!t) { toast('Collez un token GitHub'); return; }
+  setGhToken(t);
+  inp.value = '';
+  toast('Vérification du token…');
+  try {
+    // Test réel : on réécrit data.json avec l'état courant
+    await githubSaveData(window.state);
+    toast('✓ Écriture partagée activée');
+  } catch (e) {
+    setGhToken('');
+    toast('⚠️ ' + e.message);
+  }
+  renderGhSharePanel();
+}
+
+function clearGhToken() {
+  setGhToken('');
+  renderGhSharePanel();
+  toast('Token oublié (lecture seule)');
 }
 
 function openSettings() {
@@ -2950,19 +3015,20 @@ async function init() {
 // AUTH_CONFIG.mode :
 //   'local'   → stockage local (window.storage / localStorage). Aucune infra.
 //   'github'  → "base de données" PARTAGÉE = fichiers JSON dans un dépôt GitHub
-//               (aucun SQL). 
+//               (aucun SQL).
 //                 • Lecture  : directe depuis GitHub (dépôt public, sans secret)
-//                 • Écriture : via un mini proxy Cloudflare Worker qui détient
-//                              le token GitHub (jamais exposé dans la page).
-//               → laisser workerUrl vide = portail partagé en LECTURE SEULE.
+//                 • Écriture : 1) Worker Cloudflare (workerUrl), token côté serveur
+//                              2) OU token GitHub saisi par un admin dans la console
+//                                 (stocké seulement dans son navigateur) — SANS serveur
+//               → ni l'un ni l'autre = portail partagé en LECTURE SEULE.
 // ═══════════════════════════════════════════════════════════════════
 const AUTH_CONFIG = {
-  mode: 'local',   // <-- passer à 'github' une fois le dépôt + Worker prêts
+  mode: 'github',  // 'local' ou 'github'
 
   // ── "Base de données" GitHub (utilisée si mode === 'github') ──
   github: {
-    owner:     'fabienkarulak-source',   // propriétaire du dépôt
-    repo:      'cyrias-planning',         // nom du dépôt
+    owner:     'fabienkarulak-source',   // compte/organisation GitHub (à confirmer)
+    repo:      'tdbcyrias',               // nom du dépôt
     branch:    'main',                    // branche
     dataPath:  'data.json',               // "table" planning  (état complet)
     usersPath: 'users.json',              // "table" accès      (utilisateurs)
@@ -2974,7 +3040,7 @@ const AUTH_CONFIG = {
   microsoft: {
     clientId:    'VOTRE_AZURE_CLIENT_ID',
     tenantId:    'VOTRE_AZURE_TENANT_ID',
-    redirectUri: 'https://fabienkarulak-source.github.io/cyrias-planning',
+    redirectUri: 'https://fabienkarulak-source.github.io/tdbcyrias',
     scopes:      ['openid', 'profile', 'email'],
   },
   worker: {
@@ -2998,7 +3064,7 @@ const DEFAULT_AUTH_USERS = [
 // ═══════════════════════════════════════════════════════════════════
 // LISTE DES UTILISATEURS LUE DEPUIS users.json
 // Fichier statique placé À CÔTÉ de la page (même dossier que l'HTML,
-// ex. sur GitHub Pages : .../cyrias-planning/users.json).
+// ex. sur GitHub Pages : .../tdbcyrias/users.json).
 //
 // Format accepté (l'un ou l'autre) :
 //   [ { "email": "...", "role": "admin|editor|viewer", "nom": "..." }, ... ]
@@ -3074,7 +3140,7 @@ function setAuthUsers(arr) {
 let _usersSaveTimer = null;
 function persistUsers() {
   scheduleSave();                          // enregistre data.json (state.users)
-  if (AUTH_CONFIG.mode === 'github' && ghWorker()) {
+  if (AUTH_CONFIG.mode === 'github' && hasGhWrite()) {
     clearTimeout(_usersSaveTimer);
     _usersSaveTimer = setTimeout(async () => {
       try { await githubSaveUsers(getAuthUsers()); }
@@ -3180,16 +3246,71 @@ function logout() {
 // ─────────────────────────────────────────────────────────────────
 // "BASE DE DONNÉES" GITHUB  (mode 'github') — pas de SQL
 // data.json  = état complet du planning (≈ une table)
-// users.json = accès (≈ une table) — chargé par loadUsersJson()
-// Lecture directe depuis GitHub ; écriture via proxy Worker (token serveur).
+// users.json = accès (≈ une table)
+// Lecture : directe depuis GitHub (dépôt public).
+// Écriture (2 options, par ordre de priorité) :
+//   1. Worker Cloudflare (workerUrl renseigné) — token côté serveur.
+//   2. Token GitHub saisi par un admin dans la console — stocké UNIQUEMENT
+//      dans sessionStorage de SON navigateur (jamais dans le dépôt ni la page).
+//      => permet un contenu réellement PARTAGÉ sans aucun serveur.
+//   Aucune des deux => portail en lecture seule.
 // ─────────────────────────────────────────────────────────────────
 function ghCfg()      { return AUTH_CONFIG.github || {}; }
 function ghWorker()   { return (ghCfg().workerUrl || '').replace(/\/+$/, ''); }
 function ghRawUrl(p)  { const g = ghCfg(); return `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${g.branch}/${p}`; }
 
+// Token GitHub de l'admin (session courante uniquement)
+function getGhToken()   { try { return sessionStorage.getItem('cyrias_gh_token') || ''; } catch (e) { return ''; } }
+function setGhToken(t)  { try { t ? sessionStorage.setItem('cyrias_gh_token', t) : sessionStorage.removeItem('cyrias_gh_token'); } catch (e) {} }
+function hasGhWrite()   { return !!ghWorker() || !!getGhToken(); }
+function ghAuthHeaders(token) {
+  return { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
+}
+// Encodage base64 compatible UTF-8 (accents, emoji)
+function utf8ToB64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+// Écriture directe d'un fichier JSON dans le dépôt via l'API GitHub
+async function githubPutFile(path, obj) {
+  const token = getGhToken();
+  if (!token) throw new Error('Aucun token GitHub configuré (lecture seule).');
+  const g   = ghCfg();
+  const api = `https://api.github.com/repos/${g.owner}/${g.repo}/contents/${encodeURIComponent(path)}`;
+
+  // Récupère le sha courant (nécessaire pour mettre à jour un fichier existant)
+  let sha = null;
+  try {
+    const r = await fetch(`${api}?ref=${g.branch}&t=${Date.now()}`, { headers: ghAuthHeaders(token), cache: 'no-store' });
+    if (r.ok) { const j = await r.json(); sha = j.sha || null; }
+  } catch (e) {}
+
+  const who = (msUser && msUser.email) ? ` (${msUser.email})` : '';
+  const put = await fetch(api, {
+    method:  'PUT',
+    headers: { ...ghAuthHeaders(token), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: `MAJ ${path}${who} — ${new Date().toISOString()}`,
+      content: utf8ToB64(JSON.stringify(obj, null, 2)),
+      branch:  g.branch,
+      ...(sha ? { sha } : {}),
+    }),
+  });
+  if (!put.ok) {
+    let detail = ''; try { detail = (await put.json()).message || ''; } catch (e) {}
+    if (put.status === 401) throw new Error('Token GitHub invalide ou expiré.');
+    if (put.status === 403 || put.status === 404) throw new Error('Token sans droit d\'écriture sur ce dépôt.');
+    throw new Error('GitHub ' + put.status + (detail ? ' — ' + detail : ''));
+  }
+  return true;
+}
+
 async function githubLoadData() {
   const g = ghCfg();
-  // 1) Si un Worker est configuré : il renvoie { data, sha } (sha utile à l'écriture)
+  // 1) Si un Worker est configuré : il renvoie { data, sha }
   if (ghWorker()) {
     try {
       const r = await fetch(ghWorker() + '/data', { cache: 'no-store' });
@@ -3208,39 +3329,45 @@ async function githubLoadData() {
 }
 
 async function githubSaveData(data) {
-  if (!ghWorker()) {
-    throw new Error('Écriture indisponible : AUTH_CONFIG.github.workerUrl non configuré (portail en lecture seule).');
+  // Option 1 : Worker
+  if (ghWorker()) {
+    const r = await fetch(ghWorker() + '/data', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        data, sha: dataSha || null,
+        email: (msUser && msUser.email) || null,
+        role:  userRole || null,
+      }),
+    });
+    if (!r.ok) throw new Error('Worker HTTP ' + r.status);
+    const j = await r.json().catch(() => ({}));
+    if (j && j.sha) dataSha = j.sha;
+    return true;
   }
-  const r = await fetch(ghWorker() + '/data', {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      data,
-      sha:   dataSha || null,
-      email: (msUser && msUser.email) || null,
-      role:  userRole || null,
-    }),
-  });
-  if (!r.ok) throw new Error('Worker HTTP ' + r.status);
-  const j = await r.json().catch(() => ({}));
-  if (j && j.sha) dataSha = j.sha;   // mémorise le sha pour le prochain commit
-  return true;
+  // Option 2 : token direct
+  if (getGhToken()) return githubPutFile(ghCfg().dataPath, data);
+  // Sinon : lecture seule
+  throw new Error('Écriture indisponible : ni Worker ni token GitHub (portail en lecture seule).');
 }
 
-// Enregistre la liste des accès dans users.json du dépôt (via le Worker)
+// Enregistre la liste des accès dans users.json du dépôt
 async function githubSaveUsers(users) {
-  if (!ghWorker()) throw new Error('workerUrl non configuré');
-  const r = await fetch(ghWorker() + '/users', {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      data:  { users },
-      email: (msUser && msUser.email) || null,
-      role:  userRole || null,
-    }),
-  });
-  if (!r.ok) throw new Error('Worker HTTP ' + r.status);
-  return true;
+  if (ghWorker()) {
+    const r = await fetch(ghWorker() + '/users', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        data: { users },
+        email: (msUser && msUser.email) || null,
+        role:  userRole || null,
+      }),
+    });
+    if (!r.ok) throw new Error('Worker HTTP ' + r.status);
+    return true;
+  }
+  if (getGhToken()) return githubPutFile(ghCfg().usersPath, { users });
+  throw new Error('workerUrl/token non configuré');
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -3277,6 +3404,8 @@ async function saveToStorage(data) {
   if (AUTH_CONFIG.mode === 'github') {
     // Copie locale immédiate (filet de sécurité hors-ligne)
     try { localStorage.setItem('planning-presence-v2', JSON.stringify(data)); } catch(e){}
+    // Pas de capacité d'écriture (ni Worker ni token) => lecture seule, on n'alerte pas en boucle
+    if (!hasGhWrite()) { setSyncing(false); return; }
     try {
       await githubSaveData(data);
       setSyncing(false);
@@ -3472,8 +3601,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Gestion des utilisateurs dans Paramètres
   document.addEventListener('click', e => {
-    if (e.target && e.target.id === 'addUserBtn')     addUser();
-    if (e.target && e.target.id === 'exportUsersBtn') exportUsersJson();
+    if (e.target && e.target.id === 'addUserBtn')      addUser();
+    if (e.target && e.target.id === 'exportUsersBtn')  exportUsersJson();
+    if (e.target && e.target.id === 'ghTokenSaveBtn')  activateGhToken();
+    if (e.target && e.target.id === 'ghTokenClearBtn') clearGhToken();
   });
 
   document.getElementById('loginEmailInput')

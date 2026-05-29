@@ -172,7 +172,8 @@
     "p1780040683259f7nx": {
       "2026-05-24": "teletravail",
       "2026-05-26": "vannes",
-      "2026-05-27": "vannes"
+      "2026-05-27": "teletravail",
+      "2026-05-28": "teletravail"
     }
   },
   "feries": [
@@ -265,5 +266,5 @@
       "personId": "p1780040683259f7nx"
     }
   ],
-  "updatedAt": 1780068453282
+  "updatedAt": 1780068457839
 }

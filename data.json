@@ -245,6 +245,12 @@
       "email": "admin@cyrias.com",
       "role": "admin",
       "nom": "Admin"
+    },
+    {
+      "email": "fabien.karulak@cyrias.com",
+      "role": "editor",
+      "nom": "Fabien",
+      "personId": "p1780040519428v5k7"
     }
   ]
 }

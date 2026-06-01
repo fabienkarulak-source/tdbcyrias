@@ -193,7 +193,10 @@
       "2026-05-28": "teletravail",
       "2026-05-25": "vannes",
       "2026-05-31": "teletravail",
-      "2026-06-01": "teletravail"
+      "2026-06-01": "teletravail",
+      "2026-06-02": "vannes",
+      "2026-06-03": "vannes",
+      "2026-06-04": "teletravail"
     }
   },
   "feries": [
@@ -282,5 +285,5 @@
       "personId": "p1780040683259f7nx"
     }
   ],
-  "updatedAt": 1780301133367
+  "updatedAt": 1780301142943
 }

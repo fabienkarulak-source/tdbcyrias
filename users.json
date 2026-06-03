@@ -17,6 +17,12 @@
       "role": "editor",
       "nom": "Stéphane",
       "personId": "p1780040683259f7nx"
+    },
+    {
+      "email": "nicolas.guillerez@cyrias.com",
+      "role": "editor",
+      "nom": "Nicolas",
+      "personId": "p1780493131949gwmt"
     }
   ]
 }

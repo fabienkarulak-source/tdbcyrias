@@ -116,6 +116,11 @@
       "id": "p1780040683259f7nx",
       "nom": "Stéphane",
       "site": "vannes"
+    },
+    {
+      "id": "p1780493131949gwmt",
+      "nom": "Nicolas",
+      "site": "massy"
     }
   ],
   "planning": {
@@ -330,5 +335,5 @@
       "personId": "p1780040683259f7nx"
     }
   ],
-  "updatedAt": 1780301153770
+  "updatedAt": 1780493131950
 }

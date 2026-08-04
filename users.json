@@ -23,6 +23,12 @@
       "role": "editor",
       "nom": "Nicolas",
       "personId": "p1780493131949gwmt"
+    },
+    {
+      "email": "yann.derrien@cyrias.com",
+      "role": "editor",
+      "nom": "Yann",
+      "personId": "p1785853540126p5qa"
     }
   ]
 }

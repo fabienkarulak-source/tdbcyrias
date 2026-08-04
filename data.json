@@ -121,6 +121,11 @@
       "id": "p1780493131949gwmt",
       "nom": "Nicolas",
       "site": "massy"
+    },
+    {
+      "id": "p1785853540126p5qa",
+      "nom": "Yann",
+      "site": "massy"
     }
   ],
   "planning": {
@@ -341,5 +346,5 @@
       "personId": "p1780493131949gwmt"
     }
   ],
-  "updatedAt": 1780493160592
+  "updatedAt": 1785853540126
 }

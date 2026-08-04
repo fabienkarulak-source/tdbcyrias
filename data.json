@@ -194,7 +194,8 @@
       "2026-06-29": "voiture",
       "2026-06-30": "voiture",
       "2026-07-01": "voiture",
-      "2026-07-02": "teletravail"
+      "2026-07-02": "teletravail",
+      "2026-08-02": "teletravail"
     },
     "p1780040683259f7nx": {
       "2026-05-24": "teletravail",
@@ -352,5 +353,5 @@
       "personId": "p1785853540126p5qa"
     }
   ],
-  "updatedAt": 1785853562078
+  "updatedAt": 1785853652269
 }
